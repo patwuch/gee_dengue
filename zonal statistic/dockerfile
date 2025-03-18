@@ -1,0 +1,20 @@
+# Start from an official Python image (or another base image that suits your needs)
+FROM continuumio/miniconda3:latest
+
+# Set a working directory in the container
+WORKDIR /app
+
+# Copy the entire repository into the working directory in the container
+COPY . /app
+
+# Install dependencies (you could use your environment.yml file here)
+RUN conda env create -f environment.yml && conda clean --all
+
+# Make sure the conda environment is activated by default when the container starts
+SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
+
+# Expose the necessary port (if running a server or Jupyter notebook)
+EXPOSE 8888
+
+# Command to run your notebooks (example for Jupyter notebook server)
+CMD ["conda", "run", "-n", "myenv", "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888"]
