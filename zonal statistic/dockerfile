@@ -1,20 +1,56 @@
-# Start from an official Python image (or another base image that suits your needs)
+# # Step 1: Use a base image with Conda pre-installed (Miniconda)
+# FROM continuumio/miniconda3:latest
+
+# # Step 2: Set working directory in the container
+# WORKDIR /app
+
+# # Step 3: Copy your application code into the container
+# COPY . .
+
+# # Step 4: Create and activate a Conda environment with Python 3.10
+# RUN conda create -n myenv python=3.10
+
+# # Step 5: Check Python version inside the environment
+# RUN /bin/bash -c "source activate myenv && python --version"
+
+# # Step 6: Install pywin32 from conda-forge or pip
+# RUN /bin/bash -c "source activate myenv && conda install -c conda-forge pywin32"
+
+# # Step 7: Install other dependencies
+# RUN /bin/bash -c "source activate myenv && pip install -r requirements.txt"
+
+# # Step 8: Run the app (replace with your app's command)
+# CMD ["/bin/bash", "-c", "source activate myenv && python app.py"]
+
+# Step 1: Use a base image with Conda pre-installed (Miniconda)
 FROM continuumio/miniconda3:latest
 
-# Set a working directory in the container
+# Step 2: Set working directory in the container
 WORKDIR /app
 
-# Copy the entire repository into the working directory in the container
-COPY . /app
+# Step 3: Copy your application code into the container
+COPY . .
 
-# Install dependencies (you could use your environment.yml file here)
-RUN conda env create -f environment.yml && conda clean --all
+RUN chmod +x /app/start_notebook.sh
 
-# Make sure the conda environment is activated by default when the container starts
-SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
+# Step 4: Create and activate a Conda environment with Python 3.10
+RUN conda create -n myenv python=3.10
 
-# Expose the necessary port (if running a server or Jupyter notebook)
-EXPOSE 8888
+# Step 5: Check Python version inside the environment
+RUN /bin/bash -c "source activate myenv && python --version"
 
-# Command to run your notebooks (example for Jupyter notebook server)
-CMD ["conda", "run", "-n", "myenv", "jupyter", "notebook", "--ip=0.0.0.0", "--port=8888"]
+# Step 6: Install pywin32 from conda-forge or pip
+RUN /bin/bash -c "source activate myenv && conda install -c conda-forge pywin32"
+
+# Step 7: Install other dependencies
+RUN /bin/bash -c "source activate myenv && pip install -r requirements.txt"
+
+# Step 8: Install Jupyter Notebook
+RUN /bin/bash -c "source activate myenv && conda install -c conda-forge jupyter"
+
+# Step 9: Copy the script that lists notebooks and starts Jupyter
+COPY start_notebook.sh /app/start_notebook.sh
+RUN chmod +x /app/start_notebook.sh
+
+# Step 10: Run the script to list and launch selected notebook
+CMD ["/bin/bash", "-c", "source activate myenv && /app/start_notebook.sh"]
