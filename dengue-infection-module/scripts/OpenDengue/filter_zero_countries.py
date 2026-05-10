@@ -12,11 +12,11 @@ from pathlib import Path
 
 DEFAULT_INPUT = (
     Path(__file__).parent.parent.parent
-    / "main/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025.csv"
+    / "data/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025.csv"
 )
 DEFAULT_OUTPUT = (
     Path(__file__).parent.parent.parent
-    / "main/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025_filtered.csv"
+    / "data/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025_filtered.csv"
 )
 
 

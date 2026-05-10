@@ -4,7 +4,7 @@ import dask.dataframe as dd
 import pandas as pd
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-GLOBAL_RAW_DIR = PROJECT_ROOT / "main" / "raw" / "global"
+GLOBAL_RAW_DIR = PROJECT_ROOT / "data" / "raw" / "global"
 OUTPUT_DIR = GLOBAL_RAW_DIR / "who_regions_2000_2025"
 
 INPUT_FILES = {

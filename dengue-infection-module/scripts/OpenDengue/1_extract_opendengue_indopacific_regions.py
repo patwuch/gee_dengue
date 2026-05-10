@@ -17,13 +17,13 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-DATA_DIR = Path(__file__).resolve().parents[3] / "main" / "raw" / "OpenDengue"
+DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "raw" / "OpenDengue"
 
 NATIONAL_CSV = DATA_DIR / "National_extract_V1_3.csv"
 TEMPORAL_CSV = DATA_DIR / "Temporal_extract_V1_3.csv"
 SPATIAL_CSV  = DATA_DIR / "Spatial_extract_V1_3.csv"
 
-OUTPUT_DIR = DATA_DIR = Path(__file__).resolve().parents[3] / "main" / "interim" / "OpenDengue"
+OUTPUT_DIR = DATA_DIR = Path(__file__).resolve().parents[3] / "data" / "interim" / "OpenDengue"
 
 
 # ---------------------------------------------------------------------------
@@ -215,7 +215,7 @@ def load_and_filter(csv_path: Path, label: str) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
-# Main
+# data
 # ---------------------------------------------------------------------------
 
 def main():

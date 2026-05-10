@@ -17,7 +17,7 @@ replacements = {
     'REGION 4':                 'REGION IV-A (CALABARZON)',
 }
 
-filepath = '/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/interim/OpenDengue/filtered_sea_2011_2018.csv'
+filepath = '/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/interim/OpenDengue/filtered_sea_2011_2018.csv'
 
 with open(filepath, newline='') as f:
     rows = list(csv.DictReader(f))

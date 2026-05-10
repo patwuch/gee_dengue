@@ -183,7 +183,7 @@ def main():
             config=sm.input.config_file,
             checkpoint=sm.input.checkpoint,
             test_data=getattr(sm.input, "test_data", None),
-            best_params=None,
+            best_params=getattr(sm.input, "best_params", None),
             output_metrics=getattr(sm.output, "metrics", None),
             device=f"cuda:{sm.params.cuda_device}" if hasattr(sm.params, "cuda_device") else "cpu",
         )

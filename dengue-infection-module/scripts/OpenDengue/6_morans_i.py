@@ -13,12 +13,19 @@ from matplotlib.cm import ScalarMappable
 # ── Paths ─────────────────────────────────────────────────────────────────────
 CSV_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/dengue-infection-module/main/interim/OpenDengue"
+    "/dengue-infection-module/data/interim/OpenDengue"
     "/filtered_sea_2011_2018_SLVC_imputed.csv"
+)
+
+POP_PATH = (
+    "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
+    "/dengue-infection-module/data/raw/OpenDengue"
+    "/WorldPop_2011-01-01_to_2018-12-31.parquet"
+    
 )
 GEO_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/dengue-infection-module/main/external/geoparquet"
+    "/dengue-infection-module/data/external/geoparquet"
     "/gaul_2024_sea_filtered.parquet"
 )
 RANDOM_SEED = 42

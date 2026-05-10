@@ -3,16 +3,7 @@
 # ============================================================
 # Architecture: GAT (spatial) → GRU (temporal) → Linear (output)
 # Task:         Node-level dengue incidence rate regression
-#
-# Dataset : SEA_dengue_env_monthly_2011-2018.csv
-# Nodes   : 165 admin-2 units across 10 SEA countries
-# Time    : 2011-01 → 2018-12 (96 months)
-# Target  : IR (incidence rate, continuous)
-# Missing : ~10.8% of IR values absent — handled by masked loss
-#
-# Snakemake usage (run_name = sea_baseline):
-#   snakemake data/processed/stgat/sea_baseline_train.pt --cores 4
-#   snakemake models/stgat/sea_baseline/best.pt --cores 4 --resources gpu=1
+
 # ============================================================
 
 run_name: "sea_baseline"

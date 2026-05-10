@@ -2,16 +2,16 @@ import geopandas as gpd
 import pandas as pd
 
 SHP_PATH = (
-    "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/external/FAO_GAUL_shp"
+    "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/external/FAO_GAUL_shp"
 )
 CSV_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/dengue-infection-module/main/interim/OpenDengue"
+    "/dengue-infection-module/data/interim/OpenDengue"
     "/filtered_sea_2011_2018_SLVC_imputed.csv"
 )
 OUT_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/dengue-infection-module/main/external/geoparquet"
+    "/dengue-infection-module/data/external/geoparquet"
     "/gaul_2024_sea_filtered.parquet"
 )
 
@@ -100,7 +100,7 @@ def dissolve_to_l1(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
     return gpd.GeoDataFrame(l1, geometry="geometry", crs=gdf.crs)
 
 
-def main():
+def data():
     df = pd.read_csv(CSV_PATH)
     gdf = gpd.read_file(SHP_PATH)
 
@@ -176,5 +176,5 @@ def main():
     print("Done.")
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__data__":
+    data()

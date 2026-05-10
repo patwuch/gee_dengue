@@ -91,7 +91,7 @@ rule train_bayes_stgat:
         best_params = "models/stgat/{run_name}/bayes_best_params.json"
     output:
         checkpoint = "models/stgat/{run_name}/bayes_best.pt",
-        metrics    = "reports/stgat/{run_name}/bayes_train_metrics.json"
+        metrics    = "report/stgat/{run_name}/bayes_train_metrics.json"
     log:
         "logs/stgat/{run_name}/bayes_train.log"
     params:
@@ -132,11 +132,12 @@ rule eval_bayes_stgat:
     and standard regression metrics in both log-space and original IR space.
     """
     input:
-        checkpoint  = "models/stgat/{run_name}/bayes_best.pt",
-        test_data   = "data/processed/stgat/{run_name}_test.pt",
-        config_file = "config/stgat/{run_name}.yaml"
+        checkpoint   = "models/stgat/{run_name}/bayes_best.pt",
+        test_data    = "data/processed/stgat/{run_name}_test.pt",
+        config_file  = "config/stgat/{run_name}.yaml",
+        best_params  = "models/stgat/{run_name}/bayes_best_params.json"
     output:
-        metrics = "reports/stgat/{run_name}/bayes_test_metrics.json"
+        metrics = "report/stgat/{run_name}/bayes_test_metrics.json"
     log:
         "logs/stgat/{run_name}/bayes_eval.log"
     params:
@@ -157,6 +158,7 @@ rule eval_bayes_stgat:
             --config         {input.config_file}   \
             --checkpoint     {input.checkpoint}    \
             --test-data      {input.test_data}     \
+            --best-params    {input.best_params}   \
             --output-metrics {output.metrics}      \
             --device         {params.device}       \
             > {log} 2>&1

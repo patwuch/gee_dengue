@@ -1,38 +1,8 @@
 """
-scripts/preprocess_stgat.py
+scripts/preprocess_data.py
 ---------------------------
 Build train / val / test .pt tensor files for the STGAT pipeline.
 
-Graph: fully connected (N*(N-1) directed edges, unit weights).
-GAT attention heads learn which connections matter — no coordinates needed.
-
-Sliding-window layout (lookback L, stride 1):
-    window i  →  x_seq = features[i : i+L],  y = IR[i+L],  mask = ~isnan(IR[i+L])
-
-Split (based on target date, not window start):
-    test   — target month in test_year (config split.test_year, default 2018) → 12 windows
-    val    — last val_fraction of remaining windows
-    train  — the rest
-
-Output per split  (data/processed/stgat/{run_name}_{split}.pt):
-    windows      [W, L, N, F]  float32   stacked input sequences
-    y            [W, N]        float32   log1p(IR) targets  (or raw IR if log_transform=False)
-    mask         [W, N]        float32   1 = observed, 0 = missing
-    edge_index   [2, E]        int64     same for all splits
-    edge_weight  [E]           float32   uniform = 1.0
-    node_names   list[str]
-    feature_names list[str]
-    target_dates list[str]
-
-Usage (standalone):
-    python workflow/scripts/preprocess_stgat.py \\
-        --config   config/config_stgat.yaml \\
-        --input    machine-learning-module/main/data/processed/SEA_dengue_env_monthly_2011-2018.csv \\
-        --out-dir  data/processed/stgat \\
-        --run-name sea_baseline
-
-Via Snakemake (rule preprocess_stgat in stgat.smk):
-    The rule passes --config, --input, --out-dir, --run-name.
 """
 
 from __future__ import annotations
@@ -54,8 +24,8 @@ from sklearn.preprocessing import StandardScaler
 # ---------------------------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Preprocess CSV → STGAT tensor files")
-    p.add_argument("--config",    required=True,  help="Path to config_stgat.yaml")
+    p = argparse.ArgumentParser(description="Preprocess CSV → Pytorch tensor files")
+    p.add_argument("--config",    required=True,  help="Path to config.yaml")
     p.add_argument("--input",     required=True,  help="Path to SEA monthly CSV")
     p.add_argument("--out-dir",   required=True,  help="Directory to write .pt files")
     p.add_argument("--run-name",  required=True,  help="Run name prefix for output files")

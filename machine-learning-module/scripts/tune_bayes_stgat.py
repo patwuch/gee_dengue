@@ -300,7 +300,7 @@ def main():
 
     print(f"[tune_bayes] Sampler: {type(sampler).__name__}  (method={sweep_method!r})")
 
-    pruner = optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=10)
+    pruner = optuna.pruners.NopPruner()  # early stopping handles termination; pruner disabled
     study = optuna.create_study(
         study_name=study_name,
         storage=storage,

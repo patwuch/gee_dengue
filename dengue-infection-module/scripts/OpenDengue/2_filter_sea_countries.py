@@ -13,7 +13,7 @@ SEA_COUNTRIES = [
     'BRUNEI DARUSSALAM'
 ]
 
-df = pd.read_csv("/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025.csv")
+df = pd.read_csv("/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025.csv")
 filtered = df[df["adm_0_name"].isin(SEA_COUNTRIES)]
 filtered["calendar_start_date"] = pd.to_datetime(filtered["calendar_start_date"])
 
@@ -25,4 +25,4 @@ print(f"Original rows: {len(df)}")
 print(f"Filtered rows: {len(filtered)}")
 print(f"Countries found: {sorted(filtered['adm_0_name'].unique())}")
 
-filtered.to_csv("/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/interim/OpenDengue/filtered_sea_2011_2018.csv", index=False)
+filtered.to_csv("/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/interim/OpenDengue/filtered_sea_2011_2018.csv", index=False)

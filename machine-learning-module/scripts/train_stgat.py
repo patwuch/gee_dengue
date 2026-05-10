@@ -29,7 +29,7 @@ from torch_geometric.nn import GATConv
 # Model
 # ============================================================
 
-class DengueGNN(nn.Module):
+class STGATGRU(nn.Module):
     """
     GAT → GRU → Linear.
 
@@ -194,8 +194,8 @@ class DengueGNN(nn.Module):
         return self.fc_out(h_final)  # [N, out_channels]
 
 
-def build_model(cfg: dict, in_channels: int) -> DengueGNN:
-    """Construct a DengueGNN from a config dict."""
+def build_model(cfg: dict, in_channels: int) -> STGATGRU:
+    """Construct a STGATGRU from a config dict."""
     arch = cfg["model"]
     gat  = arch["gat"]
     gru  = arch["gru"]
@@ -208,7 +208,7 @@ def build_model(cfg: dict, in_channels: int) -> DengueGNN:
     else:
         out_channels = 1
 
-    return DengueGNN(
+    return STGATGRU(
         in_channels=in_channels,
         gat_hidden_dim=gat["hidden_dim"],
         gat_heads=gat["heads"],

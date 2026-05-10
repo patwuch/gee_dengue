@@ -1,7 +1,7 @@
 import geopandas as gpd 
 import pandas as pd
 
-filtered_sea = gpd.read_parquet("/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/external/geoparquet/gaul_2024_sea_filtered.parquet")
+filtered_sea = gpd.read_parquet("/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/external/geoparquet/gaul_2024_sea_filtered.parquet")
 
 # This will show you every row where 'admin' is actually null
 null_rows = filtered_sea[filtered_sea['admin'].isna()]

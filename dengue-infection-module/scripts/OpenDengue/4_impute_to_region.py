@@ -1,7 +1,7 @@
 import pandas as pd
 
-INPUT_PATH = "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/interim/OpenDengue/filtered_sea_2011_2018.csv"
-OUTPUT_PATH = "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/main/interim/OpenDengue/filtered_sea_2011_2018_SLVC_imputed.csv"
+INPUT_PATH = "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/interim/OpenDengue/filtered_sea_2011_2018.csv"
+OUTPUT_PATH = "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/interim/OpenDengue/filtered_sea_2011_2018_SLVC_imputed.csv"
 
 df = pd.read_csv(INPUT_PATH)
 
@@ -368,7 +368,7 @@ result = result[result["adm_1_name"] != "MONGAR"].copy()
 print(f"\nDropped MONGAR (stray Bhutan entry).")
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── Fill remaining gaps with NaN placeholders ─────────────────────────────────
+# ── Fill redataing gaps with NaN placeholders ─────────────────────────────────
 adm1_monthly_result = result[(result["S_res"] == "Admin1") & (result["T_res"] == "Month")].copy()
 adm1_monthly_result["YearMonth"] = adm1_monthly_result["calendar_start_date"].astype(str).str[:7]
 
