@@ -11,6 +11,8 @@ run_name: "sea_bayesian"
 arch:       stgat_bayesian
 version:    "0001"
 experiment: "sea-bayesian"
+plot_timecurves: true
+seeds: [67]
 
 
 # ---------------------------------------------------------------------------

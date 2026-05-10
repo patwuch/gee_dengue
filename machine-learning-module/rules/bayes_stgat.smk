@@ -128,7 +128,7 @@ rule eval_bayes_stgat:
     """
     Evaluate a trained BayesianSTGAT on the held-out test set.
     Runs mc_samples.test (default 50) stochastic forward passes per window.
-    Reports: predictive_mean, predictive_std (epistemic), 95% credible interval,
+    report: predictive_mean, predictive_std (epistemic), 95% credible interval,
     and standard regression metrics in both log-space and original IR space.
     """
     input:
