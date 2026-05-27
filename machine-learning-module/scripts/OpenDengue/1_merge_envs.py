@@ -2,8 +2,8 @@ import pandas as pd
 from pathlib import Path
 import json
 
-SEA_DIR = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/main/data/raw/SEA")
-OUT_DIR = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/main/data/processed")
+SEA_DIR = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/data/raw/SEA")
+OUT_DIR = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/data/interim")
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 JOIN_KEYS = ["admin", "name", "year_month"]
@@ -73,7 +73,7 @@ print(f"  MODIS_NDVI_EVI shape: {ndvi_monthly.shape}")
 # 5. MODIS_LULC (annual → monthly, histogram → % per class)
 # ---------------------------------------------------------------------------
 print("Processing MODIS_LULC...")
-lulc = pd.read_parquet(SEA_DIR / "MODIS_LULC_2011-01-01_to_2018-12-31.parquet")
+lulc = pd.read_parquet(SEA_DIR / "MODIS_LULC_2001-01-01_to_2023-12-31.parquet")
 print(f"  MODIS_LULC schema:\n  {lulc.columns.tolist()}")
 
 # Expand histogram → pct columns, using int keys from the start
@@ -91,6 +91,8 @@ hist_expanded = hist_expanded.fillna(0)
 lulc_hist = pd.concat([lulc[["admin", "name", "Date"]], hist_expanded], axis=1)
 
 lulc_monthly = expand_annual_to_monthly(lulc_hist, list(hist_expanded.columns))
+lulc_monthly = lulc_monthly[lulc_monthly["year_month"].between("2011-01-01", "2018-12-31")].reset_index(drop=True)
+
 print(f"  MODIS_LULC shape: {lulc_monthly.shape}")
 print(f"  LC classes found: {list(hist_expanded.columns)}")
 print(f"  Null check: {lulc_monthly[hist_expanded.columns].isnull().sum().sum()} nulls")

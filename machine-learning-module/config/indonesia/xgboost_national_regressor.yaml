@@ -1,0 +1,95 @@
+# ============================================================
+# Indonesia — XGBoost National Regressor
+# ------------------------------------------------------------
+# Corresponds to xgb_national_regressor_atemp.py
+# Predicts Incidence_Rate directly (regression) at national level.
+# ============================================================
+
+experiment:
+  name: national-regressor-kfold-nolulc
+
+dataset: indonesia
+scope: national
+task:   regressor
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+data:
+  processed_file: "INDONESIA/monthly_dengue_env_id_updated.csv"
+  time_column:   YearMonth
+  unit_column:   ID_2
+  region_column: Region_Group
+
+  # Regressor uses a random 80/20 split rather than a fixed hold-out year
+  split_strategy: random   # 'random' | 'year'
+  test_size:      0.2
+  test_year:      null     # only used when split_strategy = year
+
+# ---------------------------------------------------------------------------
+# Target
+# ---------------------------------------------------------------------------
+target:
+  column: Incidence_Rate
+
+# ---------------------------------------------------------------------------
+# Features
+# ---------------------------------------------------------------------------
+features:
+  env_vars:
+    - temperature_2m
+    - temperature_2m_min
+    - temperature_2m_max
+    - precipitation
+    - potential_evaporation_sum
+    - total_evaporation_sum
+    - evaporative_stress_index
+    - aridity_index
+    - temperature_2m_ANOM
+    - temperature_2m_min_ANOM
+    - temperature_2m_max_ANOM
+    - potential_evaporation_sum_ANOM
+    - total_evaporation_sum_ANOM
+    - precipitation_ANOM
+
+  climate_vars:
+    - ANOM1+2
+    - ANOM3
+    - ANOM4
+    - ANOM3.4
+    - DMI
+    - DMI_East
+
+  epidemic_vars: []   # no lag-IR for regressor (predicting IR itself)
+
+  land_use_vars:
+    - Class_70
+    - Class_60
+    - Class_50
+    - Class_40
+    - Class_95
+    - Class_30
+    - Class_20
+    - Class_10
+    - Class_90
+    - Class_80
+
+  use_landuse: false  # original script used KF (kfold, no landuse)
+  lag_steps: [1, 2, 3]
+
+# ---------------------------------------------------------------------------
+# Validation
+# ---------------------------------------------------------------------------
+validation:
+  strategy: kfold    # regressor script only supported kfold
+  kfold_n_splits: 5
+  walk_test_window: 12
+  walk_init_window: 36
+
+# ---------------------------------------------------------------------------
+# Training & tuning
+# ---------------------------------------------------------------------------
+training:
+  n_trials:     50   # original used 50 for the regressor
+  random_state: 64
+  device:       cuda

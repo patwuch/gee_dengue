@@ -2,16 +2,16 @@ import pandas as pd
 
 ENV_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/machine-learning-module/main/data/processed/SEA_env_combined_monthly_2011-2018.csv"
+    "/machine-learning-module/data/interim/SEA_env_combined_monthly_2011-2018.csv"
 )
 DENGUE_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/dengue-infection-module/main/interim/OpenDengue"
+    "/machine-learning-module/data/raw/SEA"
     "/filtered_sea_2011_2018_SLVC_imputed.csv"
 )
 OUT_PATH = (
     "/home/patwuch/Documents/projects/Chuang-Lab-TMU"
-    "/machine-learning-module/main/data/processed/SEA_dengue_env_monthly_2011-2018.csv"
+    "/machine-learning-module/data/processed/SEA_dengue_env_monthly_2011-2018.csv"
 )
 
 # ── Name mappings ─────────────────────────────────────────────────────────────
@@ -91,8 +91,8 @@ print(f"env shape       : {env.shape}")
 
 dengue = pd.read_csv(
     DENGUE_PATH,
-    parse_dates=["calendar_start_date"],
-    usecols=["adm_0_name", "adm_1_name", "calendar_start_date", "dengue_total", "S_res", "T_res"],
+    parse_dates=["Date"],
+    usecols=["adm_0_name", "adm_1_name", "Date", "dengue_total", "S_res", "T_res"],
 )
 dengue = dengue[(dengue["S_res"] == "Admin1") & (dengue["T_res"] == "Month")].copy()
 print(f"dengue shape    : {dengue.shape}")
@@ -102,7 +102,7 @@ dengue["admin_key"] = dengue["adm_0_name"].map(COUNTRY_MAP).fillna(dengue["adm_0
 dengue["shp_name"] = dengue.apply(
     lambda r: resolve_shp_name(r["admin_key"], r["adm_1_name"].upper()), axis=1
 ).str.strip()
-dengue["year_month"] = dengue["calendar_start_date"].dt.to_period("M").dt.to_timestamp()
+dengue["year_month"] = dengue["Date"].dt.to_period("M").dt.to_timestamp()
 
 dengue_agg = (
     dengue.groupby(["admin_key", "shp_name", "year_month"], as_index=False)["dengue_total"]
@@ -127,7 +127,7 @@ unmatched = sorted(merged.loc[merged["dengue_total"].isna(), "name"].unique())
 
 print(f"\nmerged shape          : {merged.shape}")
 print(f"rows with dengue_total: {matched} / {total} ({100 * matched / total:.1f}%)")
-print(f"unmatched env names   : {unmatched[:20]}")
+print(f"Regions with missing fields : {unmatched[:20]}")
 print(f"\nNA counts:\n{merged[['dengue_total', 'population_sum', 'IR']].isna().sum()}")
 print(f"\nIR summary:\n{merged['IR'].describe()}")
 
