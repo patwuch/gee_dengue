@@ -1,15 +1,10 @@
 # ============================================================
-# Indonesia — XGBoost National Classifier
-# ------------------------------------------------------------
-# Replaces the legacy 6-character config string, e.g. "WT1014":
-#   position 0 : W/K  → validation.strategy
-#   position 1 : T/F  → features.use_landuse
-#   positions 2-5 : date stamp → experiment.name (use a meaningful label instead)
+# Indonesia national classifier config for XGBoost
 # ============================================================
 
 experiment:
   name: national-classifier-walk-lulc   # unique label; used for output filenames
-                                         # (replaces the date-stamp portion of the old code)
+
 
 dataset: indonesia
 scope: national     # 'national' | 'regional'  (this file = national)

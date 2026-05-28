@@ -22,21 +22,18 @@
 *.ubj
 *.joblib
 
-# ── JSON — block all, except committed results ────────────────────────────────
+# ── JSON ──────────────────────────────────────────────────────────────────────
 *.json
-!machine-learning-module/results/
-!machine-learning-module/results/**/
-!machine-learning-module/results/**/*.json
 
 # ── Module data and outputs ───────────────────────────────────────────────────
-climate-projection-module/data/
-climate-projection-module/report/
-dengue-infection-module/data/
-dengue-infection-module/report/
+climate-projection-module/
+dengue-infection-module/
 machine-learning-module/data/
 machine-learning-module/logs/
 machine-learning-module/report/
 machine-learning-module/models/
+machine-learning-module/results/
+machine-learning-module/notebooks/
 
 # ── W&B ───────────────────────────────────────────────────────────────────────
 wandb/
@@ -54,13 +51,22 @@ venv/
 .env/
 conda/
 
+# ── Git ───────────────────────────────────────────────────────────────────────
+.git/
+.gitmodules
+.gitignore
+
 # ── IDE ───────────────────────────────────────────────────────────────────────
 .vscode/
 
 # ── Quarto ────────────────────────────────────────────────────────────────────
 /.quarto/
 **/*.quarto_ipynb
+*.qmd
 
-# ── Generated artifacts ───────────────────────────────────────────────────────
+# ── Docs and generated artifacts ─────────────────────────────────────────────
 nohup.out
 allfiles.txt
+README*
+*.md
+LICENSE
