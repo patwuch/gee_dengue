@@ -13,7 +13,9 @@ Spatiotemporally-aware ML/DL dengue fever prediction by jointly modelling Taiwan
 ## Recommended Use
 
 To invoke end-to-end workflows from data preprocessing to model evaluation, use [Snakemake](https://snakemake.readthedocs.io/en/stable/) commands.
-For environment management build [Docker](https://docs.docker.com/desktop/setup/install/windows-install/) container from __Dockerfile__ and __requirements.txt__ . 
+
+For environment management build [Docker](https://docs.docker.com/desktop/setup/install/windows-install/) container from __Dockerfile__ and __requirements.txt__ .
+ 
 Alternatively build your own [Conda](https://anaconda.org/anaconda/conda) environment with __environment.yml__ but GPU compatibility may vary.
 
 
@@ -35,3 +37,8 @@ will get fully optimized builds.
 GPU acceleration is used only for the machine-learning-module for
 - XGBoost tuning, training, and inference
 - STGNN tuning, training, inference, and xAI
+
+
+## License
+
+[GNU GPLv3](https://choosealicense.com/licenses/gpl-3.0/)

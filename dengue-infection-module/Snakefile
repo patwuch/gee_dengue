@@ -1,9 +1,5 @@
 from pathlib import Path
 
-import dask.dataframe as dd
-import pandas as pd
-
-configfile: "config.yaml"
 
 def find_git_root(start: Path) -> Path:
     for path in (start,) + tuple(start.parents):
@@ -11,42 +7,138 @@ def find_git_root(start: Path) -> Path:
             return path
     return start
 
-PROJECT_ROOT = find_git_root(Path.cwd().resolve())
-PIPELINE_ROOT = PROJECT_ROOT / "dengue-infection-module"
-RAW_DIR = PIPELINE_ROOT / Path(config["raw_dir"])
-OUTPUT_DIR = PIPELINE_ROOT / Path(config["output_dir"])
-DATASETS = {
-    name: RAW_DIR / Path(filename)
-    for name, filename in config["datasets"].items()
-}
-START_YEAR = int(config["start_year"])
-END_YEAR = int(config["end_year"])
-TARGET_REGIONS_ORDERED = tuple(config["target_who_regions"])
-TARGET_REGION_SET = set(TARGET_REGIONS_ORDERED)
-REGION_SUFFIX = "_".join(TARGET_REGIONS_ORDERED)
-SUFFIX = f"{REGION_SUFFIX}_{START_YEAR}_{END_YEAR}"
-OUT_PATTERN = f"{{dataset}}_{SUFFIX}.csv"
 
-# Rule 1: Training (Heavy Lift)
-# Snakefile
-rule train_dengue_model:
+PROJECT_ROOT   = find_git_root(Path.cwd().resolve())
+PIPELINE_ROOT  = PROJECT_ROOT / "dengue-infection-module"
+SCRIPTS        = PIPELINE_ROOT / "src" / "OpenDengue"
+
+RAW_DIR        = PIPELINE_ROOT / "data" / "raw"    / "OpenDengue"
+INTERIM_DIR    = PIPELINE_ROOT / "data" / "interim" / "OpenDengue"
+EXTERNAL_DIR   = PIPELINE_ROOT / "data" / "external"
+RESULTS_DIR    = PIPELINE_ROOT / "results"
+
+# ── Raw inputs ────────────────────────────────────────────────────────────────
+NATIONAL_CSV     = RAW_DIR / "National_extract_V1_3.csv"
+TEMPORAL_CSV     = RAW_DIR / "Temporal_extract_V1_3.csv"
+SPATIAL_CSV      = RAW_DIR / "Spatial_extract_V1_3.csv"
+WORLDPOP_PARQUET = RAW_DIR / "WorldPop_2011-01-01_to_2018-12-31.parquet"
+SHP_PATH         = EXTERNAL_DIR / "FAO_GAUL_shp"
+
+# ── Step outputs ──────────────────────────────────────────────────────────────
+STEP1_SPATIAL  = INTERIM_DIR / "spatial_SEARO_WPRO_EMRO_2000_2025.csv"
+STEP1_NATIONAL = INTERIM_DIR / "national_SEARO_WPRO_EMRO_2000_2025.csv"
+STEP1_TEMPORAL = INTERIM_DIR / "temporal_SEARO_WPRO_EMRO_2000_2025.csv"
+STEP2_OUT      = INTERIM_DIR / "filtered_sea_2011_2018.csv"
+STEP3_FLAG     = INTERIM_DIR / ".spell_check.done"
+STEP4_OUT      = INTERIM_DIR / "filtered_sea_2011_2018_SLVC_imputed.csv"
+STEP5_OUT      = EXTERNAL_DIR / "geoparquet" / "gaul_2024_sea_filtered.parquet"
+STEP6_SLICES   = RESULTS_DIR / "morans_i_slices.png"
+STEP6_SCATTER  = RESULTS_DIR / "morans_i_scatter.png"
+DECOMPOSED_DIR = EXTERNAL_DIR / "geoparquet" / "decomposed_sea_parquet"
+
+SEA_COUNTRIES = [
+    "Brunei_Darussalam",
+    "Cambodia",
+    "Indonesia",
+    "Lao_People's_Democratic_Republic",
+    "Malaysia",
+    "Myanmar",
+    "Philippines",
+    "Singapore",
+    "Thailand",
+    "Viet_Nam",
+]
+
+
+# ── Pipeline ──────────────────────────────────────────────────────────────────
+
+rule all:
     input:
-        features = "data/processed_features.pt",
-        adjacency = "data/city_graph_edges.pt"
-    output:
-        model_checkpoints = "models/st_gnn_final.pth"
-    params:
-        epochs = 100,
-        lr = 0.001,
-        hidden_dim = 64
-    script:
-        "scripts/train_stgat.py" # Snakemake calls this script
+        str(STEP6_SLICES),
+        str(STEP6_SCATTER),
+        expand(str(DECOMPOSED_DIR / "{country}.parquet"), country=SEA_COUNTRIES),
 
-# Rule 2: Interpretation (Fast/Iterative)
-rule explain_model:
-    input: 
-        model = "models/dengue_model.pth",
-        run_id = "models/run_id.txt",
-        data = "data/features.pt"
-    output: "plots/attribution_heatmap.png"
-    script: "scripts/explain.py"
+
+# Step 1 
+rule extract_regions:
+    input:
+        national = str(NATIONAL_CSV),
+        temporal = str(TEMPORAL_CSV),
+        spatial  = str(SPATIAL_CSV),
+    output:
+        spatial  = str(STEP1_SPATIAL),
+        national = str(STEP1_NATIONAL),
+        temporal = str(STEP1_TEMPORAL),
+    message:
+        "Extracting SEA countries and years 2000-2025 from OpenDengue CSVs"
+    shell:
+        "python " + str(SCRIPTS / "extract_opendengue_indopacific_regions.py")
+
+
+# Step 2
+rule filter_sea:
+    input:  str(STEP1_SPATIAL)
+    output: str(STEP2_OUT)
+    message:
+        "Filtering to SEA countries and years 2011-2018 for spatial analysis"
+    shell:
+        "python " + str(SCRIPTS / "filter_sea_countries.py")
+
+
+# Step 3 
+rule spell_check:
+    input:  str(STEP2_OUT)
+    output: touch(str(STEP3_FLAG))
+    message:
+        "Running spell check on admin-1 names in preparation for imputation"
+    shell:
+        "python " + str(SCRIPTS / "spell_check_adm_1_name.py")
+
+
+# Step 4 
+rule impute_to_region:
+    input:
+        csv  = str(STEP2_OUT),
+        flag = str(STEP3_FLAG),
+    output: str(STEP4_OUT)
+    message:
+        "Imputing spatial dengue infection data to admin-1 regions using GAUL shapefile"
+    shell:
+        "python " + str(SCRIPTS / "impute_to_region.py")
+
+
+# Step 5 
+rule filter_shp_convert_parquet:
+    input:
+        csv = str(STEP4_OUT),
+        shp = directory(str(SHP_PATH)),
+    output: str(STEP5_OUT)
+    message:
+        "Filtering GAUL shapefile to SEA countries and converting to geoparquet"
+    shell:
+        "python " + str(SCRIPTS / "filter_shp_convert_parquet.py")
+
+
+# Step 6 
+rule morans_i:
+    input:
+        csv = str(STEP4_OUT),
+        geo = str(STEP5_OUT),
+        worldpop = str(WORLDPOP_PARQUET),
+    output:
+        slices  = str(STEP6_SLICES),
+        scatter = str(STEP6_SCATTER),
+    message:
+        "Calculating Moran's I for spatial autocorrelation analysis based on IR and generating plots"
+    shell:
+        "python " + str(SCRIPTS / "morans_i.py")
+
+
+# Step 7 — split the filtered geoparquet into one file per country
+rule decompose_parquet:
+    input:  str(STEP5_OUT)
+    output: directory(str(DECOMPOSED_DIR))
+    message:
+        "Decomposing filtered SEA geoparquet for computing zonal statistics with Google Earth Engine module"
+    shell:
+        "python " + str(SCRIPTS / "decompose_parquet.py")

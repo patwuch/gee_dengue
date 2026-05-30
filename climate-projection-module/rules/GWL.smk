@@ -52,7 +52,7 @@ rule GWL_merge_across_clim_factors:
     conda:
         SSPRCP_MAIN_DIR / "envs/environment.yaml"
     script:
-        SCRIPTS_DIR / "GWL_merge_across_clim_factors.py"
+        SCRIPTS_DIR / "merge_across_clim_factors.py"
 
 
 ###############################################################################

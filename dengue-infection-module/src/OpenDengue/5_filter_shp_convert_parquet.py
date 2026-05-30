@@ -176,5 +176,5 @@ def data():
     print("Done.")
 
 
-if __name__ == "__data__":
+if __name__ == "__main__":
     data()

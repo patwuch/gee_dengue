@@ -3,7 +3,6 @@ import glob
 import pandas as pd
 import numpy as np
 from collections import defaultdict
-from snakemake.io import directory
 import os
 
 ######## RUN THIS TO CREATE DAG ########
@@ -22,14 +21,14 @@ branches = config["branches"]
 # Locate all WORK directories 
 SSPRCP_MAIN_DIR = Path(workflow.basedir).resolve()
 SSPRCP_BASE_DIR = SSPRCP_MAIN_DIR.parents[0]
-SCRIPTS_DIR = SSPRCP_MAIN_DIR / "scripts"
+SCRIPTS_DIR = SSPRCP_MAIN_DIR / "src"
 
 
 ###############################################################################
 # Directories
 ###############################################################################
 
-SSPRCP_WORK_DIR = SSPRCP_BASE_DIR / "work"
+SSPRCP_WORK_DIR = SSPRCP_MAIN_DIR
 DATA_DIR = SSPRCP_WORK_DIR / "data"
 RAW_DIR = DATA_DIR / "raw"
 INTERIM_DIR = DATA_DIR / "interim"
@@ -61,8 +60,8 @@ dirs_to_create = [
     TREAD_NETCDF_DIR,
     FIGURES_DIR
 ]
-for directory in dirs_to_create:
-    directory.mkdir(parents=True, exist_ok=True)
+for d in dirs_to_create:
+    d.mkdir(parents=True, exist_ok=True)
 
 GWL_outputs = [GWL_NETCDF_DIR / "gwl_all.nc",
         GWL_NETCDF_DIR / "gwl_all_sliced.nc",
