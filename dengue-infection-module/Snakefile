@@ -14,6 +14,7 @@ SCRIPTS        = PIPELINE_ROOT / "src" / "OpenDengue"
 
 RAW_DIR        = PIPELINE_ROOT / "data" / "raw"    / "OpenDengue"
 INTERIM_DIR    = PIPELINE_ROOT / "data" / "interim" / "OpenDengue"
+PROCESSED_DIR  = PIPELINE_ROOT / "data" / "processed" / "OpenDengue"
 EXTERNAL_DIR   = PIPELINE_ROOT / "data" / "external"
 RESULTS_DIR    = PIPELINE_ROOT / "results"
 
@@ -30,11 +31,10 @@ STEP1_NATIONAL = INTERIM_DIR / "national_SEARO_WPRO_EMRO_2000_2025.csv"
 STEP1_TEMPORAL = INTERIM_DIR / "temporal_SEARO_WPRO_EMRO_2000_2025.csv"
 STEP2_OUT      = INTERIM_DIR / "filtered_sea_2011_2018.csv"
 STEP3_FLAG     = INTERIM_DIR / ".spell_check.done"
-STEP4_OUT      = INTERIM_DIR / "filtered_sea_2011_2018_SLVC_imputed.csv"
-STEP5_OUT      = EXTERNAL_DIR / "geoparquet" / "gaul_2024_sea_filtered.parquet"
+STEP4_OUT      = PROCESSED_DIR / "filtered_sea_2011_2018_SLVC_imputed.csv"
+STEP5_OUT      = PROCESSED_DIR / "geoparquet" / "gaul_2024_sea_filtered.parquet"
 STEP6_SLICES   = RESULTS_DIR / "morans_i_slices.png"
 STEP6_SCATTER  = RESULTS_DIR / "morans_i_scatter.png"
-DECOMPOSED_DIR = EXTERNAL_DIR / "geoparquet" / "decomposed_sea_parquet"
 
 SEA_COUNTRIES = [
     "Brunei_Darussalam",
@@ -54,9 +54,17 @@ SEA_COUNTRIES = [
 
 rule all:
     input:
+        str(STEP1_SPATIAL),
+        str(STEP1_NATIONAL),
+        str(STEP1_TEMPORAL),
+        str(STEP2_OUT),
+        str(STEP3_FLAG),
+        str(STEP4_OUT),
+        str(STEP4_OUT),
+        str(STEP5_OUT),
         str(STEP6_SLICES),
         str(STEP6_SCATTER),
-        expand(str(DECOMPOSED_DIR / "{country}.parquet"), country=SEA_COUNTRIES),
+        
 
 
 # Step 1 
@@ -103,21 +111,21 @@ rule impute_to_region:
     output: str(STEP4_OUT)
     message:
         "Imputing spatial dengue infection data to admin-1 regions using GAUL shapefile"
-    shell:
-        "python " + str(SCRIPTS / "impute_to_region.py")
+    script:
+        "src/OpenDengue/impute_to_region.py"
 
 
 # Step 5 
 rule filter_shp_convert_parquet:
     input:
         csv = str(STEP4_OUT),
-        shp = directory(str(SHP_PATH)),
+        shp = str(SHP_PATH)
     output: str(STEP5_OUT)
+    threads: workflow.cores
     message:
         "Filtering GAUL shapefile to SEA countries and converting to geoparquet"
-    shell:
-        "python " + str(SCRIPTS / "filter_shp_convert_parquet.py")
-
+    script:
+        "src/OpenDengue/filter_shp_convert_parquet.py"
 
 # Step 6 
 rule morans_i:
@@ -134,11 +142,11 @@ rule morans_i:
         "python " + str(SCRIPTS / "morans_i.py")
 
 
-# Step 7 — split the filtered geoparquet into one file per country
-rule decompose_parquet:
-    input:  str(STEP5_OUT)
-    output: directory(str(DECOMPOSED_DIR))
-    message:
-        "Decomposing filtered SEA geoparquet for computing zonal statistics with Google Earth Engine module"
-    shell:
-        "python " + str(SCRIPTS / "decompose_parquet.py")
+# # Step 7 — split the filtered geoparquet into one file per country
+# rule decompose_parquet:
+#     input:  str(STEP5_OUT)
+#     output: directory(str(DECOMPOSED_DIR))
+#     message:
+#         "Decomposing filtered SEA geoparquet for computing zonal statistics with Google Earth Engine module"
+#     shell:
+#         "python " + str(SCRIPTS / "decompose_parquet.py")

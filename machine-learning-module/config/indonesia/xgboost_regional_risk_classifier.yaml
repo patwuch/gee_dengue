@@ -1,0 +1,109 @@
+# ============================================================
+# Indonesia — XGBoost Regional Classifier
+# Invoke: snakemake <target> --configfile config/IND_xgboost_regional_classifier.yaml
+# ============================================================
+
+name:    regional-classifier-walk-lulc
+dataset: indonesia
+model:   xgboost
+task:    classifier
+scope:   regional
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+data:
+  path:          data/processed/INDONESIA/monthly_dengue_env_id_class_log.csv
+  time_column:   YearMonth
+  unit_column:   ID_2
+  region_column: Region_Group
+  split:
+    strategy:  year
+    test_year: 2023
+
+# ---------------------------------------------------------------------------
+# Target
+# ---------------------------------------------------------------------------
+target:
+  column: Risk_Category
+  labels:
+    Zero: 0
+    Low:  1
+    High: 2
+
+# ---------------------------------------------------------------------------
+# Preprocessing
+# ---------------------------------------------------------------------------
+preprocessing:
+  log_transform:  false
+  add_lag_target: false
+  lag_steps:      [1, 2, 3]
+
+# ---------------------------------------------------------------------------
+# Features
+# ---------------------------------------------------------------------------
+features:
+  use_landuse: true
+  env_vars:
+    - temperature_2m
+    - temperature_2m_min
+    - temperature_2m_max
+    - precipitation
+    - potential_evaporation_sum
+    - total_evaporation_sum
+    - evaporative_stress_index
+    - aridity_index
+    - temperature_2m_ANOM
+    - temperature_2m_min_ANOM
+    - temperature_2m_max_ANOM
+    - potential_evaporation_sum_ANOM
+    - total_evaporation_sum_ANOM
+    - precipitation_ANOM
+  climate_vars:
+    - ANOM1+2
+    - ANOM3
+    - ANOM4
+    - ANOM3.4
+    - DMI
+    - DMI_East
+  epidemic_vars:
+    - Incidence_Rate_lag1
+  land_use_vars:
+    - Class_70
+    - Class_60
+    - Class_50
+    - Class_40
+    - Class_95
+    - Class_30
+    - Class_20
+    - Class_10
+    - Class_90
+    - Class_80
+
+# ---------------------------------------------------------------------------
+# Validation (CV strategy for tuning)
+# ---------------------------------------------------------------------------
+validation:
+  strategy:         walk
+  walk_test_window: 12
+  walk_init_window: 36
+  kfold_n_splits:   5
+
+# ---------------------------------------------------------------------------
+# Tuning
+# ---------------------------------------------------------------------------
+tune:
+  n_trials:     40
+  random_state: 64
+  device:       cuda
+  search_space:
+    xgboost:
+      learning_rate:    {type: log_uniform, low: 1.0e-4, high: 0.1}
+      max_depth:        {type: int,         low: 2,      high: 10}
+      n_estimators:     {type: int,         low: 50,     high: 1000}
+      subsample:        {type: float,       low: 0.5,    high: 1.0}
+      colsample_bytree: {type: float,       low: 0.5,    high: 1.0}
+      min_child_weight: {type: int,         low: 5,      high: 50}
+      gamma:            {type: log_uniform, low: 1.0e-2, high: 10.0}
+      reg_alpha:        {type: log_uniform, low: 1.0e-2, high: 10.0}
+      reg_lambda:       {type: log_uniform, low: 0.1,    high: 100.0}

@@ -37,10 +37,8 @@ machine-learning-module/data/
 machine-learning-module/logs/
 machine-learning-module/report/
 machine-learning-module/models/
+machine-learning-module/wandb/
 
-# ── W&B ───────────────────────────────────────────────────────────────────────
-wandb/
-**/wandb/
 
 # ── Snakemake ─────────────────────────────────────────────────────────────────
 **/.snakemake/

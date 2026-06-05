@@ -1,0 +1,33 @@
+RAW_OPENDENGUE_DIR    = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/data/raw/OpenDengue")
+INTERIM_DIR    = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/data/interim")
+ERA5_PATH      = RAW_OPENDENGUE_DIR / "ERA5_LAND_2011-01-01_to_2018-12-31.parquet"
+CHIRPS_PATH    = RAW_OPENDENGUE_DIR / "CHIRPS_2011-01-01_to_2018-12-31.parquet"
+MODIS_LST_PATH   = RAW_OPENDENGUE_DIR / "MODIS_LST_2011-01-01_to_2018-12-31.parquet"
+MODIS_LULC_PATH  = RAW_OPENDENGUE_DIR / "MODIS_LULC_2001-01-01_to_2023-12-31.parquet"
+MODIS_NDVI_EVI_PATH = RAW_OPENDENGUE_DIR / "MODIS_NDVI_EVI_2011-01-01_to_2018-12-31.parquet"
+WORLDPOP_PATH   = RAW_OPENDENGUE_DIR / "WorldPop_2011-01-01_to_2018-12-31.parquet"
+
+RAW_INFECTON_DATA = RAW_OPENDENGUE_DIR / "filtered_sea_2011_2018_SLVC_imputed.csv"
+MERGED_DENGUE_ENV_DATA = INTERIM_DIR / "SEA_dengue_env_monthly_2011-2018.csv"
+
+rule merge_env_infection:
+    message:
+        "Merging environmental and infection data..."
+    input:
+        dengue = RAW_INFECTON_DATA,
+        era5   = ERA5_PATH,
+        chirps  = CHIRPS_PATH,
+        modis_lst = MODIS_LST_PATH,
+        modis_lulc = MODIS_LULC_PATH,
+        modis_veg  = MODIS_NDVI_EVI_PATH,
+        worldpop   = WORLDPOP_PATH,
+    output:
+        merged = MERGED_DENGUE_ENV_DATA,
+    params:
+        cfg = lambda wc: workflow.configfiles[-1],
+    script:
+        "src/OpenDengue/merge_data.py"
+
+include: "rules/XGBoost.smk"
+include: "rules/RandomForest.smk"
+include: "rules/STGNN.smk"

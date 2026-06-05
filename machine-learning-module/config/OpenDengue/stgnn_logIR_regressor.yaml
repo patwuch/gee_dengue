@@ -1,0 +1,103 @@
+# ============================================================
+# OpenDengue SEA — STGNN Regressor (multi-country)
+# Invoke: snakemake results/STGNN/{name}/metrics.json \
+#             --configfile config/OpenDengue_STGNN_regressor.yaml \
+#             --cores 4 --resources gpu=1
+# ============================================================
+
+name:    baseline_logIR
+dataset: opendengue
+model:   stgnn
+task:    regressor
+scope:   multi-country
+wandb_project: stgnn-dengue
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+data:
+  path:          data/interim/SEA_dengue_env_monthly_2011-2018.csv
+  time_column:   year_month
+  unit_column:   adm_1_name
+  region_column: adm_0_name
+  split:
+    strategy:     month
+    test_months:  14
+    val_fraction: 0.2
+
+# ---------------------------------------------------------------------------
+# Target
+# ---------------------------------------------------------------------------
+target_column: IR
+
+# ---------------------------------------------------------------------------
+# Preprocessing
+# ---------------------------------------------------------------------------
+preprocessing:
+  log_transform:  true    # IR
+  deseasonalise:  true
+  add_lag_target: false # IN STGNN WE USE WINDOW SIZE INSTEAD OF LAGS
+  lag_steps:      []   # IN STGNN WE USE WINDOW SIZE INSTEAD OF LAGS
+
+# ---------------------------------------------------------------------------
+# Features
+# ---------------------------------------------------------------------------
+features:
+  use_landuse: true
+  quality_vars: ['data_quality']
+  env_vars:
+    - precipitation_sum
+    - temperature_2m_mean
+    - temperature_2m_max_mean
+    - temperature_2m_min_mean
+    - potential_evaporation_sum_mean
+    - total_evaporation_sum_mean
+    - evaporation_from_bare_soil_sum_mean
+    - evaporation_from_open_water_surfaces_excluding_oceans_sum_mean
+    - evaporation_from_the_top_of_canopy_sum_mean
+    - evaporation_from_vegetation_transpiration_sum_mean
+    - LST_Day_1km_mean
+    - LST_Night_1km_mean
+    - NDVI_mean
+    - EVI_mean
+  climate_vars:  []
+  epidemic_vars: []
+  land_use_vars:
+    - LC_Type1_pct_class1
+    - LC_Type1_pct_class2
+    - LC_Type1_pct_class3
+    - LC_Type1_pct_class4
+    - LC_Type1_pct_class5
+    - LC_Type1_pct_class6
+    - LC_Type1_pct_class7
+    - LC_Type1_pct_class8
+    - LC_Type1_pct_class9
+    - LC_Type1_pct_class10
+    - LC_Type1_pct_class11
+    - LC_Type1_pct_class12
+    - LC_Type1_pct_class13
+    - LC_Type1_pct_class14
+    - LC_Type1_pct_class15
+    - LC_Type1_pct_class16
+    - LC_Type1_pct_class17
+
+# ---------------------------------------------------------------------------
+# Tuning
+# ---------------------------------------------------------------------------
+tune:
+  n_trials:     40
+  metric:       masked_huber_loss
+  # random_state: 64
+  device:       cuda
+  search_space:
+    stgnn:
+      learning_rate:   {type: log_uniform, low: 1.0e-5, high: 1.0e-2}
+      # batch_size:      {type: categorical, choices: [16, 32, 64]}
+      num_epochs:      {type: categorical, choices: [50, 100, 200]}
+      window_size:     {type: categorical, choices: [1, 3, 6, 12]}
+      gat1_hidden:     {type: categorical, choices: [16, 32, 64]}
+      gat1_heads:      {type: categorical, choices: [2, 4, 8]}
+      gat2_hidden:     {type: categorical, choices: [16, 32, 64]}
+      gat2_heads:      {type: categorical, choices: [2, 4, 8]}
+      mlp_layers:      {type: categorical, choices: [1, 2, 3]}
+      dropout:         {type: categorical, choices: [0.0, 0.2, 0.4]}

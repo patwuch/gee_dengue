@@ -3,17 +3,15 @@ scripts/OpenDengue/XGBoost/utils.py
 --------------------------------------
 Shared helpers for the OpenDengue XGBoost (and Random Forest) experiments.
 
-Public surface mirrors scripts/Indonesia/XGBoost/utils.py so both datasets
-are driven by the same tune / train / eval pattern with only the config YAML
-differing:
-
-    load_data(cfg, run_cfg=None)        → pd.DataFrame
-    build_feature_columns(df, cfg)      → list[str]
-    split_train_test(df, cols, cfg, region=None)
-                                        → (df_train_val, df_test)
-    calculate_sample_weights(y)         → np.ndarray
-    resolve_paths(cfg)                  → dict[str, Path]
-    validation_strategy(cfg)            → 'walk' | 'kfold'
+Supports both the legacy flat config schema and the current nested schema:
+  - data_path (flat)  →  data.path (nested)
+  - env_vars (flat)   →  features.env_vars (nested)
+  - lulc_vars (flat)  →  features.land_use_vars (nested)
+  - use_landuse       →  features.use_landuse
+  - lag_steps         →  preprocessing.lag_steps
+  - add_lag_IR        →  preprocessing.add_lag_target
+  - time_column       →  data.time_column
+  - unit_column       →  data.unit_column
 """
 
 from __future__ import annotations
@@ -35,6 +33,60 @@ def load_config(path: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Schema helpers (support flat legacy keys and new nested keys)
+# ---------------------------------------------------------------------------
+
+def _data_path(cfg: dict, run_cfg: dict | None = None) -> str:
+    run_cfg = run_cfg or {}
+    candidate = run_cfg.get("data") or cfg.get("data")
+    if isinstance(candidate, dict):
+        return candidate.get("path") or cfg.get("data_path", "")
+    return candidate or cfg.get("data_path", "")
+
+
+def _time_col(cfg: dict) -> str:
+    return cfg.get("time_column") or cfg.get("data", {}).get("time_column", "Date")
+
+
+def _unit_col(cfg: dict) -> str:
+    return cfg.get("unit_column") or cfg.get("data", {}).get("unit_column", "name")
+
+
+def _admin_col(cfg: dict) -> str:
+    return cfg.get("admin_column") or cfg.get("data", {}).get("admin_column", "admin")
+
+
+def _target_col(cfg: dict) -> str:
+    return cfg.get("target_column") or cfg.get("target", {}).get("column", "IR")
+
+
+def _env_vars(cfg: dict) -> list[str]:
+    return cfg.get("env_vars") or cfg.get("features", {}).get("env_vars", [])
+
+
+def _land_use_vars(cfg: dict) -> list[str]:
+    return cfg.get("lulc_vars") or cfg.get("features", {}).get("land_use_vars", [])
+
+
+def _use_landuse(cfg: dict) -> bool:
+    return cfg.get("use_landuse", cfg.get("features", {}).get("use_landuse", False))
+
+
+def _lag_steps(cfg: dict) -> list[int]:
+    return cfg.get("lag_steps") or cfg.get("preprocessing", {}).get("lag_steps", [1, 2, 3])
+
+
+def _add_lag_target(cfg: dict) -> bool:
+    return (cfg.get("add_lag_IR", False)
+            or cfg.get("preprocessing", {}).get("add_lag_target", False))
+
+
+def _experiment_name(cfg: dict) -> str:
+    return (cfg.get("name")
+            or cfg.get("experiment", {}).get("name", "opendengue"))
+
+
+# ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 
@@ -46,10 +98,6 @@ def _find_project_root(start: Path, marker: str = ".git") -> Path:
 
 
 def resolve_paths(cfg: dict) -> dict[str, Path]:
-    """
-    Return canonical project paths.  cfg may optionally contain a 'paths'
-    block to override; otherwise paths are derived from the git root.
-    """
     root    = _find_project_root(Path(__file__))
     reports = root / "reports"
     defaults = {
@@ -68,37 +116,28 @@ def resolve_paths(cfg: dict) -> dict[str, Path]:
 # ---------------------------------------------------------------------------
 
 def load_data(cfg: dict, run_cfg: dict | None = None) -> pd.DataFrame:
-    """
-    Load the OpenDengue CSV and prepare lag features.
-
-    Supports both standalone mode (cfg contains data_path) and
-    Snakemake mode (run_cfg may override the path).
-    """
-    run_cfg  = run_cfg or {}
-    data_path = run_cfg.get("data") or cfg.get("data_path")
-    if data_path is None:
-        raise ValueError("data_path not set in config or run_cfg")
+    run_cfg   = run_cfg or {}
+    data_path = _data_path(cfg, run_cfg)
+    if not data_path:
+        raise ValueError("data path not set in config (data.path or data_path)")
 
     df = pd.read_csv(data_path)
 
-    time_col = cfg.get("time_column", "Date")
-    unit_col = cfg.get("unit_column", "name")
+    time_col = _time_col(cfg)
+    unit_col = _unit_col(cfg)
     df[time_col] = pd.to_datetime(df[time_col])
     df = df.sort_values([unit_col, time_col]).reset_index(drop=True)
 
-    # Lag-1 target (epidemic feature) — optional
-    target_col = cfg.get("target_column") or cfg.get("target", {}).get("column", "IR")
-    if cfg.get("add_lag_IR", False):
+    target_col = _target_col(cfg)
+    if _add_lag_target(cfg):
         df[f"{target_col}_lag1"] = df.groupby(unit_col)[target_col].shift(1)
 
-    # Lagged env features
-    lag_steps = cfg.get("lag_steps", [1, 2, 3])
-    for var in cfg.get("env_vars", []):
+    lag_steps = _lag_steps(cfg)
+    for var in _env_vars(cfg):
         if var in df.columns:
             for lag in lag_steps:
                 df[f"{var}_lag{lag}"] = df.groupby(unit_col)[var].shift(lag)
 
-    # Encode classifier target if label map is present
     label_map = cfg.get("target", {}).get("labels")
     if label_map:
         df[target_col] = df[target_col].replace(label_map).infer_objects(copy=False)
@@ -111,44 +150,36 @@ def load_data(cfg: dict, run_cfg: dict | None = None) -> pd.DataFrame:
 # ---------------------------------------------------------------------------
 
 def build_feature_columns(df: pd.DataFrame, cfg: dict) -> list[str]:
-    """
-    Build the ordered feature column list from config.
-    Mirrors Indonesia utils.build_feature_columns.
-    """
-    use_landuse = cfg.get("use_landuse", False)
-    lag_steps   = cfg.get("lag_steps", [1, 2, 3])
-    target_col  = cfg.get("target_column") or cfg.get("target", {}).get("column", "IR")
-    time_col    = cfg.get("time_column", "Date")
-    unit_col    = cfg.get("unit_column", "name")
-    admin_col   = cfg.get("admin_column", "admin")
-
-    excluded = {target_col, time_col, unit_col, admin_col}
+    use_landuse = _use_landuse(cfg)
+    lag_steps   = _lag_steps(cfg)
+    target_col  = _target_col(cfg)
+    time_col    = _time_col(cfg)
+    unit_col    = _unit_col(cfg)
+    admin_col   = _admin_col(cfg)
+    excluded    = {target_col, time_col, unit_col, admin_col}
 
     cols: list[str] = []
 
-    for var in cfg.get("env_vars", []):
+    for var in _env_vars(cfg):
         if var in df.columns:
             cols.append(var)
 
     if use_landuse:
-        for var in cfg.get("lulc_vars", []):
+        for var in _land_use_vars(cfg):
             if var in df.columns:
                 cols.append(var)
 
-    # Lagged env vars
-    for var in cfg.get("env_vars", []):
+    for var in _env_vars(cfg):
         for lag in lag_steps:
             lagged = f"{var}_lag{lag}"
             if lagged in df.columns:
                 cols.append(lagged)
 
-    # Lag-1 IR if added
-    if cfg.get("add_lag_IR", False):
-        lag_ir = f"{target_col}_lag1"
-        if lag_ir in df.columns:
-            cols.append(lag_ir)
+    if _add_lag_target(cfg):
+        lag_col = f"{target_col}_lag1"
+        if lag_col in df.columns:
+            cols.append(lag_col)
 
-    # Deduplicate, drop excluded
     seen: set[str] = set()
     result: list[str] = []
     for c in cols:
@@ -168,15 +199,9 @@ def split_train_test(
     cfg: dict,
     region: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """
-    Return (df_train_val, df_test).
-
-    Temporal split: last `test_months` months → test;
-    remainder → train/val.  Region filtering optional.
-    """
-    time_col   = cfg.get("time_column", "Date")
-    unit_col   = cfg.get("unit_column", "name")
-    target_col = cfg.get("target_column") or cfg.get("target", {}).get("column", "IR")
+    time_col   = _time_col(cfg)
+    unit_col   = _unit_col(cfg)
+    target_col = _target_col(cfg)
 
     if region is not None:
         df = df[df[unit_col] == region].copy()
@@ -184,13 +209,11 @@ def split_train_test(
     df = df.dropna(subset=variable_columns + [target_col])
     df = df.sort_values(time_col).reset_index(drop=True)
 
-    test_months = cfg.get("split", {}).get("test_months", 12)
+    test_months  = cfg.get("split", {}).get("test_months", 12)
     unique_dates = sorted(df[time_col].unique())
     cutoff       = unique_dates[-test_months] if len(unique_dates) > test_months else unique_dates[0]
 
-    df_train_val = df[df[time_col] < cutoff].copy()
-    df_test      = df[df[time_col] >= cutoff].copy()
-    return df_train_val, df_test
+    return df[df[time_col] < cutoff].copy(), df[df[time_col] >= cutoff].copy()
 
 
 # ---------------------------------------------------------------------------
@@ -199,9 +222,9 @@ def split_train_test(
 
 def calculate_sample_weights(y: np.ndarray) -> np.ndarray:
     unique_classes, counts = np.unique(y, return_counts=True)
-    total  = len(y)
-    n_cls  = len(unique_classes)
-    wmap   = {cls: total / (n_cls * cnt) for cls, cnt in zip(unique_classes, counts)}
+    total = len(y)
+    n_cls = len(unique_classes)
+    wmap  = {cls: total / (n_cls * cnt) for cls, cnt in zip(unique_classes, counts)}
     return np.array([wmap[cls] for cls in y])
 
 
@@ -209,9 +232,8 @@ def calculate_sample_weights(y: np.ndarray) -> np.ndarray:
 # Validation strategy
 # ---------------------------------------------------------------------------
 
-def validation_strategy(run_cfg: dict) -> str:
-    """Return 'walk' or 'kfold' from run_cfg (Snakemake) or cfg (standalone)."""
-    strat = run_cfg.get("validation", run_cfg.get("strategy", "walk"))
+def validation_strategy(cfg: dict) -> str:
+    strat = cfg.get("validation", cfg.get("strategy", "walk"))
     if isinstance(strat, dict):
         strat = strat.get("strategy", "walk")
     return strat
