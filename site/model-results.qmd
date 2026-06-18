@@ -1,0 +1,69 @@
+---
+title: "Model Results"
+subtitle: "STGNN performance on held-out test data (2011–2018)"
+---
+
+```{python}
+#| echo: false
+#| output: false
+import json, pathlib
+
+results_dir = pathlib.Path("../machine-learning-module/results/STGNN/baseline_logIR")
+metrics = json.loads((results_dir / "metrics.json").read_text())
+```
+
+## Test Set Metrics
+
+These metrics were computed on the 14 held-out test months from the 2011–2018 OpenDengue SEA dataset.
+
+| Metric | Value |
+|---|---|
+| Huber loss | `{python} f"{metrics['test_huber']:.4f}"` |
+| MAE (log IR) | `{python} f"{metrics['test_mae']:.4f}"` |
+| MSE (log IR) | `{python} f"{metrics['test_mse']:.4f}"` |
+| RMSE (log IR) | `{python} f"{metrics['test_rmse']:.4f}"` |
+| Best val loss | `{python} f"{metrics['best_val_loss']:.4f}"` |
+
+## Training Curves
+
+```{python}
+#| echo: false
+#| label: fig-loss-curves
+#| fig-cap: "Training and validation Huber loss per epoch."
+from IPython.display import Image
+Image(filename=str(results_dir / "loss_curves.png"), width=700)
+```
+
+## Predictions vs Actuals
+
+```{python}
+#| echo: false
+#| label: fig-predictions
+#| fig-cap: "Model predictions against actual log incidence rates on the test set."
+Image(filename=str(results_dir / "predictions.png"), width=700)
+```
+
+## Scatter Plot
+
+```{python}
+#| echo: false
+#| label: fig-scatter
+#| fig-cap: "Scatter of predicted vs actual log IR. Points coloured by country."
+Image(filename=str(results_dir / "scatter.png"), width=700)
+```
+
+## Architecture
+
+The model is a **Spatio-Temporal Graph Attention Network with GRU** (STGATGRU):
+
+- **GAT layer 1:** Spatial message passing over the admin-1 adjacency graph
+- **MLP:** Node-wise feature transformation
+- **GAT layer 2:** Second spatial aggregation pass
+- **GRU:** Temporal sequence modelling over the sliding window
+- **Linear head:** Single-step log IR prediction
+
+Hyperparameters were tuned with 40 Optuna trials using masked Huber loss (to handle missing incidence data) on a validation set of 20% of training months.
+
+## Bias Correction Note
+
+When running inference on current data (post-2018), a climate delta correction is applied before features are passed to the model. The delta is computed as the difference between the AR6 SSP2-4.5 projected monthly climatology for the current year and the 2011–2018 training period climatology. This shifts current observations back into the model's training feature distribution. See [site/scripts/apply_climate_delta.py](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/blob/main/site/scripts/apply_climate_delta.py) for implementation.

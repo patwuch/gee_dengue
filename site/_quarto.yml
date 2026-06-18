@@ -1,0 +1,49 @@
+project:
+  type: website
+  output-dir: ../docs
+
+website:
+  title: "Dengue Fever EWS — Chuang Lab, TMU"
+  description: "Spatiotemporally-aware dengue fever early warning system for Southeast Asia"
+  site-url: "https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS"
+  repo-url: "https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS"
+  repo-actions: [issue]
+
+  navbar:
+    background: dark
+    foreground: light
+    logo: assets/logo.png
+    logo-alt: "Chuang Lab"
+    left:
+      - href: index.qmd
+        text: Home
+      - href: model-results.qmd
+        text: Model Results
+      - href: climate-data.qmd
+        text: Climate Data
+      - href: dengue-timelines.qmd
+        text: Dengue Timelines
+      - href: about.qmd
+        text: About
+    right:
+      - icon: github
+        href: https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS
+
+  page-footer:
+    center: |
+      Updated monthly via GitHub Actions &nbsp;·&nbsp;
+      [Chuang Lab, Taipei Medical University](https://www.tmu.edu.tw)
+    background: dark
+
+  sidebar: false
+
+format:
+  html:
+    theme:
+      light: flatly
+      dark: darkly
+    toc: true
+    code-fold: true
+    code-tools: true
+    fig-width: 9
+    fig-height: 5

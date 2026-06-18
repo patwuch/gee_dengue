@@ -8,27 +8,9 @@ class STGATGRU(nn.Module):
     """
     Spatio-Temporal Graph Attention Network with GRU.
 
-    Changes from original:
-    - Tightly coupled: GRU hidden state H is concatenated to node features
-      before GAT at each timestep, so spatial attention is temporally aware.
-    - Explicit missingness flag: a binary feature appended to node features
-      indicating which nodes have missing values at each timestep. This lets
-      the model learn to distinguish zero from missing rather than treating
-      them identically.
-
-    Args:
-        in_channels:    Number of input node features (excluding missingness flag).
-        gat1_hidden:    Hidden units per head in first GAT layer.
-        gat1_heads:     Number of attention heads in first GAT layer.
-        mlp_hidden:     Hidden units in MLP between GAT layers.
-        mlp_layers:     Number of MLP layers.
-        gat2_hidden:    Hidden units per head in second GAT layer.
-        gat2_heads:     Number of attention heads in second GAT layer (concat=False).
-        gru_hidden:     GRU hidden state size.
-        pred_horizon:   Number of future timesteps to predict.
-        dropout:        Dropout rate.
+    Spatial (GAT) and temporal (GRU) steps are both sequential over B and T
+    to bound peak GPU memory on low-VRAM devices.
     """
-
     def __init__(
         self,
         in_channels,
@@ -41,9 +23,7 @@ class STGATGRU(nn.Module):
     ):
         super(STGATGRU, self).__init__()
 
-        # +1 for the explicit missingness flag appended to node features
-        # +gru_hidden for the hidden state concatenated at each timestep
-        gat1_in = in_channels + 1 + gru_hidden
+        gat1_in = in_channels + 1 
 
         self.gat1 = GATConv(
             gat1_in,
@@ -64,11 +44,13 @@ class STGATGRU(nn.Module):
             heads=gat2_heads,
             concat=False
         )
-        self.gru = nn.GRUCell(gat2_hidden, gru_hidden)
+        
+        self.gru = nn.GRU(gat2_hidden, gru_hidden, batch_first=True)
+
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(gru_hidden, pred_horizon)
-
         self.gru_hidden = gru_hidden
+        self._gat_out = gat2_hidden
 
     def _build_mlp(self, input_size, hidden_size, num_layers, dropout):
         layers = []
@@ -79,56 +61,62 @@ class STGATGRU(nn.Module):
             layers.append(nn.Dropout(dropout))
         return nn.Sequential(*layers)
 
-    def forward(self, x, edge_index, mask=None, H=None):
+    def forward(self, x, edge_index, mask=None):
         """
         Args:
-            x:          Node features. Shape: (num_nodes, in_channels).
-            edge_index: Graph connectivity. Shape: (2, num_edges).
-            mask:       Binary missingness flag. Shape: (num_nodes, 1).
-                        1 = valid, 0 = missing. If None, all nodes assumed valid.
-            H:          GRU hidden state from previous timestep.
-                        Shape: (num_nodes, gru_hidden). If None, initialised to zeros.
-
+            x:          Node features sequence. Shape: (B, T, N, F)
+            edge_index: Graph connectivity. Shape: (2, E)
+            mask:       Binary missingness flag. Shape: (B, T, N) or (B, N)
         Returns:
-            out:        Predictions. Shape: (num_nodes, pred_horizon).
-            H:          Updated GRU hidden state. Shape: (num_nodes, gru_hidden).
+            out:        Predictions shape: (B, N, pred_horizon)
         """
-        num_nodes = x.size(0)
+        B, T, N, F_dim = x.size()
 
-        # Initialise hidden state if not provided
-        if H is None:
-            H = torch.zeros(num_nodes, self.gru_hidden, device=x.device)
-
-        # --- Missingness flag ---
-        # Append explicit binary flag so model distinguishes zero from missing.
-        # 1 = observed, 0 = missing.
+        # --- Handle missingness masks ---
         if mask is None:
-            mask = torch.ones(num_nodes, 1, device=x.device)
+            mask = torch.ones(B, T, N, 1, device=x.device)
         else:
             mask = mask.float()
+            if mask.dim() == 2:    # (B, N) → (B, 1, N, 1)
+                mask = mask.unsqueeze(1).unsqueeze(-1)
+            elif mask.dim() == 3:  # (B, T, N) → (B, T, N, 1)
+                mask = mask.unsqueeze(-1)
 
-        # Zero out features of missing nodes so they don't inject corrupted
-        # signal into the spatial mixing, while the flag still tells the model
-        # why those features are zero.
-        x = x * mask                          # (num_nodes, in_channels)
-        x = torch.cat([x, mask], dim=-1)      # (num_nodes, in_channels + 1)
+        # Zero out missing nodes, append mask as extra feature: (B, T, N, F+1)
+        x = x * mask
+        x = torch.cat([x, mask.expand(B, T, N, 1)], dim=-1)
 
-        # --- Tight coupling: inject H before spatial attention ---
-        # GAT now sees both current (masked) features and accumulated temporal
-        # context, so attention scores reflect what has been happening over time.
-        x = torch.cat([x, H], dim=-1)         # (num_nodes, in_channels + 1 + gru_hidden)
+        # ── 2. Spatial layers — B and T sequentially ─────────────────────────
+        # Loop over each sample independently so each GAT call sees N nodes,
+        # not B×N. The shared edge_index is used directly — no disjoint-graph
+        # construction needed. Force fp32: fp16 scatter/gather is unreliable
+        # on sm<70 and some PyG builds.
+        x_seq = torch.empty(B, N, T, self._gat_out, dtype=torch.float32, device=x.device)
+        for b in range(B):
+            for t in range(T):
+                x_bt = x[b, t].float()                    # (N, F+1)
+                with torch.autocast("cuda", enabled=False):
+                    h = self.gat1(x_bt, edge_index)
+                    h = F.elu(h)
+                    h = self.mlp(h)
+                    h = self.gat2(h, edge_index)           # (N, gat2_hidden)
+                x_seq[b, :, t, :] = h
 
-        # --- Spatial attention stack ---
-        x = self.gat1(x, edge_index)
-        x = F.elu(x)
-        x = self.mlp(x)
-        x = self.gat2(x, edge_index)
-        x = self.dropout(x)
+        # ── 3. Reshape for GRU: (B*N, T, gat2_hidden) ────────────────────────
+        # (B, N, T, F) is already C-contiguous so reshape(B*N, T, F) is a view.
+        x_seq = self.dropout(x_seq)
+        x_seq = x_seq.reshape(B * N, T, -1)              # (B*N, T, gat2_hidden)
 
-        # --- Temporal update ---
-        H = self.gru(x, H)
+        # ── 4. Temporal layer & output ────────────────────────────────────────
+        # Step the GRU one timestep at a time so we never materialise the full
+        # (B*N, T, gru_hidden) output — only the rolling hidden state survives.
+        h = torch.zeros(1, B * N, self.gru_hidden, device=x_seq.device, dtype=x_seq.dtype)
+        for t in range(T):
+            _, h = self.gru(x_seq[:, t:t+1, :], h)
+        del x_seq
+        final_state = h.squeeze(0)         # (B*N, gru_hidden)
 
-        # --- Prediction ---
-        out = self.linear(H)
+        out = self.linear(final_state)     # (B*N, pred_horizon)
+        out = out.view(B, N, -1)           # (B, N, pred_horizon)
 
-        return out, H
+        return out

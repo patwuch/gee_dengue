@@ -21,6 +21,7 @@
 *.pkl
 *.ubj
 *.joblib
+*.npz
 
 # ── JSON — block all, except committed results ────────────────────────────────
 *.json

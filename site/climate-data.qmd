@@ -1,0 +1,105 @@
+---
+title: "Climate Data"
+subtitle: "Global Warming Level projections and monthly zonal statistics"
+---
+
+```{python}
+#| echo: false
+#| output: false
+import json, pathlib
+import pandas as pd
+
+data_dir = pathlib.Path("data")
+stats_path = data_dir / "latest_zonal_stats.json"
+deltas_path = data_dir / "climate_deltas.json"
+
+stats = json.loads(stats_path.read_text()) if stats_path.exists() else {}
+deltas = json.loads(deltas_path.read_text()) if deltas_path.exists() else {}
+
+target_month = stats.get("target_month", "—")
+```
+
+## Latest Monthly Zonal Statistics
+
+Remote sensing data fetched from Google Earth Engine for **`{python} target_month`**.
+These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the STGNN.
+
+```{python}
+#| echo: false
+#| label: tbl-zonal-stats
+#| tbl-cap: "Latest monthly zonal statistics by region (raw, pre-correction)."
+
+if not stats_path.exists():
+    print("⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first.")
+else:
+    regions = stats.get("regions", {})
+    rows = []
+    for region, vals in regions.items():
+        row = {"Region": region, "Country": vals.get("country", "")}
+        row.update({k: round(v, 3) for k, v in vals.items() if k not in ("country",)})
+        rows.append(row)
+    df = pd.DataFrame(rows).set_index("Region")
+    display_cols = ["Country", "precipitation_sum", "temperature_2m_mean",
+                    "LST_Day_1km_mean", "NDVI_mean", "EVI_mean"]
+    display_cols = [c for c in display_cols if c in df.columns]
+    df[display_cols].style.format(precision=3)
+```
+
+## Applied Climate Deltas
+
+The table below shows the bias correction delta applied to each feature this month.
+A negative delta means the current climate is warmer/wetter than the 2011–2018 baseline,
+so the raw observation is shifted downward before model inference.
+
+```{python}
+#| echo: false
+#| label: tbl-deltas
+#| tbl-cap: "Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month."
+
+if not deltas_path.exists():
+    print("⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first.")
+else:
+    current_month = target_month[-2:] if len(target_month) >= 2 else "01"
+    month_deltas = deltas.get(current_month, deltas.get("annual_mean", {}))
+    delta_df = pd.DataFrame([
+        {"Feature": feat, "Delta (subtract from obs)": round(val, 4)}
+        for feat, val in month_deltas.items()
+    ]).set_index("Feature")
+    delta_df
+```
+
+## Global Warming Level Projections
+
+Summary of regional climate trajectories from the GWL dataset covering the SEA domain.
+
+```{python}
+#| echo: false
+#| label: fig-gwl
+#| fig-cap: "Temperature and precipitation trends across Global Warming Levels for the SEA region."
+
+import plotly.graph_objects as go
+import pathlib, pandas as pd
+
+gwl_path = pathlib.Path("../climate-projection-module/data/processed/TSV/GWL_NetCDF/gwl_all_sliced.tsv")
+
+if not gwl_path.exists():
+    print("⚠️  GWL TSV not found — run climate-projection-module pipeline first.")
+else:
+    gwl = pd.read_csv(gwl_path, sep="\t", parse_dates=["time"])
+    gwl_monthly = gwl.groupby(["gwl", gwl["time"].dt.to_period("M")]).mean(numeric_only=True).reset_index()
+    gwl_monthly["time"] = gwl_monthly["time"].astype(str)
+
+    fig = go.Figure()
+    for gwl_val in sorted(gwl_monthly["gwl"].unique()):
+        subset = gwl_monthly[gwl_monthly["gwl"] == gwl_val]
+        fig.add_trace(go.Scatter(
+            x=subset["time"], y=subset["temp_avg"],
+            mode="lines", name=f"GWL {gwl_val}°C",
+        ))
+    fig.update_layout(
+        title="Mean Temperature by Global Warming Level",
+        xaxis_title="Month", yaxis_title="Temperature (°C)",
+        legend_title="GWL Scenario", height=400,
+    )
+    fig.show()
+```

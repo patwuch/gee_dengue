@@ -1,31 +1,40 @@
-# loss.py
 import torch
 import torch.nn.functional as F
 
 
 def masked_huber_loss(
-    pred:  torch.Tensor,
+    pred:   torch.Tensor,
     target: torch.Tensor,
-    mask:  torch.Tensor,
-    delta: float = 1.0,
+    mask:   torch.Tensor,
+    delta:  float = 1.0,
 ) -> torch.Tensor:
     """
-    Huber loss computed only over masked (valid surveillance) nodes.
+    Huber loss computed only over masked (valid surveillance) nodes across a batch.
 
     Args:
-        pred:   (N,) or (N, 1) — model predictions for this timestep.
-        target: (N,)           — ground truth incidence.
-        mask:   (N,)           — bool, True = valid node.
-        delta:  Huber threshold. Below delta: MSE. Above: MAE.
+        pred:   (B, N) or (B, N, 1) — model predictions.
+        target: (B, N) or (B, N, 1) — ground truth incidence.
+        mask:   (B, N)              — bool/float, True/1 = valid node.
+        delta:  Huber threshold.
 
     Returns:
-        Scalar loss over valid nodes. Returns 0 if no valid nodes.
+        Scalar loss averaged across valid elements.
     """
-    pred   = pred.squeeze(-1)     # (N,)
-    target = target.squeeze(-1)   # (N,)
-    mask   = mask.bool()
+    # ── 1. Safe Dimension Alignment ──────────────────────────────────────────
+    # Avoid general .squeeze(-1) which can destroy a batch dimension of size 1.
+    if pred.dim() == 3 and pred.size(-1) == 1:
+        pred = pred.squeeze(-1)
+    if target.dim() == 3 and target.size(-1) == 1:
+        target = target.squeeze(-1)
+        
+    mask = mask.bool()
 
+    # ── 2. Differentiable Fallback ───────────────────────────────────────────
     if mask.sum() == 0:
-        return torch.tensor(0.0, device=pred.device, requires_grad=True)
+        # Multiply a prediction element by 0.0 to keep the tensor attached 
+        # to the autograd graph, preventing broken gradients.
+        return pred.sum() * 0.0
 
+    # ── 3. Masked Extracted Statistics ───────────────────────────────────────
+    # Flat continuous indexing maps safely regardless of batch configurations
     return F.huber_loss(pred[mask], target[mask], delta=delta, reduction="mean")

@@ -3,11 +3,11 @@ import pandas as pd
 import torch
 from utils import load_config, save_tensors, save_scaler, save_edge_index, get_window_sizes
 from dataset import load_data, build_node_index
-from features import log_transform, separate_sources, build_masks, fit_and_scale, reshape_all, deseasonalise_target
+from features import log_transform, separate_sources, build_masks, fill_missing_inc, reshape_all, deseasonalise_target
 from features import fill_node_from_donors, impute_env_naive, assert_no_nans, encode_quality_flags
-from features import _diagnose_feature_composition
+from features import diagnose_feature_composition, scale_sources
 from graph import build_edge_index
-from temporal import build_snapshot, create_windows, temporal_split
+from temporal import create_windows, temporal_split
 
 
 # ---------------------------------------------------------------------------
@@ -60,6 +60,11 @@ def main(config_path: str):
             print(f"  Consecutive? {bad[time_col].nunique() == n_nan // bad[node_col].nunique()}")
 
     # ── Standard preprocessing ───────────────────────────────────────────────
+    # NOTE: log_transform and deseasonalise run before the split intentionally:
+    #   - NaNs are still present here, so deseasonalise correctly excludes them
+    #     from monthly mean calculation rather than treating them as zeros.
+    #   - fillna(0) on incidence happens later in fill_missing_inc, after
+    #     build_masks has already captured NaN positions.
     df = log_transform(df, cfg)        if prep.get("log_transform")  else df
     print("Log transform applied.")
     df = deseasonalise_target(df, cfg) if prep.get("deseasonalise")  else df
@@ -80,12 +85,25 @@ def main(config_path: str):
 
     train_df, val_df, test_df = temporal_split(df, cfg)
     sources = separate_sources(train_df, val_df, test_df, cfg)
+
+    # ── Incidence NaN handling ───────────────────────────────────────────────
+    # Order matters: masks must be built before filling so that NaN positions
+    # are captured while still present, then zeros are filled explicitly before
+    # scaling so scale_sources can assume clean input.
     masks   = build_masks(sources)
-    scaled  = fit_and_scale(sources)
+    sources = fill_missing_inc(sources)
+    scaled  = scale_sources(sources)
+
+    # Write scaled values back into the DataFrames so reshape_all sees scaled data.
+    # scale_sources operates on flat numpy arrays; we put them back in place here.
+    env_vars = cfg.get("features", {}).get("env_vars", [])
+    for df_obj, split_key in [(train_df, "train"), (val_df, "val"), (test_df, "test")]:
+        df_obj[target]   = scaled["inc"][split_key].reshape(-1)
+        df_obj[env_vars] = scaled["env"][split_key]
+
     tensors = reshape_all(masks, train_df, val_df, test_df, node_index, cfg)
 
-    # ── Naive imputation strategy ───────────────────────────────────────────
-
+    # ── Naive imputation strategy ────────────────────────────────────────────
     # Stage 1: Labuan filled — residual NaNs expected (LST_Night etc.)
     tensors = fill_node_from_donors(
         tensors,
@@ -104,9 +122,9 @@ def main(config_path: str):
     # ── Window creation ──────────────────────────────────────────────────────
     for window_size in get_window_sizes(cfg):
         snapshots = create_windows(tensors, window_size, node_index, cfg)
-    # ── Verify feature composition of x ──────────────────────────────────
+
         if window_size == get_window_sizes(cfg)[0]:   # only check first window size
-            _diagnose_feature_composition(snapshots, cfg)
+            diagnose_feature_composition(snapshots, cfg)
 
         save_tensors(snapshots, cfg, window_size)
 

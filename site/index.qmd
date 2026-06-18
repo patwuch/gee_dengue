@@ -1,0 +1,154 @@
+---
+title: "Dengue Fever Early Warning System"
+subtitle: "Southeast Asia · Monthly Updated Predictions"
+page-layout: full
+---
+
+```{python}
+#| echo: false
+#| output: false
+import json, pathlib, datetime
+
+data_dir = pathlib.Path("data")
+preds_path = data_dir / "latest_predictions.json"
+stats_path = data_dir / "latest_zonal_stats.json"
+
+preds = json.loads(preds_path.read_text()) if preds_path.exists() else {}
+stats = json.loads(stats_path.read_text()) if stats_path.exists() else {}
+
+updated = preds.get("generated_at", "—")
+target_month = preds.get("target_month", "—")
+n_regions = len(preds.get("regions", {}))
+```
+
+::: {.callout-note appearance="minimal"}
+**Last updated:** `{python} updated` &nbsp;·&nbsp; **Forecast month:** `{python} target_month` &nbsp;·&nbsp; **Regions covered:** `{python} n_regions`
+:::
+
+## Current Risk Map
+
+Predicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia.
+Values > 1 indicate elevated risk relative to the 2011–2018 training baseline.
+
+```{python}
+#| echo: false
+#| label: fig-risk-map
+#| fig-cap: "Predicted relative dengue risk index. Delta bias correction applied to account for 2018–2026 climate shift (AR6 SSP2-4.5)."
+
+import json, pathlib
+import plotly.express as px
+import pandas as pd
+
+data_dir = pathlib.Path("data")
+preds_path = data_dir / "latest_predictions.json"
+
+if not preds_path.exists():
+    print("⚠️  No prediction data found — run site/scripts/run_inference.py first.")
+else:
+    preds = json.loads(preds_path.read_text())
+    regions = preds.get("regions", {})
+    df = pd.DataFrame([
+        {"region": k, "country": v["country"], "risk_index": v["risk_index"]}
+        for k, v in regions.items()
+    ])
+
+    fig = px.choropleth(
+        df,
+        locations="country",
+        locationmode="country names",
+        color="risk_index",
+        hover_name="region",
+        hover_data={"risk_index": ":.2f", "country": True},
+        color_continuous_scale="RdYlGn_r",
+        range_color=[0, 3],
+        labels={"risk_index": "Risk Index"},
+        title=f"Dengue Risk Index — {preds.get('target_month', '')}",
+        scope="asia",
+    )
+    fig.update_layout(margin=dict(l=0, r=0, t=40, b=0), height=480)
+    fig.show()
+```
+
+## Risk Index Trends
+
+Mean risk index across all regions over every month predictions have been archived.
+
+```{python}
+#| echo: false
+#| label: fig-trends
+#| fig-cap: "Monthly mean relative risk index across all SEA admin-1 regions. Values > 1 indicate elevated risk vs the 2011–2018 baseline."
+
+import json, pathlib
+import plotly.graph_objects as go
+
+archive_dir = pathlib.Path("data/predictions")
+records = []
+for f in sorted(archive_dir.glob("*.json")):
+    data = json.loads(f.read_text())
+    regions = data.get("regions", {})
+    valid = [r["risk_index"] for r in regions.values() if r.get("has_data") and r.get("risk_index") is not None]
+    if valid:
+        records.append({
+            "month": data["target_month"],
+            "mean_risk": round(sum(valid) / len(valid), 4),
+            "n_regions": len(valid),
+        })
+
+if not records:
+    print("No archived predictions yet — will populate after the first monthly run.")
+else:
+    months = [r["month"] for r in records]
+    means  = [r["mean_risk"] for r in records]
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=months, y=means, mode="lines+markers",
+        line=dict(color="#e63946", width=2),
+        marker=dict(size=6),
+        name="Mean risk index",
+        hovertemplate="%{x}<br>Risk index: %{y:.3f}<extra></extra>",
+    ))
+    fig.add_hline(y=1.0, line_dash="dash", line_color="grey",
+                  annotation_text="Baseline (2011–2018 mean)", annotation_position="bottom right")
+    fig.update_layout(
+        xaxis_title="Month", yaxis_title="Mean Risk Index",
+        height=320, margin=dict(l=0, r=0, t=20, b=0),
+    )
+    fig.show()
+```
+
+## About This System
+
+This early warning system combines **spatiotemporal graph neural networks** (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across `{python} n_regions` admin-1 regions in Southeast Asia.
+
+::: {.grid}
+
+::: {.g-col-4}
+### Pipeline
+1. Monthly zonal statistics fetched from Google Earth Engine
+2. Climate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift
+3. STGNN inference run on adjusted features
+4. Results published automatically via GitHub Actions
+:::
+
+::: {.g-col-4}
+### Model
+- **Architecture:** ST-GAT + GRU (PyTorch Geometric)
+- **Training period:** 2011–2018
+- **Features:** ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop
+- **Spatial scope:** SEA admin-1 regions
+:::
+
+::: {.g-col-4}
+### Performance (test set)
+- **Huber loss:** 0.390
+- **MAE:** 1.214 (log IR)
+- **RMSE:** 2.460 (log IR)
+- **Test months:** 14 held-out months
+:::
+
+:::
+
+---
+
+> **Interpretation note:** Predictions are expressed as a *relative risk index* (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.

@@ -13,25 +13,6 @@ def log_transform(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     return df
 
 
-def add_lags(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    """Add lagged columns for the target column, grouped by node."""
-    col  = cfg.get("target_column")
-    lags = cfg.get("lags", [1])
-    df = (
-        df.groupby("name", group_keys=False)
-          .apply(lambda g: _add_lags(g, columns=[col], lags=lags))
-    )
-    return df
-
-
-def _add_lags(df: pd.DataFrame, columns: list[str], lags: list[int]) -> pd.DataFrame:
-    """Add lagged columns for each variable×lag pair within one node's time series."""
-    for col in columns:
-        for lag in lags:
-            df[f"{col}_lag{lag}"] = df[col].shift(lag)
-    return df
-
-
 def fit_scaler(x_train: np.ndarray) -> tuple[StandardScaler, np.ndarray]:
     scaler = StandardScaler()
     scaler.fit(x_train)
@@ -50,6 +31,54 @@ def deseasonalise_target(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     df[col]      = df[col] - monthly_mean
     return df
 
+
+def fit_and_scale(sources: dict) -> dict:
+    """Fit scalers on train, apply to val and test. lulc left unscaled."""
+    sources = fill_missing_inc(sources)
+    return scale_sources(sources)
+
+
+def fill_missing_inc(sources: dict) -> dict:
+    """Fill NaN incidence values with 0 before scaling."""
+    return {
+        **sources,
+        "inc": {
+            split: sources["inc"][split].fillna(0)
+            for split in ["train", "val", "test"]
+        },
+    }
+
+
+def scale_sources(sources: dict) -> dict:
+    """Fit scalers on train, apply to val and test. Assumes NaNs already filled."""
+    scaler_inc, inc_train = fit_scaler(
+        sources["inc"]["train"].values.reshape(-1, 1)
+    )
+    scaler_env, env_train = fit_scaler(
+        sources["env"]["train"].values
+    )
+
+    print("env scaler std:", scaler_env.scale_)
+    print("inc scaler std:", scaler_inc.scale_)
+
+    return {
+        "inc": {
+            "train": inc_train,
+            "val":   apply_scaler(sources["inc"]["val"].values.reshape(-1, 1),  scaler_inc),
+            "test":  apply_scaler(sources["inc"]["test"].values.reshape(-1, 1), scaler_inc),
+        },
+        "env": {
+            "train": env_train,
+            "val":   apply_scaler(sources["env"]["val"].values,  scaler_env),
+            "test":  apply_scaler(sources["env"]["test"].values, scaler_env),
+        },
+        "lulc": {
+            "train": sources["lulc"]["train"].values,
+            "val":   sources["lulc"]["val"].values,
+            "test":  sources["lulc"]["test"].values,
+        },
+        "scalers": {"inc": scaler_inc, "env": scaler_env},
+    }
 
 def separate_sources(
     train_df: pd.DataFrame,
@@ -75,39 +104,6 @@ def build_masks(sources: dict) -> dict:
         split: ~sources["inc"][split].isna().values
         for split in ["train", "val", "test"]
     }
-
-
-def fit_and_scale(sources: dict) -> dict:
-    """Fit scalers on train, apply to val and test. lulc left unscaled."""
-    scaler_inc, inc_train = fit_scaler(
-        sources["inc"]["train"].fillna(0).values.reshape(-1, 1)
-    )
-    scaler_env, env_train = fit_scaler(
-        sources["env"]["train"].values
-    )
-
-    print("env scaler std:", scaler_env.scale_)   # any zeros?
-    print("inc scaler std:", scaler_inc.scale_)
-
-    return {
-        "inc": {
-            "train": inc_train,
-            "val":   apply_scaler(sources["inc"]["val"].fillna(0).values.reshape(-1, 1),  scaler_inc),
-            "test":  apply_scaler(sources["inc"]["test"].fillna(0).values.reshape(-1, 1), scaler_inc),
-        },
-        "env": {
-            "train": env_train,
-            "val":   apply_scaler(sources["env"]["val"].values,  scaler_env),
-            "test":  apply_scaler(sources["env"]["test"].values, scaler_env),
-        },
-        "lulc": {
-            "train": sources["lulc"]["train"].values,
-            "val":   sources["lulc"]["val"].values,
-            "test":  sources["lulc"]["test"].values,
-        },
-        "scalers": {"inc": scaler_inc, "env": scaler_env},
-    }
-
 
 def reshape_to_tensor(
     df:         pd.DataFrame,
@@ -163,79 +159,26 @@ def reshape_all(
 
     return tensors
 
-def fill_labuan_from_sabah(
-    tensors:    dict,
-    node_index: dict,
-) -> dict:
-    """
-    Fill W.P. Labuan's env and lulc tensors with Sabah's values.
-    
-    Labuan is 8km off the Sabah coast — the closest and most
-    climatically representative neighbour in the node set.
-    
-    Only fills positions that are NaN in Labuan; does not overwrite
-    valid existing values (there are none, but kept for safety).
-
-    Args:
-        tensors:    Output of reshape_all.
-        node_index: {node_name: int_index} mapping.
-
-    Returns:
-        tensors with Labuan env/lulc filled from Sabah, in-place copy.
-    """
-    DONOR    = "Sabah"
-    RECEIVER = "W.P. Labuan"
-
-    if RECEIVER not in node_index:
-        print(f"[fill_labuan] '{RECEIVER}' not in node_index — skipping.")
-        return tensors
-    if DONOR not in node_index:
-        print(f"[fill_labuan] '{DONOR}' not in node_index — skipping.")
-        return tensors
-
-    labuan_idx = node_index[RECEIVER]
-    sabah_idx  = node_index[DONOR]
-
-    filled_tensors = {}
-
-    for split, data in tensors.items():
-        data = {k: v.clone() if isinstance(v, torch.Tensor) else v
-                for k, v in data.items()}
-
-        for key in ("env", "lulc"):
-            tensor = data[key]                        # (T, N, F)
-            labuan = tensor[:, labuan_idx, :]         # (T, F)
-            sabah  = tensor[:, sabah_idx,  :]         # (T, F)
-
-            nan_mask          = torch.isnan(labuan)   # (T, F) bool
-            labuan[nan_mask]  = sabah[nan_mask]
-            tensor[:, labuan_idx, :] = labuan
-            data[key] = tensor
-
-        n_filled = nan_mask.sum().item()
-        print(f"[fill_labuan] {split:5s} | filled {n_filled} NaN positions "
-              f"in '{RECEIVER}' from '{DONOR}'")
-
-        filled_tensors[split] = data
-
-    return filled_tensors
-
 
 def impute_env_naive(
     tensors:    dict,
     node_index: dict,
     cfg:        dict,
+    max_fill_gap: int = 2,
 ) -> dict:
     """
-    Naive ffill → bfill → global column mean imputation on env tensor.
+    Naive ffill/bfill (gap ≤ max_fill_gap) → global column mean imputation
+    on env tensor.
 
     Runs per-split to avoid leakage. Intended to catch residual NaNs
     after fill_labuan_from_sabah (e.g. LST_Night sparse gaps).
 
     Args:
-        tensors:    Output of fill_labuan_from_sabah (or reshape_all).
-        node_index: {node_name: int_index} mapping.
-        cfg:        Config dict.
+        tensors:      Output of fill_labuan_from_sabah (or reshape_all).
+        node_index:   {node_name: int_index} mapping.
+        cfg:          Config dict.
+        max_fill_gap: Maximum consecutive NaN timesteps to fill with
+                      ffill/bfill. Longer gaps fall through to column mean.
 
     Returns:
         tensors with env imputed.
@@ -261,8 +204,13 @@ def impute_env_naive(
         env_np = env.numpy().reshape(T, N * F)
         df_env = pd.DataFrame(env_np)
 
-        df_env = df_env.ffill(axis=0)
-        df_env = df_env.bfill(axis=0)
+        # ── Gap-limited ffill / bfill ─────────────────────────────────────
+        # limit=max_fill_gap means only runs of NaNs of that length or shorter
+        # are filled; longer runs are left as NaN and caught by the mean below.
+        df_env = df_env.ffill(axis=0, limit=max_fill_gap)
+        df_env = df_env.bfill(axis=0, limit=max_fill_gap)
+
+        # ── Global column mean for remaining long gaps ────────────────────
         df_env = df_env.fillna(df_env.mean(axis=0))
 
         still_nan = df_env.isna().sum().sum()
@@ -285,7 +233,6 @@ def impute_env_naive(
         imputed_tensors[split] = data
 
     return imputed_tensors
-
 
 def _report_imputed_nodes(
     env_orig:    torch.Tensor,
@@ -445,7 +392,7 @@ def encode_quality_flags(df: pd.DataFrame, quality_vars: list) -> tuple:
     return df, dummy_cols
 
 
-def _diagnose_feature_composition(snapshots: dict, cfg: dict) -> None:
+def diagnose_feature_composition(snapshots: dict, cfg: dict) -> None:
     """
     Print a breakdown of what's in x and confirm data_quality dummies
     are present, non-NaN, and non-constant across nodes.

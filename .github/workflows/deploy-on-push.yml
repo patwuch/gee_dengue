@@ -1,0 +1,53 @@
+name: Deploy site on push
+
+on:
+  push:
+    branches: [main]
+    # Skip commits made by the monthly-update workflow itself to avoid loops.
+    # Those commits include [skip ci] in the message, but the path filter below
+    # is the belt-and-suspenders guard.
+    paths:
+      # Retrigger only when model artifacts or site source change.
+      # Data fetching (step 1-3) is skipped — existing site/data/*.json are used.
+      - 'machine-learning-module/results/STGNN/**'
+      - 'machine-learning-module/results/STGNN/baseline_logIR/metrics.json'
+      - 'dengue-infection-module/results/**'
+      - 'site/**'
+      - 'docs/**'
+
+jobs:
+  deploy:
+    # [skip ci] in the commit message also suppresses this job, but being
+    # explicit here makes the intent clear.
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pandas numpy plotly pyarrow
+
+      - name: Set up Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render site
+        run: quarto render site/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          commit_message: "chore: deploy on push ${{ github.sha }}"

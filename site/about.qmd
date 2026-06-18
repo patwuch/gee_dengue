@@ -1,0 +1,56 @@
+---
+title: "About"
+---
+
+## Project
+
+This early warning system is developed by the **Chuang Lab at Taipei Medical University (TMU)**
+as part of ongoing research into spatiotemporally-aware dengue fever prediction for Southeast Asia.
+
+The system jointly models dengue dynamics across Taiwan and SEA by integrating:
+
+- Monthly remote sensing data (ERA5-Land, MODIS, CHIRPS)
+- OpenDengue surveillance records (2011–2018)
+- CMIP6 climate projections (AR6, GWL scenarios)
+- Shared Socioeconomic Pathways (SSP1-2.6 through SSP5-8.5)
+
+## Methods
+
+**Spatiotemporal Graph Attention Network (ST-GAT + GRU)**
+
+Admin-1 regions are represented as nodes in a spatial graph. The model uses
+two stacked Graph Attention layers for spatial message passing, followed by a
+GRU to capture temporal dynamics across a sliding window of monthly observations.
+Hyperparameters were selected via 40-trial Optuna sweeps using masked Huber loss
+(to handle missing surveillance data).
+
+**Climate bias correction**
+
+A delta bias correction is applied to current observations before inference,
+accounting for the distributional shift between the 2011–2018 training period
+and present-day conditions. The per-variable, per-month delta is computed
+as the difference between the current climatology and the 2011–2018 training
+baseline. Predictions are expressed as a relative risk index rather than
+absolute case counts.
+
+## Data
+
+| Source | Variables | Resolution |
+|---|---|---|
+| ERA5-Land (ECMWF / GEE) | Precipitation, temperature, evaporation | ~9 km, monthly |
+| MODIS MOD11A2 | Land surface temperature (day/night) | 1 km, 8-day → monthly |
+| MODIS MOD13A3 | NDVI, EVI | 1 km, monthly |
+| MODIS MCD12Q1 | Land use / land cover (17 classes) | 500 m, annual |
+| WorldPop | Population density | 100 m, annual |
+| OpenDengue | Dengue case counts | Admin-1, monthly |
+
+## Code
+
+Source code and pipeline configuration are available on
+[GitHub](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS)
+under the GNU GPLv3 license.
+
+## Contact
+
+For questions or collaboration inquiries, please open an issue on the
+[GitHub repository](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/issues).
