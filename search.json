@@ -2,28 +2,28 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Dengue Fever Early Warning System",
+    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
     "section": "",
     "text": "Last updated: —  ·  Forecast month: —  ·  Regions covered: 0"
   },
   {
     "objectID": "index.html#current-risk-map",
     "href": "index.html#current-risk-map",
-    "title": "Dengue Fever Early Warning System",
+    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
     "section": "Current Risk Map",
     "text": "Current Risk Map\nPredicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia. Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.\n\n\n\n\n⚠️  No prediction data found — run site/scripts/run_inference.py first.\n\n\n\nFigure 1"
   },
   {
     "objectID": "index.html#risk-index-trends",
     "href": "index.html#risk-index-trends",
-    "title": "Dengue Fever Early Warning System",
+    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
     "section": "Risk Index Trends",
     "text": "Risk Index Trends\nMean risk index across all regions over every month predictions have been archived.\n\n\n\n\nNo archived predictions yet — will populate after the first monthly run.\n\n\n\nFigure 2"
   },
   {
     "objectID": "index.html#about-this-system",
     "href": "index.html#about-this-system",
-    "title": "Dengue Fever Early Warning System",
+    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
     "section": "About This System",
     "text": "About This System\nThis early warning system combines spatiotemporal graph neural networks (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across 0 admin-1 regions in Southeast Asia.\n\n\nPipeline\n\nMonthly zonal statistics fetched from Google Earth Engine\nClimate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift\nSTGNN inference run on adjusted features\nResults published automatically via GitHub Actions\n\n\n\nModel\n\nArchitecture: ST-GAT + GRU (PyTorch Geometric)\nTraining period: 2011–2018\nFeatures: ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop\nSpatial scope: SEA admin-1 regions\n\n\n\nPerformance (test set)\n\nHuber loss: 0.390\nMAE: 1.214 (log IR)\nRMSE: 2.460 (log IR)\nTest months: 14 held-out months\n\n\n\n\n\nInterpretation note: Predictions are expressed as a relative risk index (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions."
   },
