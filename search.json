@@ -1,0 +1,156 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Dengue Fever Early Warning System",
+    "section": "",
+    "text": "Last updated: —  ·  Forecast month: —  ·  Regions covered: 0"
+  },
+  {
+    "objectID": "index.html#current-risk-map",
+    "href": "index.html#current-risk-map",
+    "title": "Dengue Fever Early Warning System",
+    "section": "Current Risk Map",
+    "text": "Current Risk Map\nPredicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia. Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.\n\n\n\n\n⚠️  No prediction data found — run site/scripts/run_inference.py first.\n\n\n\nFigure 1"
+  },
+  {
+    "objectID": "index.html#risk-index-trends",
+    "href": "index.html#risk-index-trends",
+    "title": "Dengue Fever Early Warning System",
+    "section": "Risk Index Trends",
+    "text": "Risk Index Trends\nMean risk index across all regions over every month predictions have been archived.\n\n\n\n\nNo archived predictions yet — will populate after the first monthly run.\n\n\n\nFigure 2"
+  },
+  {
+    "objectID": "index.html#about-this-system",
+    "href": "index.html#about-this-system",
+    "title": "Dengue Fever Early Warning System",
+    "section": "About This System",
+    "text": "About This System\nThis early warning system combines spatiotemporal graph neural networks (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across 0 admin-1 regions in Southeast Asia.\n\n\nPipeline\n\nMonthly zonal statistics fetched from Google Earth Engine\nClimate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift\nSTGNN inference run on adjusted features\nResults published automatically via GitHub Actions\n\n\n\nModel\n\nArchitecture: ST-GAT + GRU (PyTorch Geometric)\nTraining period: 2011–2018\nFeatures: ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop\nSpatial scope: SEA admin-1 regions\n\n\n\nPerformance (test set)\n\nHuber loss: 0.390\nMAE: 1.214 (log IR)\nRMSE: 2.460 (log IR)\nTest months: 14 held-out months\n\n\n\n\n\nInterpretation note: Predictions are expressed as a relative risk index (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "This early warning system is developed by the Chuang Lab at Taipei Medical University (TMU) as part of ongoing research into spatiotemporally-aware dengue fever prediction for Southeast Asia.\nThe system jointly models dengue dynamics across Taiwan and SEA by integrating:\n\nMonthly remote sensing data (ERA5-Land, MODIS, CHIRPS)\nOpenDengue surveillance records (2011–2018)\nCMIP6 climate projections (AR6, GWL scenarios)\nShared Socioeconomic Pathways (SSP1-2.6 through SSP5-8.5)"
+  },
+  {
+    "objectID": "about.html#project",
+    "href": "about.html#project",
+    "title": "About",
+    "section": "",
+    "text": "This early warning system is developed by the Chuang Lab at Taipei Medical University (TMU) as part of ongoing research into spatiotemporally-aware dengue fever prediction for Southeast Asia.\nThe system jointly models dengue dynamics across Taiwan and SEA by integrating:\n\nMonthly remote sensing data (ERA5-Land, MODIS, CHIRPS)\nOpenDengue surveillance records (2011–2018)\nCMIP6 climate projections (AR6, GWL scenarios)\nShared Socioeconomic Pathways (SSP1-2.6 through SSP5-8.5)"
+  },
+  {
+    "objectID": "about.html#methods",
+    "href": "about.html#methods",
+    "title": "About",
+    "section": "Methods",
+    "text": "Methods\nSpatiotemporal Graph Attention Network (ST-GAT + GRU)\nAdmin-1 regions are represented as nodes in a spatial graph. The model uses two stacked Graph Attention layers for spatial message passing, followed by a GRU to capture temporal dynamics across a sliding window of monthly observations. Hyperparameters were selected via 40-trial Optuna sweeps using masked Huber loss (to handle missing surveillance data).\nClimate bias correction\nA delta bias correction is applied to current observations before inference, accounting for the distributional shift between the 2011–2018 training period and present-day conditions. The per-variable, per-month delta is computed as the difference between the current climatology and the 2011–2018 training baseline. Predictions are expressed as a relative risk index rather than absolute case counts."
+  },
+  {
+    "objectID": "about.html#data",
+    "href": "about.html#data",
+    "title": "About",
+    "section": "Data",
+    "text": "Data\n\n\n\n\n\n\n\n\nSource\nVariables\nResolution\n\n\n\n\nERA5-Land (ECMWF / GEE)\nPrecipitation, temperature, evaporation\n~9 km, monthly\n\n\nMODIS MOD11A2\nLand surface temperature (day/night)\n1 km, 8-day → monthly\n\n\nMODIS MOD13A3\nNDVI, EVI\n1 km, monthly\n\n\nMODIS MCD12Q1\nLand use / land cover (17 classes)\n500 m, annual\n\n\nWorldPop\nPopulation density\n100 m, annual\n\n\nOpenDengue\nDengue case counts\nAdmin-1, monthly"
+  },
+  {
+    "objectID": "about.html#code",
+    "href": "about.html#code",
+    "title": "About",
+    "section": "Code",
+    "text": "Code\nSource code and pipeline configuration are available on GitHub under the GNU GPLv3 license."
+  },
+  {
+    "objectID": "about.html#contact",
+    "href": "about.html#contact",
+    "title": "About",
+    "section": "Contact",
+    "text": "Contact\nFor questions or collaboration inquiries, please open an issue on the GitHub repository."
+  },
+  {
+    "objectID": "model-results.html",
+    "href": "model-results.html",
+    "title": "Model Results",
+    "section": "",
+    "text": "These metrics were computed on the 14 held-out test months from the 2011–2018 OpenDengue SEA dataset.\n\n\n\nMetric\nValue\n\n\n\n\nHuber loss\n0.3903\n\n\nMAE (log IR)\n1.2145\n\n\nMSE (log IR)\n6.0496\n\n\nRMSE (log IR)\n2.4596\n\n\nBest val loss\n0.3697"
+  },
+  {
+    "objectID": "model-results.html#test-set-metrics",
+    "href": "model-results.html#test-set-metrics",
+    "title": "Model Results",
+    "section": "",
+    "text": "These metrics were computed on the 14 held-out test months from the 2011–2018 OpenDengue SEA dataset.\n\n\n\nMetric\nValue\n\n\n\n\nHuber loss\n0.3903\n\n\nMAE (log IR)\n1.2145\n\n\nMSE (log IR)\n6.0496\n\n\nRMSE (log IR)\n2.4596\n\n\nBest val loss\n0.3697"
+  },
+  {
+    "objectID": "model-results.html#training-curves",
+    "href": "model-results.html#training-curves",
+    "title": "Model Results",
+    "section": "Training Curves",
+    "text": "Training Curves\n\n\n\n\n\n\n\n\nFigure 1: Training and validation Huber loss per epoch."
+  },
+  {
+    "objectID": "model-results.html#predictions-vs-actuals",
+    "href": "model-results.html#predictions-vs-actuals",
+    "title": "Model Results",
+    "section": "Predictions vs Actuals",
+    "text": "Predictions vs Actuals\n\n\n\n\n\n\n\n\nFigure 2: Model predictions against actual log incidence rates on the test set."
+  },
+  {
+    "objectID": "model-results.html#scatter-plot",
+    "href": "model-results.html#scatter-plot",
+    "title": "Model Results",
+    "section": "Scatter Plot",
+    "text": "Scatter Plot\n\n\n\n\n\n\n\n\nFigure 3: Scatter of predicted vs actual log IR. Points coloured by country."
+  },
+  {
+    "objectID": "model-results.html#architecture",
+    "href": "model-results.html#architecture",
+    "title": "Model Results",
+    "section": "Architecture",
+    "text": "Architecture\nThe model is a Spatio-Temporal Graph Attention Network with GRU (STGATGRU):\n\nGAT layer 1: Spatial message passing over the admin-1 adjacency graph\nMLP: Node-wise feature transformation\nGAT layer 2: Second spatial aggregation pass\nGRU: Temporal sequence modelling over the sliding window\nLinear head: Single-step log IR prediction\n\nHyperparameters were tuned with 40 Optuna trials using masked Huber loss (to handle missing incidence data) on a validation set of 20% of training months."
+  },
+  {
+    "objectID": "model-results.html#bias-correction-note",
+    "href": "model-results.html#bias-correction-note",
+    "title": "Model Results",
+    "section": "Bias Correction Note",
+    "text": "Bias Correction Note\nWhen running inference on current data (post-2018), a climate delta correction is applied before features are passed to the model. The delta is computed as the difference between the AR6 SSP2-4.5 projected monthly climatology for the current year and the 2011–2018 training period climatology. This shifts current observations back into the model’s training feature distribution. See site/scripts/apply_climate_delta.py for implementation."
+  },
+  {
+    "objectID": "dengue-timelines.html",
+    "href": "dengue-timelines.html",
+    "title": "Dengue Timelines",
+    "section": "",
+    "text": "Interactive dashboards showing temporal and spatial dengue case trends by WHO region, generated from the OpenDengue dataset (SEA, 2011–2018).\n\nTemporal — SEAROTemporal — WPROSpatial — SEAROSpatial — WPRONational\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nData source: OpenDengue — a global open-access dengue surveillance database. Spatial imputation was performed using GAUL 2024 admin-1 boundaries. Spatial autocorrelation was assessed via Moran’s I.\n\n\n\n\n\n\n\n\n\n\nFigure 1: Moran’s I spatial autocorrelation across time slices.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFigure 2: Moran’s I scatter plot."
+  },
+  {
+    "objectID": "climate-data.html",
+    "href": "climate-data.html",
+    "title": "Climate Data",
+    "section": "",
+    "text": "Remote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the STGNN.\n\n\n\nTable 1: Latest monthly zonal statistics by region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first."
+  },
+  {
+    "objectID": "climate-data.html#latest-monthly-zonal-statistics",
+    "href": "climate-data.html#latest-monthly-zonal-statistics",
+    "title": "Climate Data",
+    "section": "",
+    "text": "Remote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the STGNN.\n\n\n\nTable 1: Latest monthly zonal statistics by region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first."
+  },
+  {
+    "objectID": "climate-data.html#applied-climate-deltas",
+    "href": "climate-data.html#applied-climate-deltas",
+    "title": "Climate Data",
+    "section": "Applied Climate Deltas",
+    "text": "Applied Climate Deltas\nThe table below shows the bias correction delta applied to each feature this month. A negative delta means the current climate is warmer/wetter than the 2011–2018 baseline, so the raw observation is shifted downward before model inference.\n\n\n\nTable 2: Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month.\n\n\n\n⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first."
+  },
+  {
+    "objectID": "climate-data.html#global-warming-level-projections",
+    "href": "climate-data.html#global-warming-level-projections",
+    "title": "Climate Data",
+    "section": "Global Warming Level Projections",
+    "text": "Global Warming Level Projections\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1"
+  }
+]
