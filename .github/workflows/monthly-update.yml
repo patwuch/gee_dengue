@@ -32,14 +32,18 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
+          # torch must be installed first with its own index; --index-url is
+          # a global pip flag that would poison the index for all other packages
+          # if mixed into a single pip install call.
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install \
             jupyter \
             ipykernel \
+            pyyaml \
             earthengine-api \
             geopandas \
             pandas \
             numpy \
-            torch --index-url https://download.pytorch.org/whl/cpu \
             torch-geometric \
             plotly \
             pyarrow
