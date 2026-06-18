@@ -37,6 +37,8 @@ website:
 
   sidebar: false
 
+jupyter: python3
+
 format:
   html:
     theme:
