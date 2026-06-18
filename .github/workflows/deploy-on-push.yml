@@ -37,7 +37,13 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install jupyter ipykernel pandas numpy plotly pyarrow
+          pip install jupyter ipykernel pyyaml pandas numpy plotly pyarrow
+
+      # Quarto may resolve python3 through its own detection rather than PATH.
+      # Symlinking ensures /usr/bin/python3 (a common hardcoded fallback) always
+      # points to the toolcache Python that has all packages installed.
+      - name: Point system python3 to toolcache Python
+        run: sudo ln -sf "$pythonLocation/bin/python3" /usr/bin/python3
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
