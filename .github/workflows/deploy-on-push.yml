@@ -37,7 +37,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install pandas numpy plotly pyarrow
+          pip install pandas numpy plotly pyarrow ipython
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
