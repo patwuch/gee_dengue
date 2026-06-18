@@ -82,10 +82,11 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Register Jupyter kernel
+        run: python -m ipykernel install --user --name python3 --display-name "Python 3"
+
       - name: Render site
-        run: |
-          export QUARTO_PYTHON=$(which python3)
-          quarto render site/
+        run: quarto render site/
 
       # ── Step 5: Deploy to GitHub Pages ────────────────────────────────────
       - name: Deploy to GitHub Pages
