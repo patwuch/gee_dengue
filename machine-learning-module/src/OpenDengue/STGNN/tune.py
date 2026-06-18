@@ -436,7 +436,7 @@ def _get_or_create_sweep(cfg: dict) -> str:
     return sweep_id
 
 
-def run_sweep(cfg: dict):
+def run_sweep(cfg: dict, out_path: str | Path = None):
     """Initialize (or resume) a W&B sweep, then save best params to disk."""
     strict = cfg["tune"].get("strict_data_check", True)
     sanity_check_before_sweep(cfg, strict=strict)
@@ -466,7 +466,9 @@ def run_sweep(cfg: dict):
     best_params = dict(best_run.config)
     best_params["best_val_loss"] = best_run.summary.get("best_val_loss")
 
-    out_path = Path("models/STGNN") / cfg["name"] / "best_params.json"
+    if out_path is None:
+        out_path = Path("results/STGNN") / cfg["name"] / "best_params.json"
+    out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w") as f:
         json.dump(best_params, f, indent=2)
@@ -479,4 +481,4 @@ def run_sweep(cfg: dict):
 if __name__ == "__main__":
     with open(snakemake.params.cfg) as f: # noqa: F821
         cfg = yaml.safe_load(f)
-    run_sweep(cfg)
+    run_sweep(cfg, out_path=snakemake.output.best_params) # noqa: F821

@@ -1,0 +1,14 @@
+{
+  "dropout": 0.2,
+  "batch_size": 2,
+  "gat1_heads": 2,
+  "gat2_heads": 4,
+  "mlp_hidden": 64,
+  "mlp_layers": 1,
+  "gat1_hidden": 32,
+  "gat2_hidden": 16,
+  "window_size": 1,
+  "learning_rate": 0.007838748933486149,
+  "experiment_name": "baseline_logIR_updated_sweep",
+  "best_val_loss": 0.26062379963696003
+}

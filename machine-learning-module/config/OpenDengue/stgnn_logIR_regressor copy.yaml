@@ -5,7 +5,7 @@
 #             --cores 4 --resources gpu=1
 # ============================================================
 
-name:    embed_gru_mask_logIR
+name:    baseline_logIR_updated_sweep
 dataset: opendengue
 model:   stgnn
 task:    regressor

@@ -29,7 +29,8 @@ from pathlib import Path
 
 from model import STGATGRU
 from loss  import masked_huber_loss
-from tune  import load_tensors, load_edge_index, make_windows
+from torch.utils.data import DataLoader
+from tune  import STGNNDataset, load_tensors, load_edge_index
 
 
 # ── Paths / params ────────────────────────────────────────────────────────────
@@ -70,12 +71,13 @@ def eval_with_metrics(
             if pred.dim() == 3 and y.dim() == 2:
                 pred = pred.squeeze(-1)
 
-            # Track the mask belonging to the target step (the last window frame)
-            target_mask = mask[:, -1, :].squeeze(-1)
+            target_mask = mask[:, -1, :] if mask.dim() == 3 else mask
             
             loss = masked_huber_loss(pred, y, target_mask)
             total_loss += loss.item()
 
+            if y.dim() == 3:
+                y = y.squeeze(-1)
             p = torch.expm1(pred) if log_scale else pred
             t = torch.expm1(y)    if log_scale else y
             
@@ -109,8 +111,8 @@ def plot_predictions(
     n_nodes:     int = 6,
 ) -> Path:
     """Plot pred vs target IR for the first n_nodes nodes across all windows."""
-    preds   = np.stack(all_preds,   axis=0)   # (W, N)
-    targets = np.stack(all_targets, axis=0)   # (W, N)
+    preds   = np.concatenate(all_preds,   axis=0)  # (W, N)
+    targets = np.concatenate(all_targets, axis=0)  # (W, N)
     n_show  = min(n_nodes, preds.shape[1])
 
     fig, axes = plt.subplots(n_show, 1, figsize=(10, 2.5 * n_show), sharex=True)
@@ -171,9 +173,10 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
 
     # ── Data ─────────────────────────────────────────────────────────────────
     tensors     = load_tensors(cfg, window_size)
-    windows     = make_windows(tensors, split)
+    dataset     = STGNNDataset(tensors, split)
+    dataloader  = DataLoader(dataset, batch_size=32, shuffle=False, pin_memory=True)
     edge_index  = load_edge_index(cfg, device)
-    in_channels = windows[0][0].shape[-1]
+    in_channels = dataset.x.shape[-1]
 
     # ── Rebuild model & load weights ─────────────────────────────────────────
     model = STGATGRU(
@@ -194,7 +197,7 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
 
     # ── Evaluate ──────────────────────────────────────────────────────────────
     loss, metrics, preds, targets = eval_with_metrics(
-        model, windows, edge_index, device, log_scale=log_scale
+        model, dataloader, edge_index, device, log_scale=log_scale
     )
 
     print(
@@ -206,8 +209,8 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     preds_path = out_dir / f"{split}_predictions.npz"
     np.savez(
         preds_path,
-        predictions = np.stack(preds,   axis=0),
-        targets     = np.stack(targets, axis=0),
+        predictions = np.concatenate(preds,   axis=0),
+        targets     = np.concatenate(targets, axis=0),
     )
     print(f"Predictions saved to {preds_path}")
 

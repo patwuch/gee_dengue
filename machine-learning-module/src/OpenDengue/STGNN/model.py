@@ -47,6 +47,7 @@ class STGATGRU(nn.Module):
         
         self.gru = nn.GRU(gat2_hidden, gru_hidden, batch_first=True)
 
+        self.missing_emb = nn.Parameter(torch.zeros(in_channels))
         self.dropout = nn.Dropout(dropout)
         self.linear = nn.Linear(gru_hidden, pred_horizon)
         self.gru_hidden = gru_hidden
@@ -82,9 +83,15 @@ class STGATGRU(nn.Module):
             elif mask.dim() == 3:  # (B, T, N) → (B, T, N, 1)
                 mask = mask.unsqueeze(-1)
 
-        # Zero out missing nodes, append mask as extra feature: (B, T, N, F+1)
-        x = x * mask
+        # Change 3: substitute learned embedding for missing nodes instead of zeroing
+        missing_emb = self.missing_emb.view(1, 1, 1, F_dim)
+        x = x * mask + missing_emb * (1 - mask)
         x = torch.cat([x, mask.expand(B, T, N, 1)], dim=-1)
+
+        # Prepare per-timestep missingness for GRU carry-forward (Change 2)
+        # Expand to (B, T, N, 1) first — mask may be (B, 1, N, 1) if input was 2D.
+        # gru_mask: (T, B*N) so gru_mask[t, b*N+n] = mask[b, t, n]
+        gru_mask = mask.expand(B, T, N, 1)[:, :, :, 0].permute(1, 0, 2).reshape(T, B * N)
 
         # ── 2. Spatial layers — B and T sequentially ─────────────────────────
         # Loop over each sample independently so each GAT call sees N nodes,
@@ -108,11 +115,12 @@ class STGATGRU(nn.Module):
         x_seq = x_seq.reshape(B * N, T, -1)              # (B*N, T, gat2_hidden)
 
         # ── 4. Temporal layer & output ────────────────────────────────────────
-        # Step the GRU one timestep at a time so we never materialise the full
-        # (B*N, T, gru_hidden) output — only the rolling hidden state survives.
+        # Change 2: carry forward hidden state for missing nodes rather than updating
         h = torch.zeros(1, B * N, self.gru_hidden, device=x_seq.device, dtype=x_seq.dtype)
         for t in range(T):
-            _, h = self.gru(x_seq[:, t:t+1, :], h)
+            m_t = gru_mask[t].unsqueeze(0).unsqueeze(-1)  # (1, B*N, 1)
+            _, h_new = self.gru(x_seq[:, t:t+1, :], h)
+            h = h_new * m_t + h * (1 - m_t)
         del x_seq
         final_state = h.squeeze(0)         # (B*N, gru_hidden)
 

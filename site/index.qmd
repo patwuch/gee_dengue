@@ -1,6 +1,6 @@
 ---
-title: "Dengue Fever Early Warning System"
-subtitle: "Southeast Asia · Monthly Updated Predictions"
+title: "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia"
+subtitle: 162 Southeast Asia ADM_1 Provinces · Monthly Updated Predictions"
 page-layout: full
 ---
 

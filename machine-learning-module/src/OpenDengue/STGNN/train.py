@@ -76,8 +76,7 @@ def eval_with_metrics(
             if pred.dim() == 3 and y.dim() == 2:
                 pred = pred.squeeze(-1)
 
-            # Isolate the missingness flag corresponding to our prediction step target
-            target_mask = mask[:, -1, :]  # Shape: (B, N)
+            target_mask = mask[:, -1, :] if mask.dim() == 3 else mask
             loss = masked_huber_loss(pred, y, target_mask)
             total_loss += loss.item()
 
@@ -144,8 +143,9 @@ def train(cfg: dict, params: dict):
 
     device      = torch.device(cfg.get("device", "cpu"))
     window_size = params["window_size"]
-    num_epochs  = params["num_epochs"]
-    batch_size  = params.get("batch_size", 32) # Injected optimal sweep configuration 
+    max_epochs  = 1000
+    patience    = cfg["tune"].get("patience", 15)
+    batch_size  = params.get("batch_size", 32)
     log_scale   = cfg.get("log_scale", True)
 
     # ── Data Pipeline ────────────────────────────────────────────────────────
@@ -185,12 +185,13 @@ def train(cfg: dict, params: dict):
     optimizer = torch.optim.Adam(model.parameters(), lr=params["learning_rate"])
 
     # ── Unified Vector Training ──────────────────────────────────────────────
-    best_val_loss   = float("inf")
-    train_losses    = []
-    val_losses      = []
-    best_model_path = out_dir / "best_model.pt"
+    best_val_loss    = float("inf")
+    train_losses     = []
+    val_losses       = []
+    best_model_path  = out_dir / "best_model.pt"
+    patience_counter = 0
 
-    for epoch in range(num_epochs):
+    for epoch in range(max_epochs):
         train_loss = run_epoch(model, train_loader, edge_index, device, optimizer)
         val_loss   = run_epoch(model, val_loader,   edge_index, device)
 
@@ -201,7 +202,6 @@ def train(cfg: dict, params: dict):
         train_losses.append(train_loss)
         val_losses.append(val_loss)
 
-        # Run vectorized evaluation over full loaders
         _, val_metrics, _, _ = eval_with_metrics(
             model, val_loader, edge_index, device, log_scale=log_scale
         )
@@ -216,15 +216,22 @@ def train(cfg: dict, params: dict):
         })
 
         print(
-            f"Epoch {epoch+1:>4}/{num_epochs} | "
+            f"Epoch {epoch+1:>4} | "
             f"train {train_loss:.4f} | val {val_loss:.4f} | "
             f"MAE {val_metrics['mae']:.4f} | RMSE {val_metrics['rmse']:.4f}"
         )
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
+            patience_counter = 0
             torch.save(model.state_dict(), best_model_path)
             wandb.run.summary["best_val_loss"] = best_val_loss
+        else:
+            patience_counter += 1
+
+        if patience_counter >= patience:
+            print(f"Early stopping at epoch {epoch + 1}. Best val loss: {best_val_loss:.4f}")
+            break
 
     # ── Loss curves + raw losses ──────────────────────────────────────────────
     loss_plot = plot_loss_curves(train_losses, val_losses, out_dir)
