@@ -43,9 +43,9 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Render site
-        run: quarto render site/
-        env:
-          QUARTO_PYTHON: ${{ env.pythonLocation }}/bin/python3
+        run: |
+          export QUARTO_PYTHON=$(which python3)
+          quarto render site/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
