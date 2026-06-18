@@ -3,22 +3,14 @@ name: Deploy site on push
 on:
   push:
     branches: [main]
-    # Skip commits made by the monthly-update workflow itself to avoid loops.
-    # Those commits include [skip ci] in the message, but the path filter below
-    # is the belt-and-suspenders guard.
     paths:
-      # Retrigger only when model artifacts or site source change.
-      # Data fetching (step 1-3) is skipped — existing site/data/*.json are used.
       - 'machine-learning-module/results/STGNN/**'
-      - 'machine-learning-module/results/STGNN/baseline_logIR/metrics.json'
       - 'dengue-infection-module/results/**'
       - 'site/**'
       - 'docs/**'
 
 jobs:
   deploy:
-    # [skip ci] in the commit message also suppresses this job, but being
-    # explicit here makes the intent clear.
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     permissions:
@@ -38,18 +30,12 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install jupyter ipykernel pyyaml pandas numpy plotly pyarrow
-
-      # Quarto may resolve python3 through its own detection rather than PATH.
-      # Symlinking ensures /usr/bin/python3 (a common hardcoded fallback) always
-      # points to the toolcache Python that has all packages installed.
-      - name: Point system python3 to toolcache Python
-        run: sudo ln -sf "$pythonLocation/bin/python3" /usr/bin/python3
+          # Write QUARTO_PYTHON into the persistent env so every subsequent
+          # step (including quarto-actions/setup) sees the correct interpreter.
+          echo "QUARTO_PYTHON=$pythonLocation/bin/python3" >> $GITHUB_ENV
 
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
-
-      - name: Register Jupyter kernel
-        run: python -m ipykernel install --user --name python3 --display-name "Python 3"
 
       - name: Render site
         run: quarto render site/

@@ -47,6 +47,9 @@ jobs:
             torch-geometric \
             plotly \
             pyarrow
+          # Write QUARTO_PYTHON into the persistent env so every subsequent
+          # step (including quarto-actions/setup) sees the correct interpreter.
+          echo "QUARTO_PYTHON=$pythonLocation/bin/python3" >> $GITHUB_ENV
 
       # ── Step 1: Fetch zonal statistics from GEE ──────────────────────────
       - name: Fetch monthly zonal statistics
@@ -79,34 +82,11 @@ jobs:
           git push origin main
 
       # ── Step 5: Render Quarto site ────────────────────────────────────────
-      # Quarto may resolve python3 through its own detection rather than PATH.
-      # Symlinking ensures /usr/bin/python3 (a common hardcoded fallback) always
-      # points to the toolcache Python that has all packages installed.
-      - name: Point system python3 to toolcache Python
-        run: sudo ln -sf "$pythonLocation/bin/python3" /usr/bin/python3
-
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Register Jupyter kernel
-        run: python -m ipykernel install --user --name python3 --display-name "Python 3"
-
-      - name: Debug Python / Quarto detection
-        run: |
-          echo "=== which python3 ==="
-          which python3
-          python3 --version
-          echo "=== pyyaml check ==="
-          python3 -c "import yaml; print('yaml', yaml.__version__)" || echo "MISSING yaml"
-          echo "=== jupyter check ==="
-          python3 -m jupyter --version || echo "MISSING jupyter"
-          echo "=== kernelspec list ==="
-          python3 -m jupyter kernelspec list
-          echo "=== quarto check jupyter ==="
-          quarto check jupyter || true
-
       - name: Render site
-        run: QUARTO_PYTHON="$pythonLocation/bin/python3" quarto render site/
+        run: quarto render site/
 
       # ── Step 5: Deploy to GitHub Pages ────────────────────────────────────
       - name: Deploy to GitHub Pages
