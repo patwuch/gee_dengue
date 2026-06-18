@@ -38,7 +38,8 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Render site
-        run: quarto render site/
+        working-directory: site
+        run: quarto render .
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

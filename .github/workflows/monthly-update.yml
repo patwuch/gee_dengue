@@ -86,7 +86,8 @@ jobs:
         uses: quarto-dev/quarto-actions/setup@v2
 
       - name: Render site
-        run: quarto render site/
+        working-directory: site
+        run: quarto render .
 
       # ── Step 5: Deploy to GitHub Pages ────────────────────────────────────
       - name: Deploy to GitHub Pages
