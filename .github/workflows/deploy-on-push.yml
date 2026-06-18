@@ -44,6 +44,8 @@ jobs:
 
       - name: Render site
         run: quarto render site/
+        env:
+          QUARTO_PYTHON: ${{ env.pythonLocation }}/bin/python3
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

@@ -80,6 +80,8 @@ jobs:
 
       - name: Render site
         run: quarto render site/
+        env:
+          QUARTO_PYTHON: ${{ env.pythonLocation }}/bin/python3
 
       # ── Step 5: Deploy to GitHub Pages ────────────────────────────────────
       - name: Deploy to GitHub Pages
