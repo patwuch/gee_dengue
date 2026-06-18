@@ -37,6 +37,14 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
+      - name: Register kernel and check Quarto Python detection
+        run: |
+          python -m ipykernel install --sys-prefix --name python3 --display-name "Python 3"
+          echo "=== kernel location ==="
+          python -m jupyter kernelspec list
+          echo "=== quarto check ==="
+          quarto check jupyter 2>&1 || true
+
       - name: Render site
         working-directory: site
         run: quarto render .
