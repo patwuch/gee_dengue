@@ -4,7 +4,15 @@ from plotly.subplots import make_subplots
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-DATA_PATH = "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/raw/OpenDengue/Spatial_extract_V1_3.csv"
+def _find_git_root(start):
+    from pathlib import Path
+    for p in (start,) + tuple(start.parents):
+        if (p / ".git").exists():
+            return p
+    return start
+
+from pathlib import Path
+DATA_PATH = str(_find_git_root(Path(__file__).resolve()) / "data" / "raw" / "dengue-infection" / "Spatial_extract_V1_3.csv")
 OUTPUT_PATH = "coverage_thailand_dual.html"
 COUNTRY = "THAILAND"
 DATE_START = "1960-01-01"

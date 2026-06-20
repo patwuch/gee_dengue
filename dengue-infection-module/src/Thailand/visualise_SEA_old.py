@@ -5,7 +5,15 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 # ── CONFIG ────────────────────────────────────────────────────────────────────
-INPUT_PATH = "/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/raw/OpenDengue/Temporal_extract_V1_3.csv"
+def _find_git_root(start):
+    from pathlib import Path
+    for p in (start,) + tuple(start.parents):
+        if (p / ".git").exists():
+            return p
+    return start
+
+from pathlib import Path
+INPUT_PATH = str(_find_git_root(Path(__file__).resolve()) / "data" / "raw" / "dengue-infection" / "Temporal_extract_V1_3.csv")
 OUTPUT_PATH = "coverage_sea_long_temporal.html"
 DATE_START = "1991-01-01"
 DATE_END = "2025-12-31"

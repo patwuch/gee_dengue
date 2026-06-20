@@ -1,4 +1,15 @@
 import csv
+from pathlib import Path
+
+
+def _find_git_root(start: Path) -> Path:
+    for p in (start,) + tuple(start.parents):
+        if (p / ".git").exists():
+            return p
+    return start
+
+
+PROJECT_ROOT = _find_git_root(Path(__file__).resolve())
 
 replacements = {
     'AYAYARWADDY':              'AYEYARWADY',
@@ -17,7 +28,7 @@ replacements = {
     'REGION 4':                 'REGION IV-A (CALABARZON)',
 }
 
-filepath = '/home/patwuch/Documents/projects/Chuang-Lab-TMU/dengue-infection-module/data/interim/OpenDengue/filtered_sea_2011_2018.csv'
+filepath = PROJECT_ROOT / "data" / "interim" / "dengue-infection" / "filtered_sea_2011_2018.csv"
 
 with open(filepath, newline='') as f:
     rows = list(csv.DictReader(f))

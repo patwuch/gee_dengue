@@ -29,12 +29,13 @@
 !machine-learning-module/results/**/
 !machine-learning-module/results/**/*.json
 
-# ── Module data and outputs ───────────────────────────────────────────────────
+# ── Shared data root (all pipeline data lives here) ──────────────────────────
+data/
+
+# ── Module-local outputs ──────────────────────────────────────────────────────
 climate-projection-module/data/
 climate-projection-module/report/
-dengue-infection-module/data/
 dengue-infection-module/report/
-machine-learning-module/data/
 machine-learning-module/logs/
 machine-learning-module/report/
 machine-learning-module/models/

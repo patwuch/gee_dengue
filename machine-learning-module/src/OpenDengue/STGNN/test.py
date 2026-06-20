@@ -31,6 +31,7 @@ from model import STGATGRU
 from loss  import masked_huber_loss
 from torch.utils.data import DataLoader
 from tune  import STGNNDataset, load_tensors, load_edge_index
+from preprocess.utils import load_preprocessing_params
 
 
 # ── Paths / params ────────────────────────────────────────────────────────────
@@ -49,15 +50,46 @@ def load_best_params(cfg: dict, override_path: str = None) -> dict:
         return json.load(f)
 
 
+# ── Inverse transform ─────────────────────────────────────────────────────────
+def inverse_transform(
+    preds:   np.ndarray,        # (W, N) in model output space
+    targets: np.ndarray,        # (W, N) in model output space
+    params:  dict,              # from load_preprocessing_params, or {} if unavailable
+    months:  np.ndarray | None, # (W,) month integers 1-12, or None
+    cfg:     dict,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Invert preprocessing transforms in reverse order: scaler → seasonal mean → log."""
+    prep = cfg.get("preprocessing", {})
+    p, t = preds.copy(), targets.copy()
+
+    if prep.get("scale_target", True):
+        si = params.get("scaler_inc")
+        if si:
+            p = p * si["std"] + si["mean"]
+            t = t * si["std"] + si["mean"]
+
+    if prep.get("deseasonalise") and months is not None:
+        sm = {int(k): v for k, v in params.get("seasonal_means", {}).items()}
+        if sm:
+            offsets = np.array([sm.get(int(m), 0.0) for m in months])  # (W,)
+            p = p + offsets[:, None]   # broadcast over nodes
+            t = t + offsets[:, None]
+
+    if prep.get("log_transform"):
+        p = np.expm1(p)
+        t = np.expm1(t)
+
+    return p, t
+
+
 # ── Evaluation pass ───────────────────────────────────────────────────────────
 def eval_with_metrics(
     model:      STGATGRU,
-    dataloader:  DataLoader, # Updated to accept your new batched loader
+    dataloader: DataLoader,
     edge_index: torch.Tensor,
     device:     torch.device,
-    log_scale:  bool = True,
-) -> tuple[float, dict, list, list]:
-    
+) -> tuple[float, list, list, list]:
+    """Collect predictions and targets in model output space (no inverse transform)."""
     model.eval()
     total_loss = 0.0
     all_preds, all_targets, all_masks = [], [], []
@@ -66,41 +98,24 @@ def eval_with_metrics(
         for x, y, mask in dataloader:
             x, y, mask = x.to(device), y.to(device), mask.to(device)
 
-            # Parallelized sequence pass matching your new architecture
-            pred = model(x, edge_index, mask=mask) 
+            pred = model(x, edge_index, mask=mask)
             if pred.dim() == 3 and y.dim() == 2:
                 pred = pred.squeeze(-1)
 
             target_mask = mask[:, -1, :] if mask.dim() == 3 else mask
-            
+
             loss = masked_huber_loss(pred, y, target_mask)
             total_loss += loss.item()
 
             if y.dim() == 3:
                 y = y.squeeze(-1)
-            p = torch.expm1(pred) if log_scale else pred
-            t = torch.expm1(y)    if log_scale else y
-            
-            all_preds.append(p.cpu().numpy())
-            all_targets.append(t.cpu().numpy())
-            all_masks.append(target_mask.cpu().numpy()) # Save the masks!
+
+            all_preds.append(pred.cpu().numpy())
+            all_targets.append(y.cpu().numpy())
+            all_masks.append(target_mask.cpu().numpy())
 
     mean_loss = total_loss / max(len(dataloader), 1)
-
-    # Flatten everything across the entire evaluation split
-    preds   = np.concatenate(all_preds,   axis=0)   
-    targets = np.concatenate(all_targets, axis=0)
-    masks   = np.concatenate(all_masks,   axis=0).astype(bool) # Convert to boolean index
-
-    # CRITICAL FIX: Filter out missing data points before calculating final summary stats
-    valid_preds   = preds[masks]
-    valid_targets = targets[masks]
-
-    mae = float(np.abs(valid_preds - valid_targets).mean())
-    mse = float(((valid_preds - valid_targets) ** 2).mean())
-    metrics = {"mae": mae, "mse": mse, "rmse": mse ** 0.5}
-
-    return mean_loss, metrics, all_preds, all_targets
+    return mean_loss, all_preds, all_targets, all_masks
 
 # ── Plotting ──────────────────────────────────────────────────────────────────
 
@@ -169,7 +184,6 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
 
     device      = torch.device(cfg.get("device", "cpu"))
     window_size = params["window_size"]
-    log_scale   = cfg.get("log_scale", True)
 
     # ── Data ─────────────────────────────────────────────────────────────────
     tensors     = load_tensors(cfg, window_size)
@@ -178,12 +192,21 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     edge_index  = load_edge_index(cfg, device)
     in_channels = dataset.x.shape[-1]
 
+    # ── Preprocessing params for inverse transform ────────────────────────────
+    try:
+        preproc_params = load_preprocessing_params(cfg)
+    except FileNotFoundError:
+        print("WARNING: preprocessing_params.json not found — metrics will be in model output space.")
+        preproc_params = {}
+    months    = tensors.get(f"{split}_months")
+    months_np = months.numpy() if months is not None else None
+
     # ── Rebuild model & load weights ─────────────────────────────────────────
     model = STGATGRU(
         in_channels  = in_channels,
         gat1_hidden  = params["gat1_hidden"],
         gat1_heads   = params["gat1_heads"],
-        mlp_hidden   = params["gat1_hidden"] * params["gat1_heads"],
+        mlp_hidden   = params.get("mlp_hidden", params["gat1_hidden"] * params["gat1_heads"]),
         mlp_layers   = params["mlp_layers"],
         gat2_hidden  = params["gat2_hidden"],
         gat2_heads   = params["gat2_heads"],
@@ -196,9 +219,23 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     model.load_state_dict(torch.load(model_path, weights_only=True))
 
     # ── Evaluate ──────────────────────────────────────────────────────────────
-    loss, metrics, preds, targets = eval_with_metrics(
-        model, dataloader, edge_index, device, log_scale=log_scale
+    loss, raw_preds, raw_targets, all_masks = eval_with_metrics(
+        model, dataloader, edge_index, device
     )
+
+    # ── Inverse transform to IR scale ─────────────────────────────────────────
+    preds   = np.concatenate(raw_preds,   axis=0)  # (W, N)
+    targets = np.concatenate(raw_targets, axis=0)  # (W, N)
+    masks   = np.concatenate(all_masks,   axis=0).astype(bool)
+
+    preds, targets = inverse_transform(preds, targets, preproc_params, months_np, cfg)
+
+    # ── Metrics on valid positions only ───────────────────────────────────────
+    valid_preds   = preds[masks]
+    valid_targets = targets[masks]
+    mae     = float(np.abs(valid_preds - valid_targets).mean())
+    mse     = float(((valid_preds - valid_targets) ** 2).mean())
+    metrics = {"mae": mae, "mse": mse, "rmse": mse ** 0.5}
 
     print(
         f"\n{split} results | Huber {loss:.4f} | "
@@ -207,16 +244,12 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
 
     # ── Save predictions ──────────────────────────────────────────────────────
     preds_path = out_dir / f"{split}_predictions.npz"
-    np.savez(
-        preds_path,
-        predictions = np.concatenate(preds,   axis=0),
-        targets     = np.concatenate(targets, axis=0),
-    )
+    np.savez(preds_path, predictions=preds, targets=targets)
     print(f"Predictions saved to {preds_path}")
 
     # ── Plots ─────────────────────────────────────────────────────────────────
-    pred_plot    = plot_predictions(preds, targets, out_dir)
-    scatter_plot = plot_scatter(preds, targets, out_dir)
+    pred_plot    = plot_predictions([preds],   [targets], out_dir)
+    scatter_plot = plot_scatter(    [preds],   [targets], out_dir)
 
     # ── Metrics summary ───────────────────────────────────────────────────────
     summary = {

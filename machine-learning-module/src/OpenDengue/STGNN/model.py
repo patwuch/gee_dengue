@@ -83,8 +83,10 @@ class STGATGRU(nn.Module):
             elif mask.dim() == 3:  # (B, T, N) → (B, T, N, 1)
                 mask = mask.unsqueeze(-1)
 
-        # Change 3: substitute learned embedding for missing nodes instead of zeroing
-        missing_emb = self.missing_emb.view(1, 1, 1, F_dim)
+        # Change 3: substitute learned embedding for missing nodes instead of zeroing.
+        # tanh keeps the embedding in (-1, 1) — same range as normalized features —
+        # and prevents it from exploding under high learning rates.
+        missing_emb = torch.tanh(self.missing_emb).view(1, 1, 1, F_dim)
         x = x * mask + missing_emb * (1 - mask)
         x = torch.cat([x, mask.expand(B, T, N, 1)], dim=-1)
 
@@ -116,11 +118,13 @@ class STGATGRU(nn.Module):
 
         # ── 4. Temporal layer & output ────────────────────────────────────────
         # Change 2: carry forward hidden state for missing nodes rather than updating
-        h = torch.zeros(1, B * N, self.gru_hidden, device=x_seq.device, dtype=x_seq.dtype)
+        h = torch.zeros(1, B * N, self.gru_hidden, device=x_seq.device, dtype=torch.float32)
         for t in range(T):
-            m_t = gru_mask[t].unsqueeze(0).unsqueeze(-1)  # (1, B*N, 1)
-            _, h_new = self.gru(x_seq[:, t:t+1, :], h)
-            h = h_new * m_t + h * (1 - m_t)
+            m_t = gru_mask[t].unsqueeze(0).unsqueeze(-1).bool()  # (1, B*N, 1)
+            with torch.autocast("cuda", enabled=False):
+                _, h_new = self.gru(x_seq[:, t:t+1, :].float(), h)
+            # torch.where avoids h_new * 0 = NaN when h_new overflows to inf in fp16
+            h = torch.where(m_t.expand_as(h_new), h_new, h)
         del x_seq
         final_state = h.squeeze(0)         # (B*N, gru_hidden)
 

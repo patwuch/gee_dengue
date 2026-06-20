@@ -160,7 +160,6 @@ hist_expanded.columns = [f"LC_Type1_pct_class{c}" for c in hist_expanded.columns
 hist_expanded        = hist_expanded.fillna(0)
 lulc_hist    = pd.concat([lulc[["admin", "name", "Date"]], hist_expanded], axis=1)
 lulc_monthly = expand_annual_to_monthly(lulc_hist, list(hist_expanded.columns))
-lulc_monthly = lulc_monthly[lulc_monthly["year_month"].between("2011-01-01", "2018-12-31")].reset_index(drop=True)
 print(f"  MODIS_LULC shape: {lulc_monthly.shape}")
 
 print("Processing WorldPop...")

@@ -1,28 +1,48 @@
-RAW_OPENDENGUE_DIR    = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/data/raw/OpenDengue")
-INTERIM_DIR    = Path("/home/patwuch/Documents/projects/Chuang-Lab-TMU/machine-learning-module/data/interim")
-ERA5_PATH      = RAW_OPENDENGUE_DIR / "ERA5_LAND_2011-01-01_to_2018-12-31.parquet"
-CHIRPS_PATH    = RAW_OPENDENGUE_DIR / "CHIRPS_2011-01-01_to_2018-12-31.parquet"
-MODIS_LST_PATH   = RAW_OPENDENGUE_DIR / "MODIS_LST_2011-01-01_to_2018-12-31.parquet"
-MODIS_LULC_PATH  = RAW_OPENDENGUE_DIR / "MODIS_LULC_2001-01-01_to_2023-12-31.parquet"
-MODIS_NDVI_EVI_PATH = RAW_OPENDENGUE_DIR / "MODIS_NDVI_EVI_2011-01-01_to_2018-12-31.parquet"
-WORLDPOP_PATH   = RAW_OPENDENGUE_DIR / "WorldPop_2011-01-01_to_2018-12-31.parquet"
+from pathlib import Path
 
-RAW_INFECTON_DATA = RAW_OPENDENGUE_DIR / "filtered_sea_2011_2018_SLVC_imputed.csv"
-MERGED_DENGUE_ENV_DATA = INTERIM_DIR / "SEA_dengue_env_monthly_2011-2018.csv"
+
+def find_git_root(start: Path) -> Path:
+    for path in (start,) + tuple(start.parents):
+        if (path / ".git").exists():
+            return path
+    return start
+
+
+PROJECT_ROOT  = find_git_root(Path(workflow.basedir).resolve())
+PIPELINE_ROOT = PROJECT_ROOT / "machine-learning-module"
+
+ZONAL_STATS_DIR     = PROJECT_ROOT / "data" / "processed" / "zonal-statistics"
+ERA5_PATH           = ZONAL_STATS_DIR / "ERA5_LAND_2011-01-01_to_2018-12-31.parquet"
+CHIRPS_PATH         = ZONAL_STATS_DIR / "CHIRPS_2011-01-01_to_2018-12-31.parquet"
+MODIS_LST_PATH      = ZONAL_STATS_DIR / "MODIS_LST_2011-01-01_to_2018-12-31.parquet"
+MODIS_LULC_PATH     = ZONAL_STATS_DIR / "MODIS_LULC_2011-01-01_to_2018-12-31.parquet"
+MODIS_NDVI_EVI_PATH = ZONAL_STATS_DIR / "MODIS_NDVI_EVI_2011-01-01_to_2018-12-31.parquet"
+WORLDPOP_PATH       = ZONAL_STATS_DIR / "WorldPop_2011-01-01_to_2018-12-31.parquet"
+
+
+ERA5_CALI_PATH      = ZONAL_STATS_DIR / "ERA5_LAND_2019-01-01_to_2026-05-31.parquet"
+CHIRPS_CALI_PATH    = ZONAL_STATS_DIR / "CHIRPS_2019-01-01_to_2026-05-31.parquet"
+MODIS_LST_CALI_PATH = ZONAL_STATS_DIR / "MODIS_LST_2019-01-01_to_2026-05-31.parquet"
+MODIS_LULC_CALI_PATH = ZONAL_STATS_DIR / "MODIS_LULC_2019-01-01_to_2026-05-31.parquet"
+MODIS_NDVI_EVI_CALI_PATH = ZONAL_STATS_DIR / "MODIS_NDVI_EVI_2019-01-01_to_2026-05-31.parquet"
+# WORLDPOP_PATH     = ZONAL_STATS_DIR / "WorldPop_2019-01-01_to_2018-12-31.parquet"
+
+INFECTON_DATA      = PROJECT_ROOT / "data" / "processed" / "dengue-infection" / "filtered_sea_2011_2018_SLVC_imputed.csv"
+MERGED_DENGUE_ENV_DATA = PROJECT_ROOT / "data" / "interim"   / "machine-learning" / "SEA_dengue_env_monthly_2011-2018.csv"
 
 rule merge_env_infection:
     message:
         "Merging environmental and infection data..."
     input:
-        dengue = RAW_INFECTON_DATA,
-        era5   = ERA5_PATH,
-        chirps  = CHIRPS_PATH,
-        modis_lst = MODIS_LST_PATH,
-        modis_lulc = MODIS_LULC_PATH,
-        modis_veg  = MODIS_NDVI_EVI_PATH,
-        worldpop   = WORLDPOP_PATH,
+        dengue     = str(INFECTON_DATA),
+        era5       = str(ERA5_PATH),
+        chirps     = str(CHIRPS_PATH),
+        modis_lst  = str(MODIS_LST_PATH),
+        modis_lulc = str(MODIS_LULC_PATH),
+        modis_veg  = str(MODIS_NDVI_EVI_PATH),
+        worldpop   = str(WORLDPOP_PATH),
     output:
-        merged = MERGED_DENGUE_ENV_DATA,
+        merged = str(MERGED_DENGUE_ENV_DATA),
     params:
         cfg = lambda wc: workflow.configfiles[-1],
     script:

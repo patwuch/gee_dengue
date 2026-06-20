@@ -36,8 +36,16 @@ class STGNNDataset(Dataset):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _find_git_root(start: Path) -> Path:
+    for p in (start,) + tuple(start.parents):
+        if (p / ".git").exists():
+            return p
+    return start
+
+
 def _processed_dir(cfg: dict) -> Path:
-    return Path("data/processed/STGNN") / cfg["name"]
+    root = _find_git_root(Path(__file__).resolve())
+    return root / "data" / "processed" / "machine-learning" / "STGNN" / cfg["name"]
 
 
 def _sweep_id_path(cfg: dict) -> Path:
@@ -442,38 +450,50 @@ def run_sweep(cfg: dict, out_path: str | Path = None):
     sanity_check_before_sweep(cfg, strict=strict)
 
     sweep_id = _get_or_create_sweep(cfg)
-    
+
     project = cfg.get("wandb_project")
     entity  = cfg.get("wandb_entity")
 
-    wandb.agent(
-        sweep_id,
-        function = lambda: train_sweep(cfg),
-        count    = cfg["tune"]["n_trials"],
-        entity   = entity,
-        project  = project,
-    )
+    try:
+        wandb.agent(
+            sweep_id,
+            function = lambda: train_sweep(cfg),
+            count    = cfg["tune"]["n_trials"],
+            entity   = entity,
+            project  = project,
+        )
 
-    metric   = cfg["tune"]["metric"]
-    api      = wandb.Api()
-    
-    sweep    = api.sweep(sweep_id)
-    best_run = sweep.best_run(metric=metric)
-    print(f"Best run ID: {best_run.id}")
-    print(f"Best run config: {best_run.config}")
-    print(f"Best run summary: {dict(best_run.summary)}")
+        metric   = cfg["tune"]["metric"]
+        api      = wandb.Api()
 
-    best_params = dict(best_run.config)
-    best_params["best_val_loss"] = best_run.summary.get("best_val_loss")
+        sweep    = api.sweep(sweep_id)
+        best_run = sweep.best_run()   # uses sweep config's metric/goal (minimize)
+        if best_run is None:
+            raise RuntimeError(
+                f"Sweep {sweep_id} has no completed runs with a finite metric. "
+                "Check W&B for OOM or NaN failures across all trials."
+            )
+        print(f"Best run ID: {best_run.id}")
+        print(f"Best run config: {best_run.config}")
+        print(f"Best run summary: {dict(best_run.summary)}")
 
-    if out_path is None:
-        out_path = Path("results/STGNN") / cfg["name"] / "best_params.json"
-    out_path = Path(out_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w") as f:
-        json.dump(best_params, f, indent=2)
+        best_params = dict(best_run.config)
+        best_params["best_val_loss"] = best_run.summary.get("best_val_loss")
 
-    _sweep_id_path(cfg).unlink(missing_ok=True)
+        if out_path is None:
+            out_path = Path("results/STGNN") / cfg["name"] / "best_params.json"
+        out_path = Path(out_path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w") as f:
+            json.dump(best_params, f, indent=2)
+
+        _sweep_id_path(cfg).unlink(missing_ok=True)
+
+    except Exception:
+        # Delete sweep_id.txt so the next Snakemake run starts a fresh sweep
+        # rather than reattaching to a partially-run one.
+        _sweep_id_path(cfg).unlink(missing_ok=True)
+        raise
 
 
 # ── Snakemake entry point ─────────────────────────────────────────────────────

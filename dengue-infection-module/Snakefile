@@ -12,10 +12,10 @@ PROJECT_ROOT   = find_git_root(Path.cwd().resolve())
 PIPELINE_ROOT  = PROJECT_ROOT / "dengue-infection-module"
 SCRIPTS        = PIPELINE_ROOT / "src" / "OpenDengue"
 
-RAW_DIR        = PIPELINE_ROOT / "data" / "raw"    / "OpenDengue"
-INTERIM_DIR    = PIPELINE_ROOT / "data" / "interim" / "OpenDengue"
-PROCESSED_DIR  = PIPELINE_ROOT / "data" / "processed" / "OpenDengue"
-EXTERNAL_DIR   = PIPELINE_ROOT / "data" / "external"
+RAW_DIR        = PROJECT_ROOT / "data" / "raw"       / "dengue-infection"
+INTERIM_DIR    = PROJECT_ROOT / "data" / "interim"   / "dengue-infection"
+PROCESSED_DIR  = PROJECT_ROOT / "data" / "processed" / "dengue-infection"
+EXTERNAL_DIR   = PROJECT_ROOT / "data" / "external"  / "dengue-infection"
 RESULTS_DIR    = PIPELINE_ROOT / "results"
 
 # ── Raw inputs ────────────────────────────────────────────────────────────────

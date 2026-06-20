@@ -12,7 +12,6 @@
 
 _name = config.get("name", "")
 
-
 _window_sizes = (
     config.get("tune", {})
           .get("search_space", {})
@@ -21,20 +20,21 @@ _window_sizes = (
           .get("choices", [0])
 )
 
+_ML_PROCESSED = PROJECT_ROOT / "data" / "processed" / "machine-learning"
 
 
 rule preprocess_stgnn:
     message:
         "Preprocessing for STGNN with experiment name '{_name}' and window sizes {_window_sizes}."
     input:
-        MERGED_DENGUE_ENV_DATA,
+        str(MERGED_DENGUE_ENV_DATA),
     output:
         tensors = expand(
-            "data/processed/STGNN/{name}/window_{w}/tensors.pt",
+            str(_ML_PROCESSED / "STGNN/{name}/window_{w}/tensors.pt"),
             name=_name,
             w=_window_sizes,
         ),
-        scaler  = f"data/processed/STGNN/{_name}/scaler.pkl",
+        scaler  = str(_ML_PROCESSED / f"STGNN/{_name}/preprocessing_params.json"),
     params:
         cfg = lambda wc: workflow.configfiles[-1],
     script:
@@ -43,11 +43,11 @@ rule preprocess_stgnn:
 rule tune_stgnn:
     input:
         tensors = expand(
-            "data/processed/STGNN/{name}/window_{w}/tensors.pt",
+            str(_ML_PROCESSED / "STGNN/{name}/window_{w}/tensors.pt"),
             name = _name,
             w    = _window_sizes,
         ),
-        scaler  = f"data/processed/STGNN/{_name}/scaler.pkl",
+        scaler  = str(_ML_PROCESSED / f"STGNN/{_name}/preprocessing_params.json"),
     output:
         best_params = f"results/STGNN/{_name}/best_params.json",
     resources:
@@ -94,14 +94,6 @@ rule test_stgnn:
 
 # ---------------------------------------------------------------------------
 # Production training rule — only active when best_params_source is set.
-#
-# Trains on the full dataset (no test holdout) using hyperparameters already
-# found by the baseline sweep, so no new tuning run is required.
-#
-# Invoke:
-#   snakemake results/STGNN/production_logIR/best_model.pt \
-#       --configfile config/OpenDengue/stgnn_logIR_production.yaml \
-#       --cores 4 --resources gpu=1
 # ---------------------------------------------------------------------------
 
 if config.get("best_params_source"):
@@ -111,11 +103,11 @@ if config.get("best_params_source"):
         input:
             best_params = f"results/STGNN/{_params_source}/best_params.json",
             tensors     = expand(
-                "data/processed/STGNN/{name}/window_{w}/tensors.pt",
+                str(_ML_PROCESSED / "STGNN/{name}/window_{w}/tensors.pt"),
                 name = _name,
                 w    = _window_sizes,
             ),
-            scaler      = f"data/processed/STGNN/{_name}/scaler.pkl",
+            scaler      = str(_ML_PROCESSED / f"STGNN/{_name}/preprocessing_params.json"),
         output:
             checkpoint = f"results/STGNN/{_name}/best_model.pt",
             losses     = f"results/STGNN/{_name}/train_val_losses.json",

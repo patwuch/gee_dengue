@@ -5,7 +5,7 @@
 #             --cores 4 --resources gpu=1
 # ============================================================
 
-name:    embed_gru_mask_logIR
+name:    embed_gru_mask_logIR_fixed
 dataset: opendengue
 model:   stgnn
 task:    regressor
@@ -16,7 +16,7 @@ wandb_project: stgnn-dengue
 # Data
 # ---------------------------------------------------------------------------
 data:
-  path:          data/interim/SEA_dengue_env_monthly_2011-2018.csv
+  path:          data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv
   time_column:   year_month
   unit_column:   adm_1_name
   region_column: adm_0_name
@@ -34,10 +34,11 @@ target_column: IR
 # Preprocessing
 # ---------------------------------------------------------------------------
 preprocessing:
-  log_transform:  true    # IR
+  log_transform:  true
   deseasonalise:  true
-  add_lag_target: false # IN STGNN WE USE WINDOW SIZE INSTEAD OF LAGS
-  lag_steps:      []   # IN STGNN WE USE WINDOW SIZE INSTEAD OF LAGS
+  scale_target:   true
+  add_lag_target: false
+  lag_steps:      []
 
 # ---------------------------------------------------------------------------
 # Features

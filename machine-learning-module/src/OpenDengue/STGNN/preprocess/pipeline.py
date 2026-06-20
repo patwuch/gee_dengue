@@ -1,9 +1,10 @@
 import argparse
 import pandas as pd
 import torch
-from utils import load_config, save_tensors, save_scaler, save_edge_index, get_window_sizes
+from utils import load_config, save_tensors, save_preprocessing_params, save_edge_index, get_window_sizes
 from dataset import load_data, build_node_index
-from features import log_transform, separate_sources, build_masks, fill_missing_inc, reshape_all, deseasonalise_target
+from features import log_transform, separate_sources, build_masks, fill_missing_inc, reshape_all
+from features import fit_seasonal_means, apply_seasonal_means
 from features import fill_node_from_donors, impute_env_naive, assert_no_nans, encode_quality_flags
 from features import diagnose_feature_composition, scale_sources
 from graph import build_edge_index
@@ -22,8 +23,10 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def main(config_path: str):
+def main(config_path: str, data_path: str | None = None):
     cfg  = load_config(config_path)
+    if data_path is not None:
+        cfg["data"]["path"] = data_path
     prep = cfg.get("preprocessing", {})
 
     df = load_data(cfg)
@@ -60,15 +63,12 @@ def main(config_path: str):
             print(f"  Consecutive? {bad[time_col].nunique() == n_nan // bad[node_col].nunique()}")
 
     # ── Standard preprocessing ───────────────────────────────────────────────
-    # NOTE: log_transform and deseasonalise run before the split intentionally:
-    #   - NaNs are still present here, so deseasonalise correctly excludes them
-    #     from monthly mean calculation rather than treating them as zeros.
-    #   - fillna(0) on incidence happens later in fill_missing_inc, after
-    #     build_masks has already captured NaN positions.
-    df = log_transform(df, cfg)        if prep.get("log_transform")  else df
+    # log_transform runs on the full df before the split: it is deterministic
+    # (no fitted parameters) so it introduces no data leakage, and applying it
+    # before the split ensures NaNs are still present when deseasonalise later
+    # computes monthly means (NaN rows are correctly excluded from the mean).
+    df = log_transform(df, cfg) if prep.get("log_transform") else df
     print("Log transform applied.")
-    df = deseasonalise_target(df, cfg) if prep.get("deseasonalise")  else df
-    print("Deseasonalisation applied.")
 
     # ── Encode categorical quality flags ─────────────────────────────────────
     quality_vars = cfg.get("features", {}).get("quality_vars", [])
@@ -84,15 +84,29 @@ def main(config_path: str):
     save_edge_index(edge_index, cfg)
 
     train_df, val_df, test_df = temporal_split(df, cfg)
+
+    # ── Deseasonalise: fit on train only, apply to all splits ────────────────
+    # Monthly means are computed from train_df while NaNs are still present,
+    # so missing positions are correctly excluded from the mean. The same
+    # fixed means are then applied to val and test to avoid data leakage.
+    seasonal_means: dict = {}
+    if prep.get("deseasonalise"):
+        seasonal_means = fit_seasonal_means(train_df, cfg)
+        train_df = apply_seasonal_means(train_df, seasonal_means, cfg)
+        val_df   = apply_seasonal_means(val_df,   seasonal_means, cfg)
+        test_df  = apply_seasonal_means(test_df,  seasonal_means, cfg)
+        print("Deseasonalisation applied (fitted on train only).")
+
     sources = separate_sources(train_df, val_df, test_df, cfg)
 
     # ── Incidence NaN handling ───────────────────────────────────────────────
     # Order matters: masks must be built before filling so that NaN positions
     # are captured while still present, then zeros are filled explicitly before
     # scaling so scale_sources can assume clean input.
+    scale_target = prep.get("scale_target", True)
     masks   = build_masks(sources)
     sources = fill_missing_inc(sources)
-    scaled  = scale_sources(sources)
+    scaled  = scale_sources(sources, scale_target=scale_target)
 
     # Write scaled values back into the DataFrames so reshape_all sees scaled data.
     # scale_sources operates on flat numpy arrays; we put them back in place here.
@@ -119,19 +133,28 @@ def main(config_path: str):
     assert_no_nans(tensors, stage="post-imputation",  keys=["env", "lulc"],
                 raise_on_fail=True)    # ← hard stop
 
+    # ── Month indices per split (needed for inverse deseasonalisation) ────────
+    date_col = cfg["data"]["time_column"]
+    import pandas as pd
+    split_months = {
+        split: [pd.to_datetime(d).month for d in sorted(df_obj[date_col].unique())]
+        for split, df_obj in [("train", train_df), ("val", val_df), ("test", test_df)]
+    }
+
     # ── Window creation ──────────────────────────────────────────────────────
-    for window_size in get_window_sizes(cfg):
+    window_sizes = get_window_sizes(cfg)
+    for window_size in window_sizes:
         snapshots = create_windows(tensors, window_size, node_index, cfg)
 
-        if window_size == get_window_sizes(cfg)[0]:   # only check first window size
+        if window_size == window_sizes[0]:   # only check first window size
             diagnose_feature_composition(snapshots, cfg)
 
-        save_tensors(snapshots, cfg, window_size)
+        save_tensors(snapshots, cfg, window_size, split_months=split_months)
 
-    save_scaler(scaled["scalers"], cfg)
+    save_preprocessing_params(scaled["scalers"]["inc"], seasonal_means, cfg)
 
 if "snakemake" in dir():
-    main(config_path=snakemake.params.cfg)
+    main(config_path=snakemake.params.cfg, data_path=str(snakemake.input[0]))
 elif __name__ == "__main__":
     args = parse_args()
     main(config_path=args.config)

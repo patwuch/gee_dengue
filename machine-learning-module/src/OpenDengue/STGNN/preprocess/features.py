@@ -22,13 +22,20 @@ def fit_scaler(x_train: np.ndarray) -> tuple[StandardScaler, np.ndarray]:
 def apply_scaler(x: np.ndarray, scaler: StandardScaler) -> np.ndarray:
     return scaler.transform(x)
 
-def deseasonalise_target(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
-    """Subtract monthly means from the target column."""
+def fit_seasonal_means(train_df: pd.DataFrame, cfg: dict) -> dict:
+    """Compute per-month target means from training data only (NaN-aware)."""
     col      = cfg.get("target_column")
     date_col = cfg["data"]["time_column"]
+    months   = pd.to_datetime(train_df[date_col]).dt.month
+    return train_df.groupby(months)[col].mean().to_dict()   # {1: float, ..., 12: float}
 
-    monthly_mean = df.groupby(pd.to_datetime(df[date_col]).dt.month)[col].transform("mean")
-    df[col]      = df[col] - monthly_mean
+
+def apply_seasonal_means(df: pd.DataFrame, seasonal_means: dict, cfg: dict) -> pd.DataFrame:
+    """Subtract training monthly means from the target column."""
+    col      = cfg.get("target_column")
+    date_col = cfg["data"]["time_column"]
+    months   = pd.to_datetime(df[date_col]).dt.month
+    df[col]  = df[col] - months.map(seasonal_means)
     return df
 
 
@@ -49,23 +56,33 @@ def fill_missing_inc(sources: dict) -> dict:
     }
 
 
-def scale_sources(sources: dict) -> dict:
-    """Fit scalers on train, apply to val and test. Assumes NaNs already filled."""
-    scaler_inc, inc_train = fit_scaler(
-        sources["inc"]["train"].values.reshape(-1, 1)
-    )
-    scaler_env, env_train = fit_scaler(
-        sources["env"]["train"].values
-    )
+def scale_sources(sources: dict, scale_target: bool = True) -> dict:
+    """Fit scalers on train, apply to val and test. Assumes NaNs already filled.
 
+    scale_target=False leaves the incidence column in its preprocessed space
+    (log1p + deseasonalised) without z-scoring, so expm1 alone inverts it.
+    env features are always z-scored regardless of this flag.
+    """
+    if scale_target:
+        scaler_inc, inc_train = fit_scaler(sources["inc"]["train"].values.reshape(-1, 1))
+        inc_val  = apply_scaler(sources["inc"]["val"].values.reshape(-1, 1),  scaler_inc)
+        inc_test = apply_scaler(sources["inc"]["test"].values.reshape(-1, 1), scaler_inc)
+        print("inc scaler std:", scaler_inc.scale_)
+    else:
+        scaler_inc = None
+        inc_train  = sources["inc"]["train"].values.reshape(-1, 1)
+        inc_val    = sources["inc"]["val"].values.reshape(-1, 1)
+        inc_test   = sources["inc"]["test"].values.reshape(-1, 1)
+        print("inc scaler: disabled (scale_target=False)")
+
+    scaler_env, env_train = fit_scaler(sources["env"]["train"].values)
     print("env scaler std:", scaler_env.scale_)
-    print("inc scaler std:", scaler_inc.scale_)
 
     return {
         "inc": {
             "train": inc_train,
-            "val":   apply_scaler(sources["inc"]["val"].values.reshape(-1, 1),  scaler_inc),
-            "test":  apply_scaler(sources["inc"]["test"].values.reshape(-1, 1), scaler_inc),
+            "val":   inc_val,
+            "test":  inc_test,
         },
         "env": {
             "train": env_train,

@@ -24,7 +24,7 @@ best_params_source: baseline_logIR
 # Data
 # ---------------------------------------------------------------------------
 data:
-  path:          data/interim/SEA_dengue_env_monthly_2011-2018.csv
+  path:          data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv
   time_column:   year_month
   unit_column:   adm_1_name
   region_column: adm_0_name
@@ -44,6 +44,7 @@ target_column: IR
 preprocessing:
   log_transform:  true
   deseasonalise:  true
+  scale_target:   true
   add_lag_target: false
   lag_steps:      []
 

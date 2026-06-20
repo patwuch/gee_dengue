@@ -25,7 +25,7 @@ Interpreting the result
 Usage
 -----
     python overfit_test.py \
-        --data-dir data/processed/STGNN/baseline_logIR \
+        --data-dir data/processed/machine-learning/STGNN/baseline_logIR \
         --best-params results/STGNN/baseline_logIR/best_params.json \
         --n-windows 1 --steps 2000 --lr 1e-2
 
@@ -130,7 +130,7 @@ def verdict(history, pred_std, targ_std):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data-dir", required=True,
-                    help="Path to processed data dir, e.g. data/processed/STGNN/baseline_logIR")
+                    help="Path to processed data dir, e.g. data/processed/machine-learning/STGNN/baseline_logIR")
     ap.add_argument("--best-params", required=True, help="Path to best_params.json")
     ap.add_argument("--n-windows", type=int, default=1)
     ap.add_argument("--steps", type=int, default=2000)

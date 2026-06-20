@@ -10,14 +10,18 @@ import argparse
 import pandas as pd
 from pathlib import Path
 
-DEFAULT_INPUT = (
-    Path(__file__).parent.parent.parent
-    / "data/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025.csv"
-)
-DEFAULT_OUTPUT = (
-    Path(__file__).parent.parent.parent
-    / "data/interim/OpenDengue/spatial_SEARO_WPRO_EMRO_2000_2025_filtered.csv"
-)
+
+def _find_git_root(start: Path) -> Path:
+    for p in (start,) + tuple(start.parents):
+        if (p / ".git").exists():
+            return p
+    return start
+
+
+_DATA = _find_git_root(Path(__file__).resolve()) / "data"
+
+DEFAULT_INPUT  = _DATA / "interim" / "dengue-infection" / "spatial_SEARO_WPRO_EMRO_2000_2025.csv"
+DEFAULT_OUTPUT = _DATA / "interim" / "dengue-infection" / "spatial_SEARO_WPRO_EMRO_2000_2025_filtered.csv"
 
 
 def filter_mostly_zero_countries(df: pd.DataFrame, threshold: float = 0.9) -> pd.DataFrame:
