@@ -30,7 +30,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install jupyter ipykernel pyyaml pandas numpy plotly pyarrow
+          pip install jupyter ipykernel nbclient pyyaml pandas numpy plotly pyarrow
           # Write QUARTO_PYTHON into the persistent env so every subsequent
           # step (including quarto-actions/setup) sees the correct interpreter.
           echo "QUARTO_PYTHON=$pythonLocation/bin/python3" >> $GITHUB_ENV

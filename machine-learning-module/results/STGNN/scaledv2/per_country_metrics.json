@@ -1,0 +1,62 @@
+[
+  {
+    "country": "Brunei Darussalam",
+    "n_nodes": 4,
+    "mae": 1.9877717596360711,
+    "rmse": 2.2847325818871225
+  },
+  {
+    "country": "Cambodia",
+    "n_nodes": 1,
+    "mae": 3.0937246900072988,
+    "rmse": 4.424432402849274
+  },
+  {
+    "country": "Indonesia",
+    "n_nodes": 34,
+    "mae": 1.7362419072943724,
+    "rmse": 2.645670094291067
+  },
+  {
+    "country": "Lao People's Democratic Republic",
+    "n_nodes": 1,
+    "mae": 4.288319406068155,
+    "rmse": 5.6270814031661125
+  },
+  {
+    "country": "Malaysia",
+    "n_nodes": 15,
+    "mae": 8.73677749103414,
+    "rmse": 15.743107266821191
+  },
+  {
+    "country": "Myanmar",
+    "n_nodes": 18,
+    "mae": 1.2162784276397998,
+    "rmse": 1.6597079287601915
+  },
+  {
+    "country": "Philippines",
+    "n_nodes": 10,
+    "mae": 0.904053020186055,
+    "rmse": 1.1562300890301531
+  },
+  {
+    "country": "Singapore",
+    "n_nodes": 1,
+    "mae": 3.1984799221808915,
+    "rmse": 3.624100228891247
+  },
+  {
+    "country": "Thailand",
+    "n_nodes": 77,
+    "mae": 3.9549066481897284,
+    "rmse": 7.395116888479537
+  },
+  {
+    "country": "Viet Nam",
+    "n_nodes": 1,
+    "mae": 3.6919470322423473,
+    "rmse": 5.559288504418886
+  }
+]

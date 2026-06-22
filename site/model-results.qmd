@@ -11,11 +11,12 @@ import numpy as np
 import pandas as pd
 
 results_dir = pathlib.Path("../machine-learning-module/results/STGNN/scaledv2")
-data_csv    = pathlib.Path("../data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv")
 
 metrics     = json.loads((results_dir / "metrics.json").read_text())
 best_params = json.loads((results_dir / "best_params.json").read_text())
 losses      = json.loads((results_dir / "train_val_losses.json").read_text())
+ctry_metrics = json.loads((results_dir / "per_country_metrics.json").read_text())
+test_preds   = json.loads((results_dir / "test_predictions.json").read_text())
 ```
 
 ## What is scaledv2?
@@ -119,29 +120,11 @@ fig.show()
 #| label: tbl-country-metrics
 #| tbl-cap: "MAE and RMSE broken down by country across the 14 test months."
 
-npz      = np.load(results_dir / "test_predictions.npz")
-preds    = npz["predictions"]   # (14, 162)
-targets  = npz["targets"]       # (14, 162)
-
-df_csv   = pd.read_csv(data_csv, usecols=["adm_0_name", "adm_1_name"])
-nodes    = sorted(df_csv["adm_1_name"].unique())
-country  = df_csv.drop_duplicates("adm_1_name").set_index("adm_1_name")["adm_0_name"]
-
-rows_ctry = []
-for cname in sorted(df_csv["adm_0_name"].unique()):
-    cidx = [i for i, n in enumerate(nodes) if country.get(n) == cname]
-    p    = preds[:, cidx].flatten()
-    t    = targets[:, cidx].flatten()
-    mask = ~(np.isnan(p) | np.isnan(t))
-    if mask.sum() == 0:
-        continue
-    mae  = float(np.mean(np.abs(p[mask] - t[mask])))
-    rmse = float(np.sqrt(np.mean((p[mask] - t[mask]) ** 2)))
-    rows_ctry.append({"Country": cname, "Nodes": len(cidx), "MAE": mae, "RMSE": rmse})
-
-df_ctry = pd.DataFrame(rows_ctry)
-df_ctry["MAE"]  = df_ctry["MAE"].map(lambda v: f"{v:.3f}")
-df_ctry["RMSE"] = df_ctry["RMSE"].map(lambda v: f"{v:.3f}")
+df_ctry = pd.DataFrame([
+    {"Country": r["country"], "Nodes": r["n_nodes"],
+     "MAE": f"{r['mae']:.3f}", "RMSE": f"{r['rmse']:.3f}"}
+    for r in ctry_metrics
+])
 HTML(df_ctry.to_html(index=False, border=0, classes="table table-sm table-striped"))
 ```
 
@@ -157,75 +140,48 @@ rate for each admin-1 node over the 14 test months.
 #| label: fig-interactive-ts
 #| fig-cap: "Predicted (dashed) vs actual (solid) IR by admin-1 region. Use the dropdown to filter by country."
 
-df_ts = pd.read_csv(data_csv, usecols=["adm_0_name", "adm_1_name", "year_month", "IR"])
-df_ts["year_month"] = pd.to_datetime(df_ts["year_month"])
-all_dates = sorted(df_ts["year_month"].unique())
-test_dates = all_dates[-14:]
+dates             = test_preds["dates"]
+nodes_data        = test_preds["nodes"]
+countries_ordered = sorted({n["country"] for n in nodes_data})
 
 fig2 = go.Figure()
-buttons = []
-countries_ordered = sorted(df_ts["adm_0_name"].unique())
-
 first_country = True
 for cname in countries_ordered:
-    cidx   = [i for i, n in enumerate(nodes) if country.get(n) == cname]
-    cnodes = [nodes[i] for i in cidx]
-    visible_traces = []
-
-    for ni, node in zip(cidx, cnodes):
-        node_actual = (
-            df_ts[(df_ts["adm_1_name"] == node) & (df_ts["year_month"].isin(test_dates))]
-            .set_index("year_month")["IR"]
-            .reindex(test_dates)
-        )
-        node_pred = pd.Series(preds[:, ni], index=test_dates)
-
+    for node in (n for n in nodes_data if n["country"] == cname):
         vis = first_country
         fig2.add_trace(go.Scatter(
-            x=test_dates, y=node_actual.values,
-            mode="lines+markers", name=f"{node} — actual",
+            x=dates, y=node["actual"],
+            mode="lines+markers", name=f"{node['name']} — actual",
             line=dict(width=2), visible=vis,
         ))
         fig2.add_trace(go.Scatter(
-            x=test_dates, y=node_pred.values,
-            mode="lines+markers", name=f"{node} — pred",
+            x=dates, y=node["pred"],
+            mode="lines+markers", name=f"{node['name']} — pred",
             line=dict(width=2, dash="dash"), visible=vis,
         ))
-        visible_traces.append(node)
-
     first_country = False
 
-# Build visibility arrays for each country button
-n_total_traces = len(fig2.data)
-trace_offset   = 0
-visibility_map = {}
+n_total   = len(fig2.data)
+offset    = 0
+vis_map   = {}
 for cname in countries_ordered:
-    cidx = [i for i, n in enumerate(nodes) if country.get(n) == cname]
-    n_traces_c = len(cidx) * 2
-    vis_arr = [False] * n_total_traces
-    for j in range(trace_offset, trace_offset + n_traces_c):
-        vis_arr[j] = True
-    visibility_map[cname] = vis_arr
-    trace_offset += n_traces_c
-
-buttons = [
-    dict(label=cname,
-         method="update",
-         args=[{"visible": visibility_map[cname]},
-               {"title": f"Predicted vs Actual IR — {cname}"}])
-    for cname in countries_ordered
-]
+    cnodes     = [n for n in nodes_data if n["country"] == cname]
+    n_traces_c = len(cnodes) * 2
+    arr        = [False] * n_total
+    for j in range(offset, offset + n_traces_c):
+        arr[j] = True
+    vis_map[cname] = arr
+    offset += n_traces_c
 
 fig2.update_layout(
     updatemenus=[dict(
-        buttons=buttons,
-        direction="down",
-        showactive=True,
-        x=0.01, xanchor="left",
-        y=1.15, yanchor="top",
+        buttons=[dict(label=c, method="update",
+                      args=[{"visible": vis_map[c]}, {"title": f"Predicted vs Actual IR — {c}"}])
+                 for c in countries_ordered],
+        direction="down", showactive=True,
+        x=0.01, xanchor="left", y=1.15, yanchor="top",
     )],
-    xaxis_title="Month",
-    yaxis_title="Incidence Rate (IR)",
+    xaxis_title="Month", yaxis_title="Incidence Rate (IR)",
     title=f"Predicted vs Actual IR — {countries_ordered[0]}",
     hovermode="x unified",
     legend=dict(orientation="v", x=1.01, y=1),
