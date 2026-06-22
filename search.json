@@ -74,42 +74,70 @@
     "href": "model-results.html",
     "title": "Model Results",
     "section": "",
-    "text": "These metrics were computed on the 14 held-out test months from the 2011–2018 OpenDengue SEA dataset.\n\n\n\nMetric\nValue\n\n\n\n\nHuber loss\n0.3903\n\n\nMAE (log IR)\n1.2145\n\n\nMSE (log IR)\n6.0496\n\n\nRMSE (log IR)\n2.4596\n\n\nBest val loss\n0.3697"
+    "text": "The scaledv2 experiment introduces seasonal z-score normalisation of the incidence feature before it is passed to the model. A per-month mean (computed over the 2011–2018 training period) is subtracted and the result is divided by the global standard deviation of that de-seasonalised signal. This removes the large seasonal swing that previously dominated the loss, allowing the model to learn from the residual spatial and climate signals instead. A scaler inverse-transform is applied at inference time to recover real-valued incidence rates.\nThis builds on the baseline_logIR run but with the key difference that input incidence is normalised; all other architecture choices are re-tuned via the same 40-trial Optuna search."
+  },
+  {
+    "objectID": "model-results.html#what-is-scaledv2",
+    "href": "model-results.html#what-is-scaledv2",
+    "title": "Model Results",
+    "section": "",
+    "text": "The scaledv2 experiment introduces seasonal z-score normalisation of the incidence feature before it is passed to the model. A per-month mean (computed over the 2011–2018 training period) is subtracted and the result is divided by the global standard deviation of that de-seasonalised signal. This removes the large seasonal swing that previously dominated the loss, allowing the model to learn from the residual spatial and climate signals instead. A scaler inverse-transform is applied at inference time to recover real-valued incidence rates.\nThis builds on the baseline_logIR run but with the key difference that input incidence is normalised; all other architecture choices are re-tuned via the same 40-trial Optuna search."
   },
   {
     "objectID": "model-results.html#test-set-metrics",
     "href": "model-results.html#test-set-metrics",
     "title": "Model Results",
-    "section": "",
-    "text": "These metrics were computed on the 14 held-out test months from the 2011–2018 OpenDengue SEA dataset.\n\n\n\nMetric\nValue\n\n\n\n\nHuber loss\n0.3903\n\n\nMAE (log IR)\n1.2145\n\n\nMSE (log IR)\n6.0496\n\n\nRMSE (log IR)\n2.4596\n\n\nBest val loss\n0.3697"
+    "section": "Test Set Metrics",
+    "text": "Test Set Metrics\nMetrics were computed on 14 held-out test months from the 2011–2018 OpenDengue SEA dataset (162 admin-1 nodes across 10 countries).\n\n\n\nMetric\nValue\n\n\n\n\nHuber loss\n0.1125\n\n\nMAE (IR)\n3.1188\n\n\nMSE (IR)\n40.0297\n\n\nRMSE (IR)\n6.3269\n\n\nBest val loss\n0.0519"
+  },
+  {
+    "objectID": "model-results.html#hyperparameters",
+    "href": "model-results.html#hyperparameters",
+    "title": "Model Results",
+    "section": "Hyperparameters",
+    "text": "Hyperparameters\nFinal architecture and training configuration selected by Optuna (40 trials, masked Huber loss on a 20 % validation split):\n\n\n\n\n\nParameter\nValue\n\n\n\n\nInput window (months)\n12.0\n\n\nGAT layer 1 — hidden dim\n64.0\n\n\nGAT layer 1 — attention heads\n4.0\n\n\nGAT layer 2 — hidden dim\n16.0\n\n\nGAT layer 2 — attention heads\n4.0\n\n\nMLP hidden dim\n32.0\n\n\nMLP layers\n2.0\n\n\nBatch size\n4.0\n\n\nDropout\n0.000000\n\n\nLearning rate\n0.005734"
   },
   {
     "objectID": "model-results.html#training-curves",
     "href": "model-results.html#training-curves",
     "title": "Model Results",
     "section": "Training Curves",
-    "text": "Training Curves\n\n\n\n\n\n\n\n\nFigure 1: Training and validation Huber loss per epoch."
+    "text": "Training Curves\n\n\n\n\n                            \n                                            \n\n\nFigure 1: Huber loss per epoch. Hover to inspect exact values. The dashed line marks the best validation epoch."
+  },
+  {
+    "objectID": "model-results.html#per-country-metrics",
+    "href": "model-results.html#per-country-metrics",
+    "title": "Model Results",
+    "section": "Per-Country Metrics",
+    "text": "Per-Country Metrics\n\n\n\n\nTable 1: MAE and RMSE broken down by country across the 14 test months.\n\n\n\n\n\n\nCountry\nNodes\nMAE\nRMSE\n\n\n\n\nBrunei Darussalam\n4\n1.988\n2.285\n\n\nCambodia\n1\n3.094\n4.424\n\n\nIndonesia\n34\n1.736\n2.646\n\n\nLao People's Democratic Republic\n1\n4.288\n5.627\n\n\nMalaysia\n15\n8.737\n15.743\n\n\nMyanmar\n18\n1.216\n1.660\n\n\nPhilippines\n10\n0.904\n1.156\n\n\nSingapore\n1\n3.198\n3.624\n\n\nThailand\n77\n3.955\n7.395\n\n\nViet Nam\n1\n3.692\n5.559"
   },
   {
     "objectID": "model-results.html#predictions-vs-actuals",
     "href": "model-results.html#predictions-vs-actuals",
     "title": "Model Results",
     "section": "Predictions vs Actuals",
-    "text": "Predictions vs Actuals\n\n\n\n\n\n\n\n\nFigure 2: Model predictions against actual log incidence rates on the test set."
+    "text": "Predictions vs Actuals\n\nInteractive time-series\nSelect a country from the dropdown to inspect predicted vs actual incidence rate for each admin-1 node over the 14 test months.\n\n\n\n\n                            \n                                            \n\n\nFigure 2: Predicted (dashed) vs actual (solid) IR by admin-1 region. Use the dropdown to filter by country.\n\n\n\n\n\n\nOverview (all nodes, 14 months)\n\n\n\n\n\n\n\n\nFigure 3: All 162 nodes over 14 test months. Predicted (orange) vs actual (blue) IR.\n\n\n\n\n\n\n\nZoomed — final 2 months\n\n\n\n\n\n\n\n\nFigure 4: Predicted vs actual IR for the final 2 test months, showing per-node detail."
   },
   {
     "objectID": "model-results.html#scatter-plot",
     "href": "model-results.html#scatter-plot",
     "title": "Model Results",
     "section": "Scatter Plot",
-    "text": "Scatter Plot\n\n\n\n\n\n\n\n\nFigure 3: Scatter of predicted vs actual log IR. Points coloured by country."
+    "text": "Scatter Plot\n\n\n\n\n\n\n\n\nFigure 5: Predicted vs actual IR across all nodes and test months. Points are coloured by country."
+  },
+  {
+    "objectID": "model-results.html#choropleth-maps",
+    "href": "model-results.html#choropleth-maps",
+    "title": "Model Results",
+    "section": "Choropleth Maps",
+    "text": "Choropleth Maps\n\nActual IR — 14 test months\n\n\n\n\n\n\n\n\nFigure 6: Actual dengue incidence rate per admin-1 region for each of the 14 held-out test months.\n\n\n\n\n\n\n\nPredicted vs Actual — side by side\n\n\n\n\n\n\n\n\nFigure 7: Side-by-side comparison of actual (left) and predicted (right) IR per admin-1 region for each test month."
   },
   {
     "objectID": "model-results.html#architecture",
     "href": "model-results.html#architecture",
     "title": "Model Results",
     "section": "Architecture",
-    "text": "Architecture\nThe model is a Spatio-Temporal Graph Attention Network with GRU (STGATGRU):\n\nGAT layer 1: Spatial message passing over the admin-1 adjacency graph\nMLP: Node-wise feature transformation\nGAT layer 2: Second spatial aggregation pass\nGRU: Temporal sequence modelling over the sliding window\nLinear head: Single-step log IR prediction\n\nHyperparameters were tuned with 40 Optuna trials using masked Huber loss (to handle missing incidence data) on a validation set of 20% of training months."
+    "text": "Architecture\nThe model is a Spatio-Temporal Graph Attention Network with GRU (STGATGRU):\n\nInput normalisation: seasonal z-score of incidence (per-month mean removed, divided by global std)\nGAT layer 1: Spatial message passing over the admin-1 adjacency graph\nMLP: Node-wise feature transformation\nGAT layer 2: Second spatial aggregation pass\nGRU: Temporal sequence modelling over the 12-month sliding window\nLinear head: Single-step incidence rate prediction (inverse-transformed at output)\n\nMissing admin-1 nodes (no reported incidence) receive a learnable missing embedding rather than zeroed features, and the GRU hidden state is carried over without update for those nodes. Loss masking excludes missing targets from the gradient."
   },
   {
     "objectID": "model-results.html#bias-correction-note",
