@@ -92,6 +92,19 @@ rule test_stgnn:
         "../src/OpenDengue/STGNN/test.py"
 
 
+rule choropleth_stgnn:
+    input:
+        predictions = f"results/STGNN/{_name}/test_predictions.npz",
+        best_params = f"results/STGNN/{_name}/best_params.json",
+    output:
+        actuals       = f"results/STGNN/{_name}/actual_ir_14months.png",
+        pred_vs_actual = f"results/STGNN/{_name}/pred_vs_actual.png",
+    params:
+        cfg = lambda wc: workflow.configfiles[-1],
+    script:
+        "../src/OpenDengue/STGNN/choropleth.py"
+
+
 # ---------------------------------------------------------------------------
 # Production training rule — only active when best_params_source is set.
 # ---------------------------------------------------------------------------

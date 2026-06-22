@@ -1,46 +1,257 @@
 ---
 title: "Model Results"
-subtitle: "STGNN performance on held-out test data (2011–2018)"
+subtitle: "STGNN (scaledv2) performance on held-out test data (2011–2018)"
 ---
 
 ```{python}
 #| echo: false
 #| output: false
 import json, pathlib
+import numpy as np
+import pandas as pd
 
-results_dir = pathlib.Path("../machine-learning-module/results/STGNN/baseline_logIR")
-metrics = json.loads((results_dir / "metrics.json").read_text())
+results_dir = pathlib.Path("../machine-learning-module/results/STGNN/scaledv2")
+data_csv    = pathlib.Path("../data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv")
+
+metrics     = json.loads((results_dir / "metrics.json").read_text())
+best_params = json.loads((results_dir / "best_params.json").read_text())
+losses      = json.loads((results_dir / "train_val_losses.json").read_text())
 ```
+
+## What is scaledv2?
+
+The **scaledv2** experiment introduces seasonal z-score normalisation of the
+incidence feature before it is passed to the model.  A per-month mean
+(computed over the 2011–2018 training period) is subtracted and the result is
+divided by the global standard deviation of that de-seasonalised signal.
+This removes the large seasonal swing that previously dominated the loss,
+allowing the model to learn from the residual spatial and climate signals
+instead.  A scaler inverse-transform is applied at inference time to recover
+real-valued incidence rates.
+
+This builds on the `baseline_logIR` run but with the key difference that
+input incidence is normalised; all other architecture choices are re-tuned
+via the same 40-trial Optuna search.
 
 ## Test Set Metrics
 
-These metrics were computed on the 14 held-out test months from the 2011–2018 OpenDengue SEA dataset.
+Metrics were computed on 14 held-out test months from the 2011–2018 OpenDengue
+SEA dataset (162 admin-1 nodes across 10 countries).
 
 | Metric | Value |
 |---|---|
 | Huber loss | `{python} f"{metrics['test_huber']:.4f}"` |
-| MAE (log IR) | `{python} f"{metrics['test_mae']:.4f}"` |
-| MSE (log IR) | `{python} f"{metrics['test_mse']:.4f}"` |
-| RMSE (log IR) | `{python} f"{metrics['test_rmse']:.4f}"` |
+| MAE (IR) | `{python} f"{metrics['test_mae']:.4f}"` |
+| MSE (IR) | `{python} f"{metrics['test_mse']:.4f}"` |
+| RMSE (IR) | `{python} f"{metrics['test_rmse']:.4f}"` |
 | Best val loss | `{python} f"{metrics['best_val_loss']:.4f}"` |
+
+## Hyperparameters
+
+Final architecture and training configuration selected by Optuna (40 trials,
+masked Huber loss on a 20 % validation split):
+
+```{python}
+#| echo: false
+param_labels = {
+    "window_size":   "Input window (months)",
+    "gat1_hidden":   "GAT layer 1 — hidden dim",
+    "gat1_heads":    "GAT layer 1 — attention heads",
+    "gat2_hidden":   "GAT layer 2 — hidden dim",
+    "gat2_heads":    "GAT layer 2 — attention heads",
+    "mlp_hidden":    "MLP hidden dim",
+    "mlp_layers":    "MLP layers",
+    "batch_size":    "Batch size",
+    "dropout":       "Dropout",
+    "learning_rate": "Learning rate",
+}
+rows = [(label, best_params[key]) for key, label in param_labels.items() if key in best_params]
+df_hp = pd.DataFrame(rows, columns=["Parameter", "Value"])
+df_hp["Value"] = df_hp["Value"].apply(lambda v: f"{v:.6f}" if isinstance(v, float) and v < 0.1 else v)
+from IPython.display import HTML
+HTML(df_hp.to_html(index=False, border=0, classes="table table-sm table-striped"))
+```
 
 ## Training Curves
 
 ```{python}
 #| echo: false
 #| label: fig-loss-curves
-#| fig-cap: "Training and validation Huber loss per epoch."
-from IPython.display import Image
-Image(filename=str(results_dir / "loss_curves.png"), width=700)
+#| fig-cap: "Huber loss per epoch. Hover to inspect exact values. The dashed line marks the best validation epoch."
+
+import plotly.graph_objects as go
+
+epochs     = list(range(1, len(losses["train"]) + 1))
+best_epoch = int(np.argmin(losses["val"])) + 1
+best_vl    = float(losses["best_val_loss"])
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=epochs, y=losses["train"],
+    mode="lines", name="Train loss",
+    line=dict(color="#2196F3", width=2),
+))
+fig.add_trace(go.Scatter(
+    x=epochs, y=losses["val"],
+    mode="lines", name="Val loss",
+    line=dict(color="#FF5722", width=2),
+))
+fig.add_vline(
+    x=best_epoch, line_dash="dash", line_color="grey",
+    annotation_text=f"Best val epoch {best_epoch}<br>loss={best_vl:.4f}",
+    annotation_position="top right",
+    annotation_font_size=11,
+)
+fig.update_layout(
+    xaxis_title="Epoch",
+    yaxis_title="Masked Huber Loss",
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    margin=dict(l=40, r=40, t=40, b=40),
+    hovermode="x unified",
+)
+fig.show()
+```
+
+## Per-Country Metrics
+
+```{python}
+#| echo: false
+#| label: tbl-country-metrics
+#| tbl-cap: "MAE and RMSE broken down by country across the 14 test months."
+
+npz      = np.load(results_dir / "test_predictions.npz")
+preds    = npz["predictions"]   # (14, 162)
+targets  = npz["targets"]       # (14, 162)
+
+df_csv   = pd.read_csv(data_csv, usecols=["adm_0_name", "adm_1_name"])
+nodes    = sorted(df_csv["adm_1_name"].unique())
+country  = df_csv.drop_duplicates("adm_1_name").set_index("adm_1_name")["adm_0_name"]
+
+rows_ctry = []
+for cname in sorted(df_csv["adm_0_name"].unique()):
+    cidx = [i for i, n in enumerate(nodes) if country.get(n) == cname]
+    p    = preds[:, cidx].flatten()
+    t    = targets[:, cidx].flatten()
+    mask = ~(np.isnan(p) | np.isnan(t))
+    if mask.sum() == 0:
+        continue
+    mae  = float(np.mean(np.abs(p[mask] - t[mask])))
+    rmse = float(np.sqrt(np.mean((p[mask] - t[mask]) ** 2)))
+    rows_ctry.append({"Country": cname, "Nodes": len(cidx), "MAE": mae, "RMSE": rmse})
+
+df_ctry = pd.DataFrame(rows_ctry)
+df_ctry["MAE"]  = df_ctry["MAE"].map(lambda v: f"{v:.3f}")
+df_ctry["RMSE"] = df_ctry["RMSE"].map(lambda v: f"{v:.3f}")
+HTML(df_ctry.to_html(index=False, border=0, classes="table table-sm table-striped"))
 ```
 
 ## Predictions vs Actuals
 
+### Interactive time-series
+
+Select a country from the dropdown to inspect predicted vs actual incidence
+rate for each admin-1 node over the 14 test months.
+
 ```{python}
 #| echo: false
-#| label: fig-predictions
-#| fig-cap: "Model predictions against actual log incidence rates on the test set."
-Image(filename=str(results_dir / "predictions.png"), width=700)
+#| label: fig-interactive-ts
+#| fig-cap: "Predicted (dashed) vs actual (solid) IR by admin-1 region. Use the dropdown to filter by country."
+
+df_ts = pd.read_csv(data_csv, usecols=["adm_0_name", "adm_1_name", "year_month", "IR"])
+df_ts["year_month"] = pd.to_datetime(df_ts["year_month"])
+all_dates = sorted(df_ts["year_month"].unique())
+test_dates = all_dates[-14:]
+
+fig2 = go.Figure()
+buttons = []
+countries_ordered = sorted(df_ts["adm_0_name"].unique())
+
+first_country = True
+for cname in countries_ordered:
+    cidx   = [i for i, n in enumerate(nodes) if country.get(n) == cname]
+    cnodes = [nodes[i] for i in cidx]
+    visible_traces = []
+
+    for ni, node in zip(cidx, cnodes):
+        node_actual = (
+            df_ts[(df_ts["adm_1_name"] == node) & (df_ts["year_month"].isin(test_dates))]
+            .set_index("year_month")["IR"]
+            .reindex(test_dates)
+        )
+        node_pred = pd.Series(preds[:, ni], index=test_dates)
+
+        vis = first_country
+        fig2.add_trace(go.Scatter(
+            x=test_dates, y=node_actual.values,
+            mode="lines+markers", name=f"{node} — actual",
+            line=dict(width=2), visible=vis,
+        ))
+        fig2.add_trace(go.Scatter(
+            x=test_dates, y=node_pred.values,
+            mode="lines+markers", name=f"{node} — pred",
+            line=dict(width=2, dash="dash"), visible=vis,
+        ))
+        visible_traces.append(node)
+
+    first_country = False
+
+# Build visibility arrays for each country button
+n_total_traces = len(fig2.data)
+trace_offset   = 0
+visibility_map = {}
+for cname in countries_ordered:
+    cidx = [i for i, n in enumerate(nodes) if country.get(n) == cname]
+    n_traces_c = len(cidx) * 2
+    vis_arr = [False] * n_total_traces
+    for j in range(trace_offset, trace_offset + n_traces_c):
+        vis_arr[j] = True
+    visibility_map[cname] = vis_arr
+    trace_offset += n_traces_c
+
+buttons = [
+    dict(label=cname,
+         method="update",
+         args=[{"visible": visibility_map[cname]},
+               {"title": f"Predicted vs Actual IR — {cname}"}])
+    for cname in countries_ordered
+]
+
+fig2.update_layout(
+    updatemenus=[dict(
+        buttons=buttons,
+        direction="down",
+        showactive=True,
+        x=0.01, xanchor="left",
+        y=1.15, yanchor="top",
+    )],
+    xaxis_title="Month",
+    yaxis_title="Incidence Rate (IR)",
+    title=f"Predicted vs Actual IR — {countries_ordered[0]}",
+    hovermode="x unified",
+    legend=dict(orientation="v", x=1.01, y=1),
+    margin=dict(l=40, r=180, t=80, b=40),
+    height=500,
+)
+fig2.show()
+```
+
+### Overview (all nodes, 14 months)
+
+```{python}
+#| echo: false
+#| label: fig-predictions-static
+#| fig-cap: "All 162 nodes over 14 test months. Predicted (orange) vs actual (blue) IR."
+from IPython.display import Image
+Image(filename=str(results_dir / "predictions.png"), width=850)
+```
+
+### Zoomed — final 2 months
+
+```{python}
+#| echo: false
+#| label: fig-pred-2months
+#| fig-cap: "Predicted vs actual IR for the final 2 test months, showing per-node detail."
+Image(filename=str(results_dir / "pred_vs_actual_2months.png"), width=850)
 ```
 
 ## Scatter Plot
@@ -48,22 +259,51 @@ Image(filename=str(results_dir / "predictions.png"), width=700)
 ```{python}
 #| echo: false
 #| label: fig-scatter
-#| fig-cap: "Scatter of predicted vs actual log IR. Points coloured by country."
+#| fig-cap: "Predicted vs actual IR across all nodes and test months. Points are coloured by country."
 Image(filename=str(results_dir / "scatter.png"), width=700)
+```
+
+## Choropleth Maps
+
+### Actual IR — 14 test months
+
+```{python}
+#| echo: false
+#| label: fig-choropleth-actual
+#| fig-cap: "Actual dengue incidence rate per admin-1 region for each of the 14 held-out test months."
+Image(filename=str(results_dir / "actual_ir_14months.png"), width=900)
+```
+
+### Predicted vs Actual — side by side
+
+```{python}
+#| echo: false
+#| label: fig-choropleth-pred
+#| fig-cap: "Side-by-side comparison of actual (left) and predicted (right) IR per admin-1 region for each test month."
+Image(filename=str(results_dir / "pred_vs_actual.png"), width=900)
 ```
 
 ## Architecture
 
 The model is a **Spatio-Temporal Graph Attention Network with GRU** (STGATGRU):
 
+- **Input normalisation:** seasonal z-score of incidence (per-month mean removed, divided by global std)
 - **GAT layer 1:** Spatial message passing over the admin-1 adjacency graph
 - **MLP:** Node-wise feature transformation
 - **GAT layer 2:** Second spatial aggregation pass
-- **GRU:** Temporal sequence modelling over the sliding window
-- **Linear head:** Single-step log IR prediction
+- **GRU:** Temporal sequence modelling over the `{python} best_params['window_size']`-month sliding window
+- **Linear head:** Single-step incidence rate prediction (inverse-transformed at output)
 
-Hyperparameters were tuned with 40 Optuna trials using masked Huber loss (to handle missing incidence data) on a validation set of 20% of training months.
+Missing admin-1 nodes (no reported incidence) receive a learnable missing embedding
+rather than zeroed features, and the GRU hidden state is carried over without update
+for those nodes.  Loss masking excludes missing targets from the gradient.
 
 ## Bias Correction Note
 
-When running inference on current data (post-2018), a climate delta correction is applied before features are passed to the model. The delta is computed as the difference between the AR6 SSP2-4.5 projected monthly climatology for the current year and the 2011–2018 training period climatology. This shifts current observations back into the model's training feature distribution. See [site/scripts/apply_climate_delta.py](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/blob/main/site/scripts/apply_climate_delta.py) for implementation.
+When running inference on current data (post-2018), a climate delta correction is
+applied before features are passed to the model.  The delta is computed as the
+difference between the AR6 SSP2-4.5 projected monthly climatology for the current
+year and the 2011–2018 training period climatology.  This shifts current observations
+back into the model's training feature distribution.  See
+[site/scripts/apply_climate_delta.py](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/blob/main/site/scripts/apply_climate_delta.py)
+for implementation.

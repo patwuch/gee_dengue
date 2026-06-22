@@ -99,7 +99,7 @@ def eval_with_metrics(
             x, y, mask = x.to(device), y.to(device), mask.to(device)
 
             pred = model(x, edge_index, mask=mask)
-            if pred.dim() == 3 and y.dim() == 2:
+            if pred.dim() == 3:
                 pred = pred.squeeze(-1)
 
             target_mask = mask[:, -1, :] if mask.dim() == 3 else mask
@@ -186,7 +186,15 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     window_size = params["window_size"]
 
     # ── Data ─────────────────────────────────────────────────────────────────
-    tensors     = load_tensors(cfg, window_size)
+    tensors = load_tensors(cfg, window_size)
+
+    # Prefer the inference split when available — it covers all test months
+    # by borrowing context from the train/val tail (see preprocess/temporal.py).
+    # Fall back to the regular test split for backwards compatibility.
+    if split == "test" and "inference_x" in tensors:
+        split = "inference"
+        print("INFO: using inference split — predictions cover all test months.")
+
     dataset     = STGNNDataset(tensors, split)
     dataloader  = DataLoader(dataset, batch_size=32, shuffle=False, pin_memory=True)
     edge_index  = load_edge_index(cfg, device)
@@ -243,7 +251,9 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     )
 
     # ── Save predictions ──────────────────────────────────────────────────────
-    preds_path = out_dir / f"{split}_predictions.npz"
+    # Always written as test_predictions.npz so Snakemake output paths are stable
+    # regardless of whether the inference or test split was used internally.
+    preds_path = out_dir / "test_predictions.npz"
     np.savez(preds_path, predictions=preds, targets=targets)
     print(f"Predictions saved to {preds_path}")
 
@@ -252,11 +262,12 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     scatter_plot = plot_scatter(    [preds],   [targets], out_dir)
 
     # ── Metrics summary ───────────────────────────────────────────────────────
+    # Keys are always prefixed "test_" so metrics.json is stable across splits.
     summary = {
-        f"{split}_huber": loss,
-        f"{split}_mae":   metrics["mae"],
-        f"{split}_mse":   metrics["mse"],
-        f"{split}_rmse":  metrics["rmse"],
+        "test_huber": loss,
+        "test_mae":   metrics["mae"],
+        "test_mse":   metrics["mse"],
+        "test_rmse":  metrics["rmse"],
     }
     # Fold in best_val_loss from training if it's available.
     losses_path = out_dir / "train_val_losses.json"

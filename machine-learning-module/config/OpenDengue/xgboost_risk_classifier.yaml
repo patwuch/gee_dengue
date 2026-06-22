@@ -3,50 +3,47 @@
 # Invoke: snakemake <target> --configfile config/OpenDengue_xgboost_classifier.yaml
 # ============================================================
 
-name:    sea-baseline-xgboost
+name:    xgboostv1
 dataset: opendengue
 model:   xgboost
 task:    regressor
 scope:   multi-country
-regions:
-  - Thailand
-  - Vietnam
-  - Philippines
-  - Malaysia
-  - Singapore
+wandb_project: stgnn-dengue
 
 # ---------------------------------------------------------------------------
 # Data
 # ---------------------------------------------------------------------------
 data:
-  path:          data/processed/SEA_dengue_env_monthly_2011-2018.csv
-  time_column:   Date
-  unit_column:   name
-  region_column: admin
+  path:          data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv
+  time_column:   year_month
+  unit_column:   adm_1_name
+  region_column: adm_0_name
   split:
     strategy:     month
-    test_months:  12
-    val_fraction: 0.15
+    test_months:  14
+    val_fraction: 0.2
 
 # ---------------------------------------------------------------------------
 # Target
 # ---------------------------------------------------------------------------
-target:
-  column: IR
+target_column: IR
 
 # ---------------------------------------------------------------------------
 # Preprocessing
 # ---------------------------------------------------------------------------
 preprocessing:
-  log_transform:  true  # IR
+  log_transform:  true
+  deseasonalise:  true
+  scale_target:   true
   add_lag_target: false
-  lag_steps:      [1, 2, 3]
+  lag_steps:      []
 
 # ---------------------------------------------------------------------------
 # Features
 # ---------------------------------------------------------------------------
 features:
   use_landuse: true
+  quality_vars: ['data_quality']
   env_vars:
     - precipitation_sum
     - temperature_2m_mean
@@ -62,8 +59,8 @@ features:
     - LST_Night_1km_mean
     - NDVI_mean
     - EVI_mean
-  climate_vars:   []
-  epidemic_vars:  []
+  climate_vars:  []
+  epidemic_vars: []
   land_use_vars:
     - LC_Type1_pct_class1
     - LC_Type1_pct_class2
@@ -84,29 +81,24 @@ features:
     - LC_Type1_pct_class17
 
 # ---------------------------------------------------------------------------
-# Validation (CV strategy for tuning)
-# ---------------------------------------------------------------------------
-validation:
-  strategy:         walk
-  walk_test_window: 12
-  walk_init_window: 36
-  kfold_n_splits:   5
-
-# ---------------------------------------------------------------------------
 # Tuning
 # ---------------------------------------------------------------------------
 tune:
   n_trials:     40
-  random_state: 64
+  metric:       masked_huber_loss
   device:       cuda
+  num_epochs:   50  # <--- Set a fixed maximum number of epochs here
+  patience:     15   # <--- Add a patience threshold for early stopping
   search_space:
-    xgboost:
-      learning_rate:    {type: log_uniform, low: 1.0e-4, high: 0.1}
-      max_depth:        {type: int,         low: 2,      high: 10}
-      n_estimators:     {type: int,         low: 50,     high: 1000}
-      subsample:        {type: float,       low: 0.5,    high: 1.0}
-      colsample_bytree: {type: float,       low: 0.5,    high: 1.0}
-      min_child_weight: {type: int,         low: 5,      high: 50}
-      gamma:            {type: log_uniform, low: 1.0e-2, high: 10.0}
-      reg_alpha:        {type: log_uniform, low: 1.0e-2, high: 10.0}
-      reg_lambda:       {type: log_uniform, low: 0.1,    high: 100.0}
+    stgnn:
+      learning_rate:   {type: log_uniform, low: 1.0e-4, high: 5.0e-1}
+      # num_epochs is removed from here!
+      batch_size:      {type: categorical, choices: [2, 4]}
+      window_size:     {type: categorical, choices: [1, 3, 6, 12]}
+      gat1_hidden:     {type: categorical, choices: [16, 32, 64]}
+      gat1_heads:      {type: categorical, choices: [2, 4]}
+      mlp_hidden:      {type: categorical, choices: [32, 64]}
+      gat2_hidden:     {type: categorical, choices: [16, 32, 64]}
+      gat2_heads:      {type: categorical, choices: [2, 4]}
+      mlp_layers:      {type: categorical, choices: [1, 2]}
+      dropout:         {type: categorical, choices: [0.0, 0.2, 0.4]}

@@ -5,7 +5,7 @@
 #             --cores 4 --resources gpu=1
 # ============================================================
 
-name:    embed_gru_mask_logIR_fixed
+name:    scaledv2
 dataset: opendengue
 model:   stgnn
 task:    regressor

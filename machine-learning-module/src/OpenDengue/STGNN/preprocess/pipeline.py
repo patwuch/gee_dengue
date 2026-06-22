@@ -8,7 +8,7 @@ from features import fit_seasonal_means, apply_seasonal_means
 from features import fill_node_from_donors, impute_env_naive, assert_no_nans, encode_quality_flags
 from features import diagnose_feature_composition, scale_sources
 from graph import build_edge_index
-from temporal import create_windows, temporal_split
+from temporal import create_windows, create_inference_windows, temporal_split
 
 
 # ---------------------------------------------------------------------------
@@ -149,7 +149,16 @@ def main(config_path: str, data_path: str | None = None):
         if window_size == window_sizes[0]:   # only check first window size
             diagnose_feature_composition(snapshots, cfg)
 
-        save_tensors(snapshots, cfg, window_size, split_months=split_months)
+        # Inference windows span the train/val→test boundary so every test
+        # month has a prediction.  The month list is padded with window_size
+        # zeros so that save_tensors' [window_size:] slice yields the 14
+        # test-month numbers correctly.
+        snapshots["inference"] = create_inference_windows(tensors, window_size)
+        inference_months = {
+            **split_months,
+            "inference": [0] * window_size + split_months["test"],
+        }
+        save_tensors(snapshots, cfg, window_size, split_months=inference_months)
 
     save_preprocessing_params(scaled["scalers"]["inc"], seasonal_means, cfg)
 

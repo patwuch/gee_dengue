@@ -1,0 +1,14 @@
+{
+  "dropout": 0,
+  "batch_size": 4,
+  "gat1_heads": 4,
+  "gat2_heads": 4,
+  "mlp_hidden": 32,
+  "mlp_layers": 2,
+  "gat1_hidden": 64,
+  "gat2_hidden": 16,
+  "window_size": 12,
+  "learning_rate": 0.00573414554079998,
+  "experiment_name": "scaledv2",
+  "best_val_loss": 0.07369823008775711
+}

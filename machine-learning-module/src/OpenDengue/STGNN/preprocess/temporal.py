@@ -47,18 +47,23 @@ def temporal_split(df: pd.DataFrame, cfg: dict) -> tuple[pd.DataFrame, pd.DataFr
 
     return train_df, val_df, test_df
 
+def _build_feature_tensor(data: dict) -> torch.Tensor:
+    """Concatenate inc (NaN→0), env, lulc, quality into (T, N, F)."""
+    inc = data["inc"].clone()
+    inc[torch.isnan(inc)] = 0.0
+    parts = [inc, data["env"], data["lulc"]]
+    if data.get("quality") is not None:
+        parts.append(data["quality"])
+    return torch.cat(parts, dim=-1)
+
+
 def create_windows(tensors: dict, window_size: int, node_index: dict, cfg: dict) -> dict:
     snapshots = {}
 
     for split, data in tensors.items():
+        x    = _build_feature_tensor(data)
         inc  = data["inc"].clone()
         inc[torch.isnan(inc)] = 0.0
-
-        parts = [inc, data["env"], data["lulc"]]
-        if data.get("quality") is not None:
-            parts.append(data["quality"])
-
-        x    = torch.cat(parts, dim=-1)
         mask = data["mask"]
 
         if window_size >= len(x):
@@ -73,3 +78,29 @@ def create_windows(tensors: dict, window_size: int, node_index: dict, cfg: dict)
         ]
 
     return snapshots
+
+
+def create_inference_windows(tensors: dict, window_size: int) -> list:
+    """Build windows that cover all test months.
+
+    The first window's context is drawn from the tail of the train+val data,
+    so every test month gets a prediction (not just the last len(test)-window_size).
+    """
+    pre_x = torch.cat(
+        [_build_feature_tensor(tensors["train"]),
+         _build_feature_tensor(tensors["val"])],
+        dim=0,
+    )[-window_size:]                              # (window_size, N, F)
+
+    test_x    = _build_feature_tensor(tensors["test"])   # (T_test, N, F)
+    test_inc  = tensors["test"]["inc"].clone()
+    test_inc[torch.isnan(test_inc)] = 0.0
+    test_mask = tensors["test"]["mask"]
+
+    full_x = torch.cat([pre_x, test_x], dim=0)   # (window_size + T_test, N, F)
+    T_test = len(test_x)
+
+    return [
+        (full_x[t - window_size:t], test_inc[t - window_size], test_mask[t - window_size])
+        for t in range(window_size, window_size + T_test)
+    ]
