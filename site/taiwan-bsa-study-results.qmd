@@ -1,0 +1,31 @@
+---
+title: "Model Results"
+subtitle: "STGNN (scaledv2) performance on held-out test data (2011–2018)"
+---
+
+```{python}
+#| echo: false
+#| output: false
+import json, pathlib
+import numpy as np
+import pandas as pd
+
+results_dir = pathlib.Path("../machine-learning-module/results/STGNN/scaledv2")
+
+metrics     = json.loads((results_dir / "metrics.json").read_text())
+best_params = json.loads((results_dir / "best_params.json").read_text())
+losses      = json.loads((results_dir / "train_val_losses.json").read_text())
+ctry_metrics = json.loads((results_dir / "per_country_metrics.json").read_text())
+test_preds   = json.loads((results_dir / "test_predictions.json").read_text())
+```
+
+## Taiwanese Basic Statistics Area (BSA) Risk Prediction
+
+As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia,
+we capitalise on our Southeast Asian interprovincial risk state model to generate "exporter" regions
+and "importer" regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese
+Government keeps track of.
+
+The model would jointly consider international mobility, local mobility, BSA environment suitability,
+and BSA population demographic to predict elevated risk.
+

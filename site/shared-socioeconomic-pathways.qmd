@@ -1,0 +1,141 @@
+---
+title: "Shared Socioeconomic Pathways"
+subtitle: "SSP scenario data used as socioeconomic covariates in the SEA Provinces model and as future projection context for the Taiwan BSA model"
+---
+
+```{python}
+#| echo: false
+#| output: false
+import pathlib
+import pandas as pd
+
+ssp_dir = pathlib.Path("../climate-projection-module/data/processed/SSP")
+```
+
+Shared Socioeconomic Pathways (SSPs) are a set of five global scenarios describing plausible futures for
+societal development through 2100 (SSP1–SSP5). They were developed by the climate research community
+alongside the IPCC AR6 process and are widely used to contextualise climate impact projections. In this study:
+
+- **Arm 1 (SEA Provinces):** Population projections from SSP1, SSP2, and SSP3 scenarios are used directly
+  as node-level covariates in the STGNN, capturing how demographic change modulates dengue transmission
+  dynamics across provinces.
+- **Arm 2 (Taiwan BSA):** SSP population and urbanisation trajectories provide future projection context
+  for evaluating dengue risk under different development pathways, combined with TCCIP regional climate
+  projections.
+
+---
+
+## Arm 1 — Southeast Asia Provinces
+
+### SSP Population Projections by Province
+
+Population projections at admin-1 level under SSP1 (sustainability), SSP2 (middle of the road), and
+SSP3 (regional rivalry) scenarios, derived from the CMIP6-aligned SSP database.
+
+```{python}
+#| echo: false
+#| label: fig-ssp-sea-population
+#| fig-cap: "SSP population projections for SEA admin-1 provinces, 2010–2100, under SSP1, SSP2, and SSP3."
+
+import plotly.graph_objects as go
+
+ssp_sea_path = ssp_dir / "sea_admin1_population.tsv"
+
+if not ssp_sea_path.exists():
+    print("⚠️  SEA SSP population data not found — run climate-projection-module/scripts/extract_ssp_population.py first.")
+else:
+    df = pd.read_csv(ssp_sea_path, sep="\t")
+    fig = go.Figure()
+    for scenario in df["scenario"].unique():
+        subset = df[df["scenario"] == scenario]
+        fig.add_trace(go.Scatter(
+            x=subset["year"], y=subset["population_mean"],
+            mode="lines", name=scenario,
+        ))
+    fig.update_layout(
+        title="Mean Admin-1 Population by SSP Scenario — SEA",
+        xaxis_title="Year", yaxis_title="Population",
+        legend_title="SSP Scenario", height=400,
+    )
+    fig.show()
+```
+
+### SSP Urbanisation Rate by Province
+
+Urban fraction of population is a key driver of dengue vector density. SSP2 and SSP3 diverge substantially
+in projected urbanisation rates across SEA countries.
+
+```{python}
+#| echo: false
+#| label: fig-ssp-sea-urban
+#| fig-cap: "Placeholder: SSP urbanisation rate projections for SEA admin-1 provinces."
+
+ssp_urban_path = ssp_dir / "sea_admin1_urbanisation.tsv"
+if not ssp_urban_path.exists():
+    print("⚠️  SEA SSP urbanisation data not found — run climate-projection-module/scripts/extract_ssp_urbanisation.py first.")
+else:
+    df = pd.read_csv(ssp_urban_path, sep="\t")
+    print(df.head())
+```
+
+### SSP Feature Contribution to STGNN
+
+The table below summarises how SSP variables are incorporated into the SEA STGNN feature set.
+
+| SSP Variable | Scenario(s) Used | Role in Model |
+|---|---|---|
+| Population (total) | SSP2 (baseline) | Node feature — scales absolute case counts |
+| Population density | SSP2 | Node feature — proxy for human-vector contact rate |
+| Urban fraction | SSP1, SSP2, SSP3 | Node feature — affects vector habitat availability |
+| GDP per capita | SSP2 | Node feature — proxy for healthcare access / reporting capacity |
+
+---
+
+## Arm 2 — Taiwan Basic Statistics Area
+
+### TCCIP Population Projections (Taiwan BSA)
+
+::: {.callout-warning}
+**Placeholder** — Taiwan BSA population projections from the TCCIP dataset are not yet integrated.
+This section will display BSA-level demographic trajectories under different SSP scenarios once the
+taiwan-bsa-module/data/tccip_ssp_pipeline.py is operational.
+:::
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-ssp-population
+#| fig-cap: "Placeholder: Population projections at Taiwan BSA level under SSP1, SSP2, and SSP5 (TCCIP)."
+
+print("⚠️  Taiwan BSA SSP population data not yet available — implement taiwan-bsa-module/data/tccip_ssp_pipeline.py first.")
+```
+
+### Ageing Population and Dengue Vulnerability (Taiwan)
+
+Taiwan's rapidly ageing population is an important modulator of dengue severity. Older adults face higher
+hospitalisation and case fatality rates. SSP projections indicate Taiwan's median age rising significantly
+through 2050, which will be incorporated as a BSA-level demographic covariate.
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-age-pyramid
+#| fig-cap: "Placeholder: Age pyramid projections for Taiwan under SSP2, 2025–2050, with dengue vulnerability overlay."
+
+print("⚠️  Taiwan age structure projections not yet available.")
+```
+
+### Urbanisation and Heat Island Risk (Taiwan BSA)
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-ssp-urban
+#| fig-cap: "Placeholder: Urban fraction projections across Taiwan BSAs under SSP1 and SSP3, with LST correlation."
+
+print("⚠️  Taiwan BSA urbanisation SSP data not yet available.")
+```
+
+---
+
+> **Note on scenario selection:** The SEA STGNN is trained and validated under historical conditions (2011–2018)
+> and uses SSP2 population data as the primary covariate. SSP1 and SSP3 are included as sensitivity
+> scenarios for prospective risk projections only. For operational monthly inference, SSP2-4.5 is used
+> throughout for consistency with the AR6 climate delta correction.

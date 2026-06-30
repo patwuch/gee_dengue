@@ -19,9 +19,9 @@ ctry_metrics = json.loads((results_dir / "per_country_metrics.json").read_text()
 test_preds   = json.loads((results_dir / "test_predictions.json").read_text())
 ```
 
-## What is scaledv2?
+## What the SEA Provinces Study?
 
-The **scaledv2** experiment introduces seasonal z-score normalisation of the
+The **SEA Provinces Study** experiment introduces seasonal z-score normalisation of the
 incidence feature before it is passed to the model.  A per-month mean
 (computed over the 2011–2018 training period) is subtracted and the result is
 divided by the global standard deviation of that de-seasonalised signal.
@@ -137,58 +137,140 @@ rate for each admin-1 node over the 14 test months.
 
 ```{python}
 #| echo: false
-#| label: fig-interactive-ts
-#| fig-cap: "Predicted (dashed) vs actual (solid) IR by admin-1 region. Use the dropdown to filter by country."
+
+import json
+from IPython.display import HTML
 
 dates             = test_preds["dates"]
 nodes_data        = test_preds["nodes"]
 countries_ordered = sorted({n["country"] for n in nodes_data})
+first_country     = countries_ordered[0]
 
-fig2 = go.Figure()
-first_country = True
+# Build flat trace list and a metadata index consumed by the JS layer.
+# Each node gets two consecutive traces: actual (even idx) and pred (odd idx).
+trace_list = []
+trace_meta = []  # {country, name, ai (actual trace idx), pi (pred trace idx)}
+idx = 0
+
 for cname in countries_ordered:
-    for node in (n for n in nodes_data if n["country"] == cname):
-        vis = first_country
-        fig2.add_trace(go.Scatter(
-            x=dates, y=node["actual"],
-            mode="lines+markers", name=f"{node['name']} — actual",
-            line=dict(width=2), visible=vis,
-        ))
-        fig2.add_trace(go.Scatter(
-            x=dates, y=node["pred"],
-            mode="lines+markers", name=f"{node['name']} — pred",
-            line=dict(width=2, dash="dash"), visible=vis,
-        ))
-    first_country = False
+    for node in [n for n in nodes_data if n["country"] == cname]:
+        visible = cname == first_country
+        trace_list.append({
+            "type": "scatter", "x": dates, "y": node["actual"],
+            "mode": "lines+markers", "name": f"{node['name']} — actual",
+            "line": {"width": 2}, "visible": visible,
+        })
+        trace_list.append({
+            "type": "scatter", "x": dates, "y": node["pred"],
+            "mode": "lines+markers", "name": f"{node['name']} — pred",
+            "line": {"width": 2, "dash": "dash"}, "visible": visible,
+        })
+        trace_meta.append({"country": cname, "name": node["name"], "ai": idx, "pi": idx + 1})
+        idx += 2
 
-n_total   = len(fig2.data)
-offset    = 0
-vis_map   = {}
-for cname in countries_ordered:
-    cnodes     = [n for n in nodes_data if n["country"] == cname]
-    n_traces_c = len(cnodes) * 2
-    arr        = [False] * n_total
-    for j in range(offset, offset + n_traces_c):
-        arr[j] = True
-    vis_map[cname] = arr
-    offset += n_traces_c
+layout = {
+    "xaxis": {"title": "Month"},
+    "yaxis": {"title": "Incidence Rate (IR)"},
+    "title": f"Predicted vs Actual IR — {first_country}",
+    "hovermode": "x unified",
+    "legend": {"orientation": "v", "x": 1.01, "y": 1},
+    "margin": {"l": 40, "r": 180, "t": 80, "b": 40},
+    "height": 500,
+}
 
-fig2.update_layout(
-    updatemenus=[dict(
-        buttons=[dict(label=c, method="update",
-                      args=[{"visible": vis_map[c]}, {"title": f"Predicted vs Actual IR — {c}"}])
-                 for c in countries_ordered],
-        direction="down", showactive=True,
-        x=0.01, xanchor="left", y=1.15, yanchor="top",
-    )],
-    xaxis_title="Month", yaxis_title="Incidence Rate (IR)",
-    title=f"Predicted vs Actual IR — {countries_ordered[0]}",
-    hovermode="x unified",
-    legend=dict(orientation="v", x=1.01, y=1),
-    margin=dict(l=40, r=180, t=80, b=40),
-    height=500,
-)
-fig2.show()
+_traces_j = json.dumps(trace_list)
+_meta_j   = json.dumps(trace_meta)
+_layout_j = json.dumps(layout)
+_ctry_j   = json.dumps(countries_ordered)
+_first_j  = json.dumps(first_country)
+
+HTML(f"""
+<div>
+  <div style="display:flex;gap:20px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+    <div>
+      <label for="ts-csel" style="font-weight:600;">Country:</label>
+      <select id="ts-csel" style="margin-left:6px;padding:3px 8px;"></select>
+    </div>
+    <div>
+      <label for="ts-nsel" style="font-weight:600;">Node:</label>
+      <select id="ts-nsel" style="margin-left:6px;padding:3px 8px;min-width:220px;"></select>
+    </div>
+  </div>
+  <div id="ts-plot" style="width:100%;"></div>
+</div>
+<script>
+(function() {{
+  var meta     = {_meta_j};
+  var countries= {_ctry_j};
+  var traces   = {_traces_j};
+  var layout   = {_layout_j};
+  var firstC   = {_first_j};
+
+  function init() {{
+    var div  = document.getElementById('ts-plot');
+    var csel = document.getElementById('ts-csel');
+    var nsel = document.getElementById('ts-nsel');
+
+    Plotly.newPlot(div, traces, layout, {{responsive: true}});
+
+    // Populate country dropdown
+    countries.forEach(function(c) {{
+      var o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      csel.appendChild(o);
+    }});
+
+    // Rebuild node dropdown whenever the country changes
+    function buildNodeDropdown(c) {{
+      nsel.innerHTML = '';
+      var all = document.createElement('option');
+      all.value = '__all__'; all.textContent = 'All nodes';
+      nsel.appendChild(all);
+      meta.filter(function(m) {{ return m.country === c; }}).forEach(function(m) {{
+        var o = document.createElement('option');
+        o.value = m.name; o.textContent = m.name;
+        nsel.appendChild(o);
+      }});
+    }}
+
+    // Set trace visibility based on current country + node selection
+    function applyFilter(c, node) {{
+      var vis = new Array(traces.length).fill(false);
+      meta.forEach(function(m) {{
+        if (m.country !== c) return;
+        if (node !== '__all__' && m.name !== node) return;
+        vis[m.ai] = true;
+        vis[m.pi] = true;
+      }});
+      var title = node === '__all__'
+        ? 'Predicted vs Actual IR — ' + c
+        : 'Predicted vs Actual IR — ' + c + ' / ' + node;
+      Plotly.restyle(div, {{visible: vis}});
+      Plotly.relayout(div, {{title: title}});
+    }}
+
+    csel.addEventListener('change', function() {{
+      buildNodeDropdown(this.value);
+      applyFilter(this.value, '__all__');
+    }});
+
+    nsel.addEventListener('change', function() {{
+      applyFilter(csel.value, this.value);
+    }});
+
+    buildNodeDropdown(firstC);
+  }}
+
+  // Plotly.js is loaded by an earlier figure in the document; poll until ready.
+  function waitForPlotly(fn, n) {{
+    if (window.Plotly) {{ fn(); return; }}
+    if (n <= 0) {{ console.error('Plotly not available'); return; }}
+    setTimeout(function() {{ waitForPlotly(fn, n - 1); }}, 100);
+  }}
+  waitForPlotly(init, 50);
+}})();
+</script>
+""")
 ```
 
 ### Overview (all nodes, 14 months)

@@ -1,0 +1,168 @@
+---
+title: "Dengue Data"
+subtitle: "Historical dengue surveillance records from OpenDengue (SEA provinces) and the Taiwan Ministry of Health (BSA)"
+format:
+  html:
+    page-layout: full
+---
+
+This page presents the dengue case data underpinning both study arms: the OpenDengue dataset used to
+train and evaluate the SEA Provinces model, and individual case records from the Taiwan Ministry of Health
+used by the Taiwan BSA model.
+
+## Arm 1 — Southeast Asia Provinces (OpenDengue)
+
+Interactive dashboards showing temporal and spatial dengue case trends by WHO region,
+generated from the OpenDengue dataset (SEA, 2011–2018).
+
+::: {.panel-tabset}
+
+## Temporal — SEARO
+
+```{=html}
+<iframe
+  src="../dengue-infection-module/report/WHO_region_temporal_timelines/SEARO_timeline.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+## Temporal — WPRO
+
+```{=html}
+<iframe
+  src="../dengue-infection-module/report/WHO_region_temporal_timelines/WPRO_timeline.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+## Spatial — SEARO
+
+```{=html}
+<iframe
+  src="../dengue-infection-module/report/WHO_region_spatial_timelines/SEARO_timeline.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+## Spatial — WPRO
+
+```{=html}
+<iframe
+  src="../dengue-infection-module/report/WHO_region_spatial_timelines/WPRO_timeline.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+## National
+
+```{=html}
+<iframe
+  src="../dengue-infection-module/report/WHO_region_national_timelines/SEARO_timeline.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+:::
+
+---
+
+**Data source:** [OpenDengue](https://opendengue.org) — a global open-access dengue surveillance database.
+Spatial imputation was performed using GAUL 2024 admin-1 boundaries. Spatial autocorrelation was assessed via Moran's I.
+
+::: {.grid}
+::: {.g-col-6}
+```{python}
+#| echo: false
+#| label: fig-morans-slices
+#| fig-cap: "Moran's I spatial autocorrelation across time slices."
+from IPython.display import Image
+import pathlib
+Image(filename=str(pathlib.Path("../dengue-infection-module/results/morans_i_slices.png")), width=500)
+```
+:::
+::: {.g-col-6}
+```{python}
+#| echo: false
+#| label: fig-morans-scatter
+#| fig-cap: "Moran's I scatter plot."
+Image(filename=str(pathlib.Path("../dengue-infection-module/results/morans_i_scatter.png")), width=500)
+```
+:::
+:::
+
+---
+
+## Arm 2 — Taiwan Basic Statistics Area (Taiwan Ministry of Health)
+
+Individual dengue case records from the Taiwan Centers for Disease Control (Taiwan CDC / MoH), aggregated to
+Basic Statistics Area (BSA) level. BSAs are the finest spatial unit of census data maintained by the Taiwanese
+government and are used as the prediction target in the Taiwan BSA model.
+
+### Case Counts by Year
+
+::: {.callout-warning}
+**Placeholder** — Taiwan MoH case data pipeline not yet integrated. This panel will display annual confirmed
+dengue case counts disaggregated by BSA once the taiwan-bsa-module data pipeline is operational.
+:::
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-annual
+#| fig-cap: "Placeholder: Annual confirmed dengue cases in Taiwan by BSA, coloured by serotype."
+
+print("⚠️  Taiwan MoH BSA data not yet available — implement taiwan-bsa-module/data/moh_pipeline.py first.")
+```
+
+### Temporal Trends — Taiwan
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-temporal
+#| fig-cap: "Placeholder: Monthly dengue case counts in Taiwan, 2005–present."
+
+print("⚠️  Taiwan MoH temporal data not yet available.")
+```
+
+### Spatial Distribution — Taiwan BSA Choropleth
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-spatial
+#| fig-cap: "Placeholder: Spatial distribution of confirmed dengue cases across Taiwan BSAs."
+
+print("⚠️  Taiwan BSA spatial data not yet available.")
+```
+
+### Case Demographics
+
+::: {.callout-warning}
+**Placeholder** — Summary statistics of case demographics (age, sex, serotype, clinical severity) from Taiwan MoH
+individual case reports will appear here once the data pipeline is connected.
+:::
+
+```{python}
+#| echo: false
+#| label: tbl-taiwan-demographics
+#| tbl-cap: "Placeholder: Case demographic breakdown from Taiwan MoH individual case reports."
+
+print("⚠️  Taiwan MoH demographic data not yet available.")
+```
+
+### Imported vs Local Transmission
+
+A key feature of the Taiwan BSA model is distinguishing imported cases (travellers returning from SEA) from
+locally-acquired cases. The SEA Provinces model (Arm 1) provides the international risk context feeding into
+this classification.
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-imported
+#| fig-cap: "Placeholder: Proportion of imported vs locally-acquired cases in Taiwan by month, with SEA risk index overlay."
+
+print("⚠️  Imported/local classification data not yet available — requires integration with taiwan-bsa-module and Arm 1 risk states.")
+```

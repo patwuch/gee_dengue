@@ -1,6 +1,6 @@
 ---
-title: "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia"
-subtitle: 162 Southeast Asia ADM_1 Provinces · Monthly Updated Predictions"
+title: "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan"
+subtitle: "A two-pronged deep learning early warning system operating at province and sub-district scale"
 page-layout: full
 ---
 
@@ -22,10 +22,34 @@ n_regions = len(preds.get("regions", {}))
 ```
 
 ::: {.callout-note appearance="minimal"}
-**Last updated:** `{python} updated` &nbsp;·&nbsp; **Forecast month:** `{python} target_month` &nbsp;·&nbsp; **Regions covered:** `{python} n_regions`
+**Last updated:** `{python} updated` &nbsp;·&nbsp; **Forecast month:** `{python} target_month` &nbsp;·&nbsp; **SEA regions covered:** `{python} n_regions`
 :::
 
-## Current Risk Map
+## Study Overview
+
+This project combines two complementary prediction models targeting different geographic scales and use cases:
+
+::: {.grid}
+
+::: {.g-col-6}
+### Arm 1 — Southeast Asia Provinces
+A spatiotemporally-aware deep learning model (ST-GAT + GRU) trained on 162 admin-1 provinces across 10 SEA countries (2011–2018). It captures international dengue risk dynamics using province-level historical infection data, monthly climatological data (ERA5-Land, MODIS, CHIRPS), and Shared Socioeconomic Pathways. Inference runs monthly and is bias-corrected to account for post-2018 climate shift (AR6 SSP2-4.5).
+
+[View SEA Provinces Results →](sea-provinces-study-results.qmd)
+:::
+
+::: {.g-col-6}
+### Arm 2 — Taiwan Basic Statistics Area (BSA)
+A Taiwan-specific counterpart operating at the finer granularity of the Basic Statistics Area (BSA) — the smallest census unit tracked by the Taiwanese government. It jointly considers international mobility (using SEA risk states from Arm 1 as exporter signals), local mobility, BSA-level environmental suitability, and population demographics to predict elevated local dengue risk.
+
+[View Taiwan BSA Results →](taiwan-bsa-study-results.qmd)
+:::
+
+:::
+
+---
+
+## SEA Provinces — Current Risk Map
 
 Predicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia.
 Values > 1 indicate elevated risk relative to the 2011–2018 training baseline.
@@ -69,9 +93,9 @@ else:
     fig.show()
 ```
 
-## Risk Index Trends
+## SEA Provinces — Risk Index Trends
 
-Mean risk index across all regions over every month predictions have been archived.
+Mean risk index across all SEA admin-1 regions over every month predictions have been archived.
 
 ```{python}
 #| echo: false
@@ -117,38 +141,78 @@ else:
     fig.show()
 ```
 
-## About This System
+## Taiwan BSA — Current Risk Map
 
-This early warning system combines **spatiotemporal graph neural networks** (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across `{python} n_regions` admin-1 regions in Southeast Asia.
+::: {.callout-warning}
+**Placeholder** — Taiwan BSA risk predictions are not yet available. This panel will display a choropleth of BSA-level dengue risk across Taiwan once the BSA model pipeline is operational.
+:::
+
+```{python}
+#| echo: false
+#| label: fig-taiwan-risk-map
+#| fig-cap: "Placeholder: Taiwan BSA dengue risk index for the current forecast month."
+
+print("⚠️  Taiwan BSA predictions not yet available — implement taiwan-bsa-module inference pipeline first.")
+```
+
+## About
+
+Dengue fever's transmission dynamics in Southeast Asia relies on human and vector mobility, displaying a high
+degree of non-linearity and unpredictability. Moreover, as dengue outbreaks in Taiwan are
+attributed to imported cases from Southeast Asia coinciding with windows of time where weather
+favors vector reproductability, preventative measures must be taken at the right time in the right places.
+To address the limits of considering dengue outbreak in isolation which ignores how circulating dengue serotypes
+confer patterns that may only be explained across multiple countries extended beyond neighboring years,
+this study creates a two-pronged experimental design that combines:
+(1) a Southeast Asian spatiotemporally-aware deep learning
+prediction model that captures international dengue risk dynamics based on province-level historical infection
+data, near-real-time climatological data, as well as Shared Socioeconomic Pathways data.
+(2) a Taiwan-only counterpart whose prediction works at a finer granularity, a Basic Statistics Area (BSA), and
+predicts based on individual case report, clinical diagnosis, demographic data, and environmental data.
 
 ::: {.grid}
 
-::: {.g-col-4}
-### Pipeline
+::: {.g-col-6}
+### SEA Provinces Pipeline
 1. Monthly zonal statistics fetched from Google Earth Engine
 2. Climate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift
 3. STGNN inference run on adjusted features
 4. Results published automatically via GitHub Actions
+
+**Architecture:** ST-GAT + GRU (PyTorch Geometric)
+**Training period:** 2011–2018
+**Features:** ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop, SSP population
+**Spatial scope:** 162 admin-1 regions across 10 SEA countries
+**Performance (test set):** Huber 0.390 · MAE 1.214 · RMSE 2.460 (log IR, 14 held-out months)
 :::
 
-::: {.g-col-4}
-### Model
-- **Architecture:** ST-GAT + GRU (PyTorch Geometric)
-- **Training period:** 2011–2018
-- **Features:** ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop
-- **Spatial scope:** SEA admin-1 regions
-:::
+::: {.g-col-6}
+### Taiwan BSA Pipeline
+1. SEA province risk states ingested as international mobility proxy (from Arm 1)
+2. BSA-level environmental suitability computed from TCCIP climate data
+3. Individual case reports and demographic data from Taiwan Ministry of Health
+4. BSA model inference generates sub-district risk predictions
 
-::: {.g-col-4}
-### Performance (test set)
-- **Huber loss:** 0.390
-- **MAE:** 1.214 (log IR)
-- **RMSE:** 2.460 (log IR)
-- **Test months:** 14 held-out months
+**Architecture:** *(to be finalised)*
+**Training period:** *(to be determined)*
+**Features:** MoH case reports, clinical diagnosis, demographics, TCCIP climate, local mobility
+**Spatial scope:** Taiwan Basic Statistics Areas (BSAs)
+**Performance:** *(pending model training)*
 :::
 
 :::
 
 ---
 
-> **Interpretation note:** Predictions are expressed as a *relative risk index* (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.
+> **Interpretation note:** SEA predictions are expressed as a *relative risk index* (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.
+
+## Code
+
+Source code and pipeline configuration are available on
+[GitHub](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS)
+under the GNU GPLv3 license.
+
+## Contact
+
+For questions or collaboration inquiries, please open an issue on the
+[GitHub repository](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/issues).
