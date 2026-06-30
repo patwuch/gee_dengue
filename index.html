@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia – Dengue Fever EWS — Chuang Lab, TMU</title>
+<title>Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan – Chuang Lab, Dept. of Molecular Parasitology and Tropical Diseasess</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -283,11 +283,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./assets/logo.png" alt="Chuang Lab" class="navbar-logo light-content">
-    <img src="./assets/logo.png" alt="Chuang Lab" class="navbar-logo dark-content">
+    <img src="./assets/TMU_CoM_Logo.png" alt="Taipei Medical University College of Medicine" class="navbar-logo light-content">
+    <img src="./assets/TMU_CoM_Logo.png" alt="Taipei Medical University College of Medicine" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Dengue Fever EWS — Chuang Lab, TMU</span>
+    <span class="navbar-title">Chuang Lab, Dept. of Molecular Parasitology and Tropical Diseasess</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -301,20 +301,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./model-results.html"> 
-<span class="menu-text">Model Results</span></a>
+    <a class="nav-link" href="./sea-provinces-study-results.html"> 
+<span class="menu-text">Southeast Asia Provinces Study</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./climate-data.html"> 
-<span class="menu-text">Climate Data</span></a>
+    <a class="nav-link" href="./taiwan-bsa-study-results.html"> 
+<span class="menu-text">Taiwan Basic Statistics Area Study</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./dengue-timelines.html"> 
-<span class="menu-text">Dengue Timelines</span></a>
+    <a class="nav-link" href="./dengue-data.html"> 
+<span class="menu-text">Dengue Data</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./about.html"> 
-<span class="menu-text">About</span></a>
+    <a class="nav-link" href="./monthly-zonal-stats.html"> 
+<span class="menu-text">Monthly Environmental Data</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./shared-socioeconomic-pathways.html"> 
+<span class="menu-text">Shared Socioeconomic Pathways</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./climate-projection-data.html"> 
+<span class="menu-text">Climate Projection</span></a>
   </li>  
 </ul>
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
@@ -340,9 +348,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#current-risk-map" id="toc-current-risk-map" class="nav-link active" data-scroll-target="#current-risk-map">Current Risk Map</a></li>
-  <li><a href="#risk-index-trends" id="toc-risk-index-trends" class="nav-link" data-scroll-target="#risk-index-trends">Risk Index Trends</a></li>
-  <li><a href="#about-this-system" id="toc-about-this-system" class="nav-link" data-scroll-target="#about-this-system">About This System</a></li>
+  <li><a href="#study-overview" id="toc-study-overview" class="nav-link active" data-scroll-target="#study-overview">Study Overview</a></li>
+  <li><a href="#sea-provinces-current-risk-map" id="toc-sea-provinces-current-risk-map" class="nav-link" data-scroll-target="#sea-provinces-current-risk-map">SEA Provinces — Current Risk Map</a></li>
+  <li><a href="#sea-provinces-risk-index-trends" id="toc-sea-provinces-risk-index-trends" class="nav-link" data-scroll-target="#sea-provinces-risk-index-trends">SEA Provinces — Risk Index Trends</a></li>
+  <li><a href="#taiwan-bsa-current-risk-map" id="toc-taiwan-bsa-current-risk-map" class="nav-link" data-scroll-target="#taiwan-bsa-current-risk-map">Taiwan BSA — Current Risk Map</a></li>
+  <li><a href="#about" id="toc-about" class="nav-link" data-scroll-target="#about">About</a></li>
+  <li><a href="#code" id="toc-code" class="nav-link" data-scroll-target="#code">Code</a></li>
+  <li><a href="#contact" id="toc-contact" class="nav-link" data-scroll-target="#contact">Contact</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/issues/new" class="toc-action"><i class="bi bi-github"></i>Report an issue</a></li></ul></div></nav>
     </div>
@@ -352,8 +364,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title">A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
-<p class="subtitle lead">162 Southeast Asia ADM_1 Provinces · Monthly Updated Predictions”</p>
+<div class="quarto-title-block"><div><h1 class="title">Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan</h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<p class="subtitle lead">A two-pronged deep learning early warning system operating at province and sub-district scale</p>
 </div>
 
 
@@ -376,12 +388,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <i class="callout-icon no-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>Last updated:</strong> — &nbsp;·&nbsp; <strong>Forecast month:</strong> — &nbsp;·&nbsp; <strong>Regions covered:</strong> 0</p>
+<p><strong>Last updated:</strong> — &nbsp;·&nbsp; <strong>Forecast month:</strong> — &nbsp;·&nbsp; <strong>SEA regions covered:</strong> 0</p>
 </div>
 </div>
 </div>
-<section id="current-risk-map" class="level2">
-<h2 class="anchored" data-anchor-id="current-risk-map">Current Risk Map</h2>
+<section id="study-overview" class="level2">
+<h2 class="anchored" data-anchor-id="study-overview">Study Overview</h2>
+<p>This project combines two complementary prediction models targeting different geographic scales and use cases:</p>
+<div class="grid">
+<section id="arm-1-southeast-asia-provinces" class="level3 g-col-6">
+<h3 class="anchored" data-anchor-id="arm-1-southeast-asia-provinces">Arm 1 — Southeast Asia Provinces</h3>
+<p>A spatiotemporally-aware deep learning model (ST-GAT + GRU) trained on 162 admin-1 provinces across 10 SEA countries (2011–2018). It captures international dengue risk dynamics using province-level historical infection data, monthly climatological data (ERA5-Land, MODIS, CHIRPS), and Shared Socioeconomic Pathways. Inference runs monthly and is bias-corrected to account for post-2018 climate shift (AR6 SSP2-4.5).</p>
+<p><a href="./sea-provinces-study-results.html">View SEA Provinces Results →</a></p>
+</section>
+<section id="arm-2-taiwan-basic-statistics-area-bsa" class="level3 g-col-6">
+<h3 class="anchored" data-anchor-id="arm-2-taiwan-basic-statistics-area-bsa">Arm 2 — Taiwan Basic Statistics Area (BSA)</h3>
+<p>A Taiwan-specific counterpart operating at the finer granularity of the Basic Statistics Area (BSA) — the smallest census unit tracked by the Taiwanese government. It jointly considers international mobility (using SEA risk states from Arm 1 as exporter signals), local mobility, BSA-level environmental suitability, and population demographics to predict elevated local dengue risk.</p>
+<p><a href="./taiwan-bsa-study-results.html">View Taiwan BSA Results →</a></p>
+</section>
+</div>
+<hr>
+</section>
+<section id="sea-provinces-current-risk-map" class="level2">
+<h2 class="anchored" data-anchor-id="sea-provinces-current-risk-map">SEA Provinces — Current Risk Map</h2>
 <p>Predicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia. Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.</p>
 <div id="fig-risk-map" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="2">
 <figure class="quarto-float quarto-float-fig figure">
@@ -396,9 +425,9 @@ Figure&nbsp;1
 </figure>
 </div>
 </section>
-<section id="risk-index-trends" class="level2">
-<h2 class="anchored" data-anchor-id="risk-index-trends">Risk Index Trends</h2>
-<p>Mean risk index across all regions over every month predictions have been archived.</p>
+<section id="sea-provinces-risk-index-trends" class="level2">
+<h2 class="anchored" data-anchor-id="sea-provinces-risk-index-trends">SEA Provinces — Risk Index Trends</h2>
+<p>Mean risk index across all SEA admin-1 regions over every month predictions have been archived.</p>
 <div id="fig-trends" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="3">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-trends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -412,42 +441,71 @@ Figure&nbsp;2
 </figure>
 </div>
 </section>
-<section id="about-this-system" class="level2">
-<h2 class="anchored" data-anchor-id="about-this-system">About This System</h2>
-<p>This early warning system combines <strong>spatiotemporal graph neural networks</strong> (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across 0 admin-1 regions in Southeast Asia.</p>
+<section id="taiwan-bsa-current-risk-map" class="level2">
+<h2 class="anchored" data-anchor-id="taiwan-bsa-current-risk-map">Taiwan BSA — Current Risk Map</h2>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Placeholder</strong> — Taiwan BSA risk predictions are not yet available. This panel will display a choropleth of BSA-level dengue risk across Taiwan once the BSA model pipeline is operational.</p>
+</div>
+</div>
+<div id="fig-taiwan-risk-map" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-execution_count="4">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-taiwan-risk-map-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output cell-output-stdout">
+<pre><code>⚠️  Taiwan BSA predictions not yet available — implement taiwan-bsa-module inference pipeline first.</code></pre>
+</div>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-taiwan-risk-map-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="about" class="level2">
+<h2 class="anchored" data-anchor-id="about">About</h2>
+<p>Dengue fever’s transmission dynamics in Southeast Asia relies on human and vector mobility, displaying a high degree of non-linearity and unpredictability. Moreover, as dengue outbreaks in Taiwan are attributed to imported cases from Southeast Asia coinciding with windows of time where weather favors vector reproductability, preventative measures must be taken at the right time in the right places. To address the limits of considering dengue outbreak in isolation which ignores how circulating dengue serotypes confer patterns that may only be explained across multiple countries extended beyond neighboring years, this study creates a two-pronged experimental design that combines: (1) a Southeast Asian spatiotemporally-aware deep learning prediction model that captures international dengue risk dynamics based on province-level historical infection data, near-real-time climatological data, as well as Shared Socioeconomic Pathways data. (2) a Taiwan-only counterpart whose prediction works at a finer granularity, a Basic Statistics Area (BSA), and predicts based on individual case report, clinical diagnosis, demographic data, and environmental data.</p>
 <div class="grid">
-<section id="pipeline" class="level3 g-col-4">
-<h3 class="anchored" data-anchor-id="pipeline">Pipeline</h3>
+<section id="sea-provinces-pipeline" class="level3 g-col-6">
+<h3 class="anchored" data-anchor-id="sea-provinces-pipeline">SEA Provinces Pipeline</h3>
 <ol type="1">
 <li>Monthly zonal statistics fetched from Google Earth Engine</li>
 <li>Climate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift</li>
 <li>STGNN inference run on adjusted features</li>
 <li>Results published automatically via GitHub Actions</li>
 </ol>
+<p><strong>Architecture:</strong> ST-GAT + GRU (PyTorch Geometric) <strong>Training period:</strong> 2011–2018 <strong>Features:</strong> ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop, SSP population <strong>Spatial scope:</strong> 162 admin-1 regions across 10 SEA countries <strong>Performance (test set):</strong> Huber 0.390 · MAE 1.214 · RMSE 2.460 (log IR, 14 held-out months)</p>
 </section>
-<section id="model" class="level3 g-col-4">
-<h3 class="anchored" data-anchor-id="model">Model</h3>
-<ul>
-<li><strong>Architecture:</strong> ST-GAT + GRU (PyTorch Geometric)</li>
-<li><strong>Training period:</strong> 2011–2018</li>
-<li><strong>Features:</strong> ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop</li>
-<li><strong>Spatial scope:</strong> SEA admin-1 regions</li>
-</ul>
-</section>
-<section id="performance-test-set" class="level3 g-col-4">
-<h3 class="anchored" data-anchor-id="performance-test-set">Performance (test set)</h3>
-<ul>
-<li><strong>Huber loss:</strong> 0.390</li>
-<li><strong>MAE:</strong> 1.214 (log IR)</li>
-<li><strong>RMSE:</strong> 2.460 (log IR)</li>
-<li><strong>Test months:</strong> 14 held-out months</li>
-</ul>
+<section id="taiwan-bsa-pipeline" class="level3 g-col-6">
+<h3 class="anchored" data-anchor-id="taiwan-bsa-pipeline">Taiwan BSA Pipeline</h3>
+<ol type="1">
+<li>SEA province risk states ingested as international mobility proxy (from Arm 1)</li>
+<li>BSA-level environmental suitability computed from TCCIP climate data</li>
+<li>Individual case reports and demographic data from Taiwan Ministry of Health</li>
+<li>BSA model inference generates sub-district risk predictions</li>
+</ol>
+<p><strong>Architecture:</strong> <em>(to be finalised)</em> <strong>Training period:</strong> <em>(to be determined)</em> <strong>Features:</strong> MoH case reports, clinical diagnosis, demographics, TCCIP climate, local mobility <strong>Spatial scope:</strong> Taiwan Basic Statistics Areas (BSAs) <strong>Performance:</strong> <em>(pending model training)</em></p>
 </section>
 </div>
 <hr>
 <blockquote class="blockquote">
-<p><strong>Interpretation note:</strong> Predictions are expressed as a <em>relative risk index</em> (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.</p>
+<p><strong>Interpretation note:</strong> SEA predictions are expressed as a <em>relative risk index</em> (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.</p>
 </blockquote>
+</section>
+<section id="code" class="level2">
+<h2 class="anchored" data-anchor-id="code">Code</h2>
+<p>Source code and pipeline configuration are available on <a href="https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS">GitHub</a> under the GNU GPLv3 license.</p>
+</section>
+<section id="contact" class="level2">
+<h2 class="anchored" data-anchor-id="contact">Contact</h2>
+<p>For questions or collaboration inquiries, please open an issue on the <a href="https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/issues">GitHub repository</a>.</p>
 
 
 <!-- -->
@@ -919,160 +977,224 @@ Figure&nbsp;2
     }
   });
   </script><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia"</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> 162 Southeast Asia ADM_1 Provinces · Monthly Updated Predictions"</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="an">page-layout:</span><span class="co"> full</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#| output: false</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, pathlib, datetime</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> pathlib.Path(<span class="st">"data"</span>)</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>preds_path <span class="op">=</span> data_dir <span class="op">/</span> <span class="st">"latest_predictions.json"</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>stats_path <span class="op">=</span> data_dir <span class="op">/</span> <span class="st">"latest_zonal_stats.json"</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> json.loads(preds_path.read_text()) <span class="cf">if</span> preds_path.exists() <span class="cf">else</span> {}</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>stats <span class="op">=</span> json.loads(stats_path.read_text()) <span class="cf">if</span> stats_path.exists() <span class="cf">else</span> {}</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>updated <span class="op">=</span> preds.get(<span class="st">"generated_at"</span>, <span class="st">"—"</span>)</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>target_month <span class="op">=</span> preds.get(<span class="st">"target_month"</span>, <span class="st">"—"</span>)</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>n_regions <span class="op">=</span> <span class="bu">len</span>(preds.get(<span class="st">"regions"</span>, {}))</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>::: {.callout-note appearance="minimal"}</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>**Last updated:** `{python} updated` &amp;nbsp;·&amp;nbsp; **Forecast month:** `{python} target_month` &amp;nbsp;·&amp;nbsp; **Regions covered:** <span class="in">`{python} n_regions`</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="fu">## Current Risk Map</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>Predicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia.</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-risk-map</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Predicted relative dengue risk index. Delta bias correction applied to account for 2018–2026 climate shift (AR6 SSP2-4.5)."</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, pathlib</span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> pathlib.Path(<span class="st">"data"</span>)</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>preds_path <span class="op">=</span> data_dir <span class="op">/</span> <span class="st">"latest_predictions.json"</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> preds_path.exists():</span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  No prediction data found — run site/scripts/run_inference.py first."</span>)</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    preds <span class="op">=</span> json.loads(preds_path.read_text())</span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    regions <span class="op">=</span> preds.get(<span class="st">"regions"</span>, {})</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.DataFrame([</span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"region"</span>: k, <span class="st">"country"</span>: v[<span class="st">"country"</span>], <span class="st">"risk_index"</span>: v[<span class="st">"risk_index"</span>]}</span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k, v <span class="kw">in</span> regions.items()</span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    ])</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> px.choropleth(</span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>        df,</span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>        locations<span class="op">=</span><span class="st">"country"</span>,</span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>        locationmode<span class="op">=</span><span class="st">"country names"</span>,</span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span><span class="st">"risk_index"</span>,</span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>        hover_name<span class="op">=</span><span class="st">"region"</span>,</span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>        hover_data<span class="op">=</span>{<span class="st">"risk_index"</span>: <span class="st">":.2f"</span>, <span class="st">"country"</span>: <span class="va">True</span>},</span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>        color_continuous_scale<span class="op">=</span><span class="st">"RdYlGn_r"</span>,</span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>        range_color<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">3</span>],</span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>        labels<span class="op">=</span>{<span class="st">"risk_index"</span>: <span class="st">"Risk Index"</span>},</span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="ss">f"Dengue Risk Index — </span><span class="sc">{</span>preds<span class="sc">.</span>get(<span class="st">'target_month'</span>, <span class="st">''</span>)<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>        scope<span class="op">=</span><span class="st">"asia"</span>,</span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(margin<span class="op">=</span><span class="bu">dict</span>(l<span class="op">=</span><span class="dv">0</span>, r<span class="op">=</span><span class="dv">0</span>, t<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">0</span>), height<span class="op">=</span><span class="dv">480</span>)</span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    fig.show()</span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="fu">## Risk Index Trends</span></span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>Mean risk index across all regions over every month predictions have been archived.</span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-trends</span></span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Monthly mean relative risk index across all SEA admin-1 regions. Values &gt; 1 indicate elevated risk vs the 2011–2018 baseline."</span></span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, pathlib</span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>archive_dir <span class="op">=</span> pathlib.Path(<span class="st">"data/predictions"</span>)</span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>records <span class="op">=</span> []</span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> <span class="bu">sorted</span>(archive_dir.glob(<span class="st">"*.json"</span>)):</span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> json.loads(f.read_text())</span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    regions <span class="op">=</span> data.get(<span class="st">"regions"</span>, {})</span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>    valid <span class="op">=</span> [r[<span class="st">"risk_index"</span>] <span class="cf">for</span> r <span class="kw">in</span> regions.values() <span class="cf">if</span> r.get(<span class="st">"has_data"</span>) <span class="kw">and</span> r.get(<span class="st">"risk_index"</span>) <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>]</span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> valid:</span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>        records.append({</span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>            <span class="st">"month"</span>: data[<span class="st">"target_month"</span>],</span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mean_risk"</span>: <span class="bu">round</span>(<span class="bu">sum</span>(valid) <span class="op">/</span> <span class="bu">len</span>(valid), <span class="dv">4</span>),</span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>            <span class="st">"n_regions"</span>: <span class="bu">len</span>(valid),</span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>        })</span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> records:</span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No archived predictions yet — will populate after the first monthly run."</span>)</span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>    months <span class="op">=</span> [r[<span class="st">"month"</span>] <span class="cf">for</span> r <span class="kw">in</span> records]</span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>    means  <span class="op">=</span> [r[<span class="st">"mean_risk"</span>] <span class="cf">for</span> r <span class="kw">in</span> records]</span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(</span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>months, y<span class="op">=</span>means, mode<span class="op">=</span><span class="st">"lines+markers"</span>,</span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">"#e63946"</span>, width<span class="op">=</span><span class="dv">2</span>),</span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">6</span>),</span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">"Mean risk index"</span>,</span>
-<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>        hovertemplate<span class="op">=</span><span class="st">"%</span><span class="sc">{x}</span><span class="st">&lt;br&gt;Risk index: %</span><span class="sc">{y:.3f}</span><span class="st">&lt;extra&gt;&lt;/extra&gt;"</span>,</span>
-<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a>    ))</span>
-<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>    fig.add_hline(y<span class="op">=</span><span class="fl">1.0</span>, line_dash<span class="op">=</span><span class="st">"dash"</span>, line_color<span class="op">=</span><span class="st">"grey"</span>,</span>
-<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>                  annotation_text<span class="op">=</span><span class="st">"Baseline (2011–2018 mean)"</span>, annotation_position<span class="op">=</span><span class="st">"bottom right"</span>)</span>
-<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(</span>
-<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>        xaxis_title<span class="op">=</span><span class="st">"Month"</span>, yaxis_title<span class="op">=</span><span class="st">"Mean Risk Index"</span>,</span>
-<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>        height<span class="op">=</span><span class="dv">320</span>, margin<span class="op">=</span><span class="bu">dict</span>(l<span class="op">=</span><span class="dv">0</span>, r<span class="op">=</span><span class="dv">0</span>, t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">0</span>),</span>
-<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>    fig.show()</span>
-<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="fu">## About This System</span></span>
-<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>This early warning system combines **spatiotemporal graph neural networks** (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across <span class="in">`{python} n_regions`</span> admin-1 regions in Southeast Asia.</span>
-<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>::: {.grid}</span>
-<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>::: {.g-col-4}</span>
-<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="fu">### Pipeline</span></span>
-<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Monthly zonal statistics fetched from Google Earth Engine</span>
-<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Climate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift</span>
-<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>STGNN inference run on adjusted features</span>
-<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Results published automatically via GitHub Actions</span>
-<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>::: {.g-col-4}</span>
-<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a><span class="fu">### Model</span></span>
-<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Architecture:** ST-GAT + GRU (PyTorch Geometric)</span>
-<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Training period:** 2011–2018</span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Features:** ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop</span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Spatial scope:** SEA admin-1 regions</span>
-<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>::: {.g-col-4}</span>
-<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a><span class="fu">### Performance (test set)</span></span>
-<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Huber loss:** 0.390</span>
-<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**MAE:** 1.214 (log IR)</span>
-<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**RMSE:** 2.460 (log IR)</span>
-<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Test months:** 14 held-out months</span>
-<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>---</span>
-<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **Interpretation note:** Predictions are expressed as a *relative risk index* (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="an">subtitle:</span><span class="co"> "A two-pronged deep learning early warning system operating at province and sub-district scale"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="an">page-layout:</span><span class="co"> full</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co">#| output: false</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, pathlib, datetime</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> pathlib.Path(<span class="st">"data"</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>preds_path <span class="op">=</span> data_dir <span class="op">/</span> <span class="st">"latest_predictions.json"</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>stats_path <span class="op">=</span> data_dir <span class="op">/</span> <span class="st">"latest_zonal_stats.json"</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>preds <span class="op">=</span> json.loads(preds_path.read_text()) <span class="cf">if</span> preds_path.exists() <span class="cf">else</span> {}</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>stats <span class="op">=</span> json.loads(stats_path.read_text()) <span class="cf">if</span> stats_path.exists() <span class="cf">else</span> {}</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>updated <span class="op">=</span> preds.get(<span class="st">"generated_at"</span>, <span class="st">"—"</span>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>target_month <span class="op">=</span> preds.get(<span class="st">"target_month"</span>, <span class="st">"—"</span>)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>n_regions <span class="op">=</span> <span class="bu">len</span>(preds.get(<span class="st">"regions"</span>, {}))</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>::: {.callout-note appearance="minimal"}</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>**Last updated:** `{python} updated` &amp;nbsp;·&amp;nbsp; **Forecast month:** `{python} target_month` &amp;nbsp;·&amp;nbsp; **SEA regions covered:** <span class="in">`{python} n_regions`</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="fu">## Study Overview</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>This project combines two complementary prediction models targeting different geographic scales and use cases:</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>::: {.grid}</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>::: {.g-col-6}</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="fu">### Arm 1 — Southeast Asia Provinces</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>A spatiotemporally-aware deep learning model (ST-GAT + GRU) trained on 162 admin-1 provinces across 10 SEA countries (2011–2018). It captures international dengue risk dynamics using province-level historical infection data, monthly climatological data (ERA5-Land, MODIS, CHIRPS), and Shared Socioeconomic Pathways. Inference runs monthly and is bias-corrected to account for post-2018 climate shift (AR6 SSP2-4.5).</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">View SEA Provinces Results →</span><span class="co">](sea-provinces-study-results.qmd)</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>::: {.g-col-6}</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a><span class="fu">### Arm 2 — Taiwan Basic Statistics Area (BSA)</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>A Taiwan-specific counterpart operating at the finer granularity of the Basic Statistics Area (BSA) — the smallest census unit tracked by the Taiwanese government. It jointly considers international mobility (using SEA risk states from Arm 1 as exporter signals), local mobility, BSA-level environmental suitability, and population demographics to predict elevated local dengue risk.</span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">View Taiwan BSA Results →</span><span class="co">](taiwan-bsa-study-results.qmd)</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="fu">## SEA Provinces — Current Risk Map</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>Predicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia.</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-risk-map</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Predicted relative dengue risk index. Delta bias correction applied to account for 2018–2026 climate shift (AR6 SSP2-4.5)."</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, pathlib</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> pathlib.Path(<span class="st">"data"</span>)</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>preds_path <span class="op">=</span> data_dir <span class="op">/</span> <span class="st">"latest_predictions.json"</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> preds_path.exists():</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  No prediction data found — run site/scripts/run_inference.py first."</span>)</span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>    preds <span class="op">=</span> json.loads(preds_path.read_text())</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>    regions <span class="op">=</span> preds.get(<span class="st">"regions"</span>, {})</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.DataFrame([</span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"region"</span>: k, <span class="st">"country"</span>: v[<span class="st">"country"</span>], <span class="st">"risk_index"</span>: v[<span class="st">"risk_index"</span>]}</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k, v <span class="kw">in</span> regions.items()</span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> px.choropleth(</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>        df,</span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>        locations<span class="op">=</span><span class="st">"country"</span>,</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>        locationmode<span class="op">=</span><span class="st">"country names"</span>,</span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span><span class="st">"risk_index"</span>,</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>        hover_name<span class="op">=</span><span class="st">"region"</span>,</span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>        hover_data<span class="op">=</span>{<span class="st">"risk_index"</span>: <span class="st">":.2f"</span>, <span class="st">"country"</span>: <span class="va">True</span>},</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>        color_continuous_scale<span class="op">=</span><span class="st">"RdYlGn_r"</span>,</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>        range_color<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">3</span>],</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>        labels<span class="op">=</span>{<span class="st">"risk_index"</span>: <span class="st">"Risk Index"</span>},</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="ss">f"Dengue Risk Index — </span><span class="sc">{</span>preds<span class="sc">.</span>get(<span class="st">'target_month'</span>, <span class="st">''</span>)<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>        scope<span class="op">=</span><span class="st">"asia"</span>,</span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(margin<span class="op">=</span><span class="bu">dict</span>(l<span class="op">=</span><span class="dv">0</span>, r<span class="op">=</span><span class="dv">0</span>, t<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">0</span>), height<span class="op">=</span><span class="dv">480</span>)</span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>    fig.show()</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a><span class="fu">## SEA Provinces — Risk Index Trends</span></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>Mean risk index across all SEA admin-1 regions over every month predictions have been archived.</span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-trends</span></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Monthly mean relative risk index across all SEA admin-1 regions. Values &gt; 1 indicate elevated risk vs the 2011–2018 baseline."</span></span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json, pathlib</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>archive_dir <span class="op">=</span> pathlib.Path(<span class="st">"data/predictions"</span>)</span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>records <span class="op">=</span> []</span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> <span class="bu">sorted</span>(archive_dir.glob(<span class="st">"*.json"</span>)):</span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> json.loads(f.read_text())</span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>    regions <span class="op">=</span> data.get(<span class="st">"regions"</span>, {})</span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>    valid <span class="op">=</span> [r[<span class="st">"risk_index"</span>] <span class="cf">for</span> r <span class="kw">in</span> regions.values() <span class="cf">if</span> r.get(<span class="st">"has_data"</span>) <span class="kw">and</span> r.get(<span class="st">"risk_index"</span>) <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>]</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> valid:</span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>        records.append({</span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>            <span class="st">"month"</span>: data[<span class="st">"target_month"</span>],</span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mean_risk"</span>: <span class="bu">round</span>(<span class="bu">sum</span>(valid) <span class="op">/</span> <span class="bu">len</span>(valid), <span class="dv">4</span>),</span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>            <span class="st">"n_regions"</span>: <span class="bu">len</span>(valid),</span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> records:</span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"No archived predictions yet — will populate after the first monthly run."</span>)</span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>    months <span class="op">=</span> [r[<span class="st">"month"</span>] <span class="cf">for</span> r <span class="kw">in</span> records]</span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a>    means  <span class="op">=</span> [r[<span class="st">"mean_risk"</span>] <span class="cf">for</span> r <span class="kw">in</span> records]</span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(</span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>months, y<span class="op">=</span>means, mode<span class="op">=</span><span class="st">"lines+markers"</span>,</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">"#e63946"</span>, width<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">6</span>),</span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">"Mean risk index"</span>,</span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a>        hovertemplate<span class="op">=</span><span class="st">"%</span><span class="sc">{x}</span><span class="st">&lt;br&gt;Risk index: %</span><span class="sc">{y:.3f}</span><span class="st">&lt;extra&gt;&lt;/extra&gt;"</span>,</span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>    fig.add_hline(y<span class="op">=</span><span class="fl">1.0</span>, line_dash<span class="op">=</span><span class="st">"dash"</span>, line_color<span class="op">=</span><span class="st">"grey"</span>,</span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>                  annotation_text<span class="op">=</span><span class="st">"Baseline (2011–2018 mean)"</span>, annotation_position<span class="op">=</span><span class="st">"bottom right"</span>)</span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(</span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>        xaxis_title<span class="op">=</span><span class="st">"Month"</span>, yaxis_title<span class="op">=</span><span class="st">"Mean Risk Index"</span>,</span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a>        height<span class="op">=</span><span class="dv">320</span>, margin<span class="op">=</span><span class="bu">dict</span>(l<span class="op">=</span><span class="dv">0</span>, r<span class="op">=</span><span class="dv">0</span>, t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">0</span>),</span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a>    fig.show()</span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a><span class="fu">## Taiwan BSA — Current Risk Map</span></span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>**Placeholder** — Taiwan BSA risk predictions are not yet available. This panel will display a choropleth of BSA-level dengue risk across Taiwan once the BSA model pipeline is operational.</span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-taiwan-risk-map</span></span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Taiwan BSA dengue risk index for the current forecast month."</span></span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"⚠️  Taiwan BSA predictions not yet available — implement taiwan-bsa-module inference pipeline first."</span>)</span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a><span class="fu">## About</span></span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>Dengue fever's transmission dynamics in Southeast Asia relies on human and vector mobility, displaying a high</span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a>degree of non-linearity and unpredictability. Moreover, as dengue outbreaks in Taiwan are</span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>attributed to imported cases from Southeast Asia coinciding with windows of time where weather</span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a>favors vector reproductability, preventative measures must be taken at the right time in the right places.</span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>To address the limits of considering dengue outbreak in isolation which ignores how circulating dengue serotypes</span>
+<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a>confer patterns that may only be explained across multiple countries extended beyond neighboring years,</span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>this study creates a two-pronged experimental design that combines:</span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a>(1) a Southeast Asian spatiotemporally-aware deep learning</span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a>prediction model that captures international dengue risk dynamics based on province-level historical infection</span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a>data, near-real-time climatological data, as well as Shared Socioeconomic Pathways data.</span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a>(2) a Taiwan-only counterpart whose prediction works at a finer granularity, a Basic Statistics Area (BSA), and</span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a>predicts based on individual case report, clinical diagnosis, demographic data, and environmental data.</span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a>::: {.grid}</span>
+<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>::: {.g-col-6}</span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a><span class="fu">### SEA Provinces Pipeline</span></span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Monthly zonal statistics fetched from Google Earth Engine</span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Climate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift</span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>STGNN inference run on adjusted features</span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>Results published automatically via GitHub Actions</span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a>**Architecture:** ST-GAT + GRU (PyTorch Geometric)</span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>**Training period:** 2011–2018</span>
+<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a>**Features:** ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop, SSP population</span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>**Spatial scope:** 162 admin-1 regions across 10 SEA countries</span>
+<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a>**Performance (test set):** Huber 0.390 · MAE 1.214 · RMSE 2.460 (log IR, 14 held-out months)</span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>::: {.g-col-6}</span>
+<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a><span class="fu">### Taiwan BSA Pipeline</span></span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>SEA province risk states ingested as international mobility proxy (from Arm 1)</span>
+<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>BSA-level environmental suitability computed from TCCIP climate data</span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Individual case reports and demographic data from Taiwan Ministry of Health</span>
+<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>BSA model inference generates sub-district risk predictions</span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a>**Architecture:** *(to be finalised)*</span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a>**Training period:** *(to be determined)*</span>
+<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>**Features:** MoH case reports, clinical diagnosis, demographics, TCCIP climate, local mobility</span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>**Spatial scope:** Taiwan Basic Statistics Areas (BSAs)</span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>**Performance:** *(pending model training)*</span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **Interpretation note:** SEA predictions are expressed as a *relative risk index* (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions.</span></span>
+<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a><span class="fu">## Code</span></span>
+<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>Source code and pipeline configuration are available on</span>
+<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">GitHub</span><span class="co">](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS)</span></span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>under the GNU GPLv3 license.</span>
+<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a><span class="fu">## Contact</span></span>
+<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a>For questions or collaboration inquiries, please open an issue on the</span>
+<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">GitHub repository</span><span class="co">](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/issues)</span>.</span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->

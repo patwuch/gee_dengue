@@ -2,22 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/index.html</loc>
-    <lastmod>2026-06-22T11:15:14.904Z</lastmod>
+    <lastmod>2026-06-30T13:48:20.284Z</lastmod>
   </url>
   <url>
-    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/about.html</loc>
-    <lastmod>2026-06-22T11:15:14.904Z</lastmod>
+    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/shared-socioeconomic-pathways.html</loc>
+    <lastmod>2026-06-30T13:48:20.285Z</lastmod>
   </url>
   <url>
-    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/model-results.html</loc>
-    <lastmod>2026-06-22T11:15:14.904Z</lastmod>
+    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/monthly-zonal-stats.html</loc>
+    <lastmod>2026-06-30T13:48:20.284Z</lastmod>
   </url>
   <url>
-    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/dengue-timelines.html</loc>
-    <lastmod>2026-06-22T11:15:14.904Z</lastmod>
+    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/climate-projection-data.html</loc>
+    <lastmod>2026-06-30T13:48:20.284Z</lastmod>
   </url>
   <url>
-    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/climate-data.html</loc>
-    <lastmod>2026-06-22T11:15:14.904Z</lastmod>
+    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/taiwan-bsa-study-results.html</loc>
+    <lastmod>2026-06-30T13:48:20.285Z</lastmod>
+  </url>
+  <url>
+    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/sea-provinces-study-results.html</loc>
+    <lastmod>2026-06-30T13:48:20.285Z</lastmod>
+  </url>
+  <url>
+    <loc>https://chuang-lab-dmptd-tmu.github.io/dengue-fever-EWS/dengue-data.html</loc>
+    <lastmod>2026-06-30T13:48:20.284Z</lastmod>
   </url>
 </urlset>

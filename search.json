@@ -2,183 +2,232 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
     "section": "",
-    "text": "Last updated: —  ·  Forecast month: —  ·  Regions covered: 0"
+    "text": "Last updated: —  ·  Forecast month: —  ·  SEA regions covered: 0"
   },
   {
-    "objectID": "index.html#current-risk-map",
-    "href": "index.html#current-risk-map",
-    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
-    "section": "Current Risk Map",
-    "text": "Current Risk Map\nPredicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia. Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.\n\n\n\n\n⚠️  No prediction data found — run site/scripts/run_inference.py first.\n\n\n\nFigure 1"
+    "objectID": "index.html#study-overview",
+    "href": "index.html#study-overview",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
+    "section": "Study Overview",
+    "text": "Study Overview\nThis project combines two complementary prediction models targeting different geographic scales and use cases:\n\n\nArm 1 — Southeast Asia Provinces\nA spatiotemporally-aware deep learning model (ST-GAT + GRU) trained on 162 admin-1 provinces across 10 SEA countries (2011–2018). It captures international dengue risk dynamics using province-level historical infection data, monthly climatological data (ERA5-Land, MODIS, CHIRPS), and Shared Socioeconomic Pathways. Inference runs monthly and is bias-corrected to account for post-2018 climate shift (AR6 SSP2-4.5).\nView SEA Provinces Results →\n\n\nArm 2 — Taiwan Basic Statistics Area (BSA)\nA Taiwan-specific counterpart operating at the finer granularity of the Basic Statistics Area (BSA) — the smallest census unit tracked by the Taiwanese government. It jointly considers international mobility (using SEA risk states from Arm 1 as exporter signals), local mobility, BSA-level environmental suitability, and population demographics to predict elevated local dengue risk.\nView Taiwan BSA Results →"
   },
   {
-    "objectID": "index.html#risk-index-trends",
-    "href": "index.html#risk-index-trends",
-    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
-    "section": "Risk Index Trends",
-    "text": "Risk Index Trends\nMean risk index across all regions over every month predictions have been archived.\n\n\n\n\nNo archived predictions yet — will populate after the first monthly run.\n\n\n\nFigure 2"
+    "objectID": "index.html#sea-provinces-current-risk-map",
+    "href": "index.html#sea-provinces-current-risk-map",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
+    "section": "SEA Provinces — Current Risk Map",
+    "text": "SEA Provinces — Current Risk Map\nPredicted dengue incidence rate (relative risk index) for admin-1 regions across Southeast Asia. Values &gt; 1 indicate elevated risk relative to the 2011–2018 training baseline.\n\n\n\n\n⚠️  No prediction data found — run site/scripts/run_inference.py first.\n\n\n\nFigure 1"
   },
   {
-    "objectID": "index.html#about-this-system",
-    "href": "index.html#about-this-system",
-    "title": "A Spatiotemporal Model of Interprovincial Dengue Transmission Patterns in Southeast Asia",
-    "section": "About This System",
-    "text": "About This System\nThis early warning system combines spatiotemporal graph neural networks (ST-GAT + GRU) with monthly remote sensing data to forecast dengue fever incidence across 0 admin-1 regions in Southeast Asia.\n\n\nPipeline\n\nMonthly zonal statistics fetched from Google Earth Engine\nClimate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift\nSTGNN inference run on adjusted features\nResults published automatically via GitHub Actions\n\n\n\nModel\n\nArchitecture: ST-GAT + GRU (PyTorch Geometric)\nTraining period: 2011–2018\nFeatures: ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop\nSpatial scope: SEA admin-1 regions\n\n\n\nPerformance (test set)\n\nHuber loss: 0.390\nMAE: 1.214 (log IR)\nRMSE: 2.460 (log IR)\nTest months: 14 held-out months\n\n\n\n\n\nInterpretation note: Predictions are expressed as a relative risk index (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions."
+    "objectID": "index.html#sea-provinces-risk-index-trends",
+    "href": "index.html#sea-provinces-risk-index-trends",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
+    "section": "SEA Provinces — Risk Index Trends",
+    "text": "SEA Provinces — Risk Index Trends\nMean risk index across all SEA admin-1 regions over every month predictions have been archived.\n\n\n\n\nNo archived predictions yet — will populate after the first monthly run.\n\n\n\nFigure 2"
   },
   {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "This early warning system is developed by the Chuang Lab at Taipei Medical University (TMU) as part of ongoing research into spatiotemporally-aware dengue fever prediction for Southeast Asia.\nThe system jointly models dengue dynamics across Taiwan and SEA by integrating:\n\nMonthly remote sensing data (ERA5-Land, MODIS, CHIRPS)\nOpenDengue surveillance records (2011–2018)\nCMIP6 climate projections (AR6, GWL scenarios)\nShared Socioeconomic Pathways (SSP1-2.6 through SSP5-8.5)"
+    "objectID": "index.html#taiwan-bsa-current-risk-map",
+    "href": "index.html#taiwan-bsa-current-risk-map",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
+    "section": "Taiwan BSA — Current Risk Map",
+    "text": "Taiwan BSA — Current Risk Map\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Taiwan BSA risk predictions are not yet available. This panel will display a choropleth of BSA-level dengue risk across Taiwan once the BSA model pipeline is operational.\n\n\n\n\n\n\n⚠️  Taiwan BSA predictions not yet available — implement taiwan-bsa-module inference pipeline first.\n\n\n\nFigure 3"
   },
   {
-    "objectID": "about.html#project",
-    "href": "about.html#project",
-    "title": "About",
-    "section": "",
-    "text": "This early warning system is developed by the Chuang Lab at Taipei Medical University (TMU) as part of ongoing research into spatiotemporally-aware dengue fever prediction for Southeast Asia.\nThe system jointly models dengue dynamics across Taiwan and SEA by integrating:\n\nMonthly remote sensing data (ERA5-Land, MODIS, CHIRPS)\nOpenDengue surveillance records (2011–2018)\nCMIP6 climate projections (AR6, GWL scenarios)\nShared Socioeconomic Pathways (SSP1-2.6 through SSP5-8.5)"
+    "objectID": "index.html#about",
+    "href": "index.html#about",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
+    "section": "About",
+    "text": "About\nDengue fever’s transmission dynamics in Southeast Asia relies on human and vector mobility, displaying a high degree of non-linearity and unpredictability. Moreover, as dengue outbreaks in Taiwan are attributed to imported cases from Southeast Asia coinciding with windows of time where weather favors vector reproductability, preventative measures must be taken at the right time in the right places. To address the limits of considering dengue outbreak in isolation which ignores how circulating dengue serotypes confer patterns that may only be explained across multiple countries extended beyond neighboring years, this study creates a two-pronged experimental design that combines: (1) a Southeast Asian spatiotemporally-aware deep learning prediction model that captures international dengue risk dynamics based on province-level historical infection data, near-real-time climatological data, as well as Shared Socioeconomic Pathways data. (2) a Taiwan-only counterpart whose prediction works at a finer granularity, a Basic Statistics Area (BSA), and predicts based on individual case report, clinical diagnosis, demographic data, and environmental data.\n\n\nSEA Provinces Pipeline\n\nMonthly zonal statistics fetched from Google Earth Engine\nClimate delta correction applied (AR6 SSP2-4.5) to adjust for post-2018 climate shift\nSTGNN inference run on adjusted features\nResults published automatically via GitHub Actions\n\nArchitecture: ST-GAT + GRU (PyTorch Geometric) Training period: 2011–2018 Features: ERA5-Land, MODIS LST, NDVI/EVI, CHIRPS, LULC, WorldPop, SSP population Spatial scope: 162 admin-1 regions across 10 SEA countries Performance (test set): Huber 0.390 · MAE 1.214 · RMSE 2.460 (log IR, 14 held-out months)\n\n\nTaiwan BSA Pipeline\n\nSEA province risk states ingested as international mobility proxy (from Arm 1)\nBSA-level environmental suitability computed from TCCIP climate data\nIndividual case reports and demographic data from Taiwan Ministry of Health\nBSA model inference generates sub-district risk predictions\n\nArchitecture: (to be finalised) Training period: (to be determined) Features: MoH case reports, clinical diagnosis, demographics, TCCIP climate, local mobility Spatial scope: Taiwan Basic Statistics Areas (BSAs) Performance: (pending model training)\n\n\n\n\nInterpretation note: SEA predictions are expressed as a relative risk index (predicted log IR normalised to the 2011–2018 baseline), not absolute case counts. This accounts for structural model uncertainty arising from the 8-year gap between training data and current conditions."
   },
   {
-    "objectID": "about.html#methods",
-    "href": "about.html#methods",
-    "title": "About",
-    "section": "Methods",
-    "text": "Methods\nSpatiotemporal Graph Attention Network (ST-GAT + GRU)\nAdmin-1 regions are represented as nodes in a spatial graph. The model uses two stacked Graph Attention layers for spatial message passing, followed by a GRU to capture temporal dynamics across a sliding window of monthly observations. Hyperparameters were selected via 40-trial Optuna sweeps using masked Huber loss (to handle missing surveillance data).\nClimate bias correction\nA delta bias correction is applied to current observations before inference, accounting for the distributional shift between the 2011–2018 training period and present-day conditions. The per-variable, per-month delta is computed as the difference between the current climatology and the 2011–2018 training baseline. Predictions are expressed as a relative risk index rather than absolute case counts."
-  },
-  {
-    "objectID": "about.html#data",
-    "href": "about.html#data",
-    "title": "About",
-    "section": "Data",
-    "text": "Data\n\n\n\n\n\n\n\n\nSource\nVariables\nResolution\n\n\n\n\nERA5-Land (ECMWF / GEE)\nPrecipitation, temperature, evaporation\n~9 km, monthly\n\n\nMODIS MOD11A2\nLand surface temperature (day/night)\n1 km, 8-day → monthly\n\n\nMODIS MOD13A3\nNDVI, EVI\n1 km, monthly\n\n\nMODIS MCD12Q1\nLand use / land cover (17 classes)\n500 m, annual\n\n\nWorldPop\nPopulation density\n100 m, annual\n\n\nOpenDengue\nDengue case counts\nAdmin-1, monthly"
-  },
-  {
-    "objectID": "about.html#code",
-    "href": "about.html#code",
-    "title": "About",
+    "objectID": "index.html#code",
+    "href": "index.html#code",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
     "section": "Code",
     "text": "Code\nSource code and pipeline configuration are available on GitHub under the GNU GPLv3 license."
   },
   {
-    "objectID": "about.html#contact",
-    "href": "about.html#contact",
-    "title": "About",
+    "objectID": "index.html#contact",
+    "href": "index.html#contact",
+    "title": "Spatiotemporal Dengue Risk Prediction in Southeast Asia and Taiwan",
     "section": "Contact",
     "text": "Contact\nFor questions or collaboration inquiries, please open an issue on the GitHub repository."
   },
   {
-    "objectID": "model-results.html",
-    "href": "model-results.html",
-    "title": "Model Results",
+    "objectID": "shared-socioeconomic-pathways.html",
+    "href": "shared-socioeconomic-pathways.html",
+    "title": "Shared Socioeconomic Pathways",
     "section": "",
-    "text": "The scaledv2 experiment introduces seasonal z-score normalisation of the incidence feature before it is passed to the model. A per-month mean (computed over the 2011–2018 training period) is subtracted and the result is divided by the global standard deviation of that de-seasonalised signal. This removes the large seasonal swing that previously dominated the loss, allowing the model to learn from the residual spatial and climate signals instead. A scaler inverse-transform is applied at inference time to recover real-valued incidence rates.\nThis builds on the baseline_logIR run but with the key difference that input incidence is normalised; all other architecture choices are re-tuned via the same 40-trial Optuna search."
+    "text": "Shared Socioeconomic Pathways (SSPs) are a set of five global scenarios describing plausible futures for societal development through 2100 (SSP1–SSP5). They were developed by the climate research community alongside the IPCC AR6 process and are widely used to contextualise climate impact projections. In this study:"
   },
   {
-    "objectID": "model-results.html#what-is-scaledv2",
-    "href": "model-results.html#what-is-scaledv2",
-    "title": "Model Results",
-    "section": "",
-    "text": "The scaledv2 experiment introduces seasonal z-score normalisation of the incidence feature before it is passed to the model. A per-month mean (computed over the 2011–2018 training period) is subtracted and the result is divided by the global standard deviation of that de-seasonalised signal. This removes the large seasonal swing that previously dominated the loss, allowing the model to learn from the residual spatial and climate signals instead. A scaler inverse-transform is applied at inference time to recover real-valued incidence rates.\nThis builds on the baseline_logIR run but with the key difference that input incidence is normalised; all other architecture choices are re-tuned via the same 40-trial Optuna search."
+    "objectID": "shared-socioeconomic-pathways.html#arm-1-southeast-asia-provinces",
+    "href": "shared-socioeconomic-pathways.html#arm-1-southeast-asia-provinces",
+    "title": "Shared Socioeconomic Pathways",
+    "section": "Arm 1 — Southeast Asia Provinces",
+    "text": "Arm 1 — Southeast Asia Provinces\n\nSSP Population Projections by Province\nPopulation projections at admin-1 level under SSP1 (sustainability), SSP2 (middle of the road), and SSP3 (regional rivalry) scenarios, derived from the CMIP6-aligned SSP database.\n\n\n\n\n⚠️  SEA SSP population data not found — run climate-projection-module/scripts/extract_ssp_population.py first.\n\n\n\nFigure 1\n\n\n\n\n\nSSP Urbanisation Rate by Province\nUrban fraction of population is a key driver of dengue vector density. SSP2 and SSP3 diverge substantially in projected urbanisation rates across SEA countries.\n\n\n\n\n⚠️  SEA SSP urbanisation data not found — run climate-projection-module/scripts/extract_ssp_urbanisation.py first.\n\n\n\nFigure 2\n\n\n\n\n\nSSP Feature Contribution to STGNN\nThe table below summarises how SSP variables are incorporated into the SEA STGNN feature set.\n\n\n\n\n\n\n\n\nSSP Variable\nScenario(s) Used\nRole in Model\n\n\n\n\nPopulation (total)\nSSP2 (baseline)\nNode feature — scales absolute case counts\n\n\nPopulation density\nSSP2\nNode feature — proxy for human-vector contact rate\n\n\nUrban fraction\nSSP1, SSP2, SSP3\nNode feature — affects vector habitat availability\n\n\nGDP per capita\nSSP2\nNode feature — proxy for healthcare access / reporting capacity"
   },
   {
-    "objectID": "model-results.html#test-set-metrics",
-    "href": "model-results.html#test-set-metrics",
+    "objectID": "shared-socioeconomic-pathways.html#arm-2-taiwan-basic-statistics-area",
+    "href": "shared-socioeconomic-pathways.html#arm-2-taiwan-basic-statistics-area",
+    "title": "Shared Socioeconomic Pathways",
+    "section": "Arm 2 — Taiwan Basic Statistics Area",
+    "text": "Arm 2 — Taiwan Basic Statistics Area\n\nTCCIP Population Projections (Taiwan BSA)\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Taiwan BSA population projections from the TCCIP dataset are not yet integrated. This section will display BSA-level demographic trajectories under different SSP scenarios once the taiwan-bsa-module/data/tccip_ssp_pipeline.py is operational.\n\n\n\n\n\n\n⚠️  Taiwan BSA SSP population data not yet available — implement taiwan-bsa-module/data/tccip_ssp_pipeline.py first.\n\n\n\nFigure 3\n\n\n\n\n\nAgeing Population and Dengue Vulnerability (Taiwan)\nTaiwan’s rapidly ageing population is an important modulator of dengue severity. Older adults face higher hospitalisation and case fatality rates. SSP projections indicate Taiwan’s median age rising significantly through 2050, which will be incorporated as a BSA-level demographic covariate.\n\n\n\n\n⚠️  Taiwan age structure projections not yet available.\n\n\n\nFigure 4\n\n\n\n\n\nUrbanisation and Heat Island Risk (Taiwan BSA)\n\n\n\n\n⚠️  Taiwan BSA urbanisation SSP data not yet available.\n\n\n\nFigure 5\n\n\n\n\n\nNote on scenario selection: The SEA STGNN is trained and validated under historical conditions (2011–2018) and uses SSP2 population data as the primary covariate. SSP1 and SSP3 are included as sensitivity scenarios for prospective risk projections only. For operational monthly inference, SSP2-4.5 is used throughout for consistency with the AR6 climate delta correction."
+  },
+  {
+    "objectID": "monthly-zonal-stats.html",
+    "href": "monthly-zonal-stats.html",
+    "title": "Monthly Environmental Data",
+    "section": "",
+    "text": "Environmental features feed both study arms, but at different spatial granularities: admin-1 zonal statistics for the SEA Provinces model, and BSA-level indicators for the Taiwan model. All zonal statistics between 2011 and 2026 have been computed with the Easy-Earth-Engine application, which provides a data-provenance pipeline ensuring reproducibility of the remote sensing extraction."
+  },
+  {
+    "objectID": "monthly-zonal-stats.html#arm-1-southeast-asia-provinces-admin-1-zonal-statistics",
+    "href": "monthly-zonal-stats.html#arm-1-southeast-asia-provinces-admin-1-zonal-statistics",
+    "title": "Monthly Environmental Data",
+    "section": "Arm 1 — Southeast Asia Provinces (Admin-1 Zonal Statistics)",
+    "text": "Arm 1 — Southeast Asia Provinces (Admin-1 Zonal Statistics)\nRemote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the SEA STGNN.\n\nLatest Monthly Zonal Statistics\n\n\n\nTable 1: Latest monthly zonal statistics by SEA admin-1 region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first.\n\n\n\n\n\n\nApplied Climate Deltas (SEA)\nThe table below shows the bias correction delta applied to each SEA feature this month. A negative delta means the current climate is warmer/wetter than the 2011–2018 baseline, so the raw observation is shifted downward before model inference.\n\n\n\nTable 2: Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month.\n\n\n\n⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first.\n\n\n\n\n\n\nGlobal Warming Level Projections (SEA Domain)\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1"
+  },
+  {
+    "objectID": "monthly-zonal-stats.html#arm-2-taiwan-basic-statistics-area-bsa-level-environmental-data",
+    "href": "monthly-zonal-stats.html#arm-2-taiwan-basic-statistics-area-bsa-level-environmental-data",
+    "title": "Monthly Environmental Data",
+    "section": "Arm 2 — Taiwan Basic Statistics Area (BSA-Level Environmental Data)",
+    "text": "Arm 2 — Taiwan Basic Statistics Area (BSA-Level Environmental Data)\nEnvironmental features for the Taiwan BSA model are derived from TCCIP (Taiwan Climate Change Projection Information and Adaptation Knowledge Platform) and local remote sensing products, aggregated to BSA granularity. These complement the individual case report data from Taiwan MoH.\n\nLatest Monthly BSA Zonal Statistics\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — BSA-level zonal statistics for Taiwan are not yet available. This table will show per-BSA averages of temperature, precipitation, NDVI, and other suitability indicators once the taiwan-bsa-module environmental pipeline is operational.\n\n\n\n\n\nTable 3: Placeholder: Monthly zonal statistics by Taiwan BSA (temperature, precipitation, NDVI, EVI).\n\n\n\n⚠️  Taiwan BSA zonal statistics not yet available — implement taiwan-bsa-module/data/gee_bsa_pipeline.py first.\n\n\n\n\n\n\nApplied Climate Deltas (Taiwan)\n\n\n\nTable 4: Placeholder: Per-variable TCCIP climate deltas applied to Taiwan BSA features this month.\n\n\n\n⚠️  Taiwan BSA climate deltas not yet available — requires TCCIP baseline computation.\n\n\n\n\n\n\nVegetation and Urban Heat Island Indicators (Taiwan BSA)\nBSA-level NDVI and LST are particularly important for identifying urban heat island effects that increase vector reproduction rates in dense Taiwanese cities.\n\n\n\n\n⚠️  Taiwan BSA LST/NDVI data not yet available.\n\n\n\nFigure 2"
+  },
+  {
+    "objectID": "climate-projection-data.html",
+    "href": "climate-projection-data.html",
+    "title": "Climate Projection Data",
+    "section": "",
+    "text": "Climate projection data informs both study arms, but from different sources suited to each geography:"
+  },
+  {
+    "objectID": "climate-projection-data.html#arm-1-southeast-asia-provinces-cmip6-gwl",
+    "href": "climate-projection-data.html#arm-1-southeast-asia-provinces-cmip6-gwl",
+    "title": "Climate Projection Data",
+    "section": "Arm 1 — Southeast Asia Provinces (CMIP6 / GWL)",
+    "text": "Arm 1 — Southeast Asia Provinces (CMIP6 / GWL)\n\nGlobal Warming Level Projections (SEA Domain)\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain. These trajectories are used to compute the monthly bias correction applied before STGNN inference.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1\n\n\n\n\n\nGWL Precipitation Projections (SEA Domain)\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 2\n\n\n\n\n\nCMIP6 SSP2-4.5 Bias Correction Baseline\nThe bias correction applied to operational inference computes the difference between the CMIP6 SSP2-4.5 projected climatology for the current calendar month and the 2011–2018 ERA5-Land training climatology. This delta is subtracted from current observations before they are passed to the STGNN.\n\n\n\nTable 1: Monthly bias correction deltas (CMIP6 SSP2-4.5 minus 2011–2018 ERA5 baseline) across all calendar months.\n\n\n\n⚠️  climate_deltas.json not found — run site/scripts/apply_climate_delta.py first.\n\n\n\n\n\n\nCMIP6 Multi-Model Spread (SEA)\n\n\n\n\n⚠️  CMIP6 ensemble spread TSV not found — run climate-projection-module/scripts/compute_cmip6_spread.py first.\n\n\n\nFigure 3"
+  },
+  {
+    "objectID": "climate-projection-data.html#arm-2-taiwan-basic-statistics-area-tccip",
+    "href": "climate-projection-data.html#arm-2-taiwan-basic-statistics-area-tccip",
+    "title": "Climate Projection Data",
+    "section": "Arm 2 — Taiwan Basic Statistics Area (TCCIP)",
+    "text": "Arm 2 — Taiwan Basic Statistics Area (TCCIP)\nTCCIP provides high-resolution statistically and dynamically downscaled climate projections specifically covering Taiwan. The projections are used to characterise future dengue suitability at BSA level under different warming scenarios.\n\nTCCIP Temperature Projections (Taiwan)\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — TCCIP temperature projections for Taiwan are not yet integrated into the site pipeline. This section will display county- and BSA-level temperature trajectories under RCP4.5 and RCP8.5 (TCCIP uses RCP rather than SSP nomenclature for its downscaled products) once the climate-projection-module/scripts/extract_tccip.py pipeline is operational.\n\n\n\n\n\n\n⚠️  TCCIP temperature TSV not found — run climate-projection-module/scripts/extract_tccip.py first.\n\n\n\nFigure 4\n\n\n\n\n\nTCCIP Precipitation Projections (Taiwan)\n\n\n\n\n⚠️  TCCIP precipitation TSV not found — run climate-projection-module/scripts/extract_tccip.py first.\n\n\n\nFigure 5\n\n\n\n\n\nDengue Suitability Index — Taiwan Future Projections\nThe climate suitability index for Aedes aegypti and Aedes albopictus transmission is computed from TCCIP temperature and precipitation projections using the Mordecai et al. thermal performance curve framework.\n\n\n\n\n⚠️  TCCIP suitability index not yet computed — implement climate-projection-module/scripts/compute_suitability_taiwan.py first.\n\n\n\nFigure 6\n\n\n\n\n\nComparison: SEA vs Taiwan Climate Trajectories\n\n\n\n\n⚠️  Comparison figure not yet available — requires both CMIP6 and TCCIP pipelines to be complete.\n\n\n\nFigure 7\n\n\n\n\n\nNote on scenario alignment: The SEA Provinces model uses CMIP6 SSP2-4.5 for its operational bias correction. The Taiwan BSA model uses TCCIP RCP4.5 as the primary scenario, which is approximately equivalent in radiative forcing. SSP5-8.5 / RCP8.5 projections are included for sensitivity analysis only."
+  },
+  {
+    "objectID": "taiwan-bsa-study-results.html",
+    "href": "taiwan-bsa-study-results.html",
+    "title": "Model Results",
+    "section": "",
+    "text": "As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia, we capitalise on our Southeast Asian interprovincial risk state model to generate “exporter” regions and “importer” regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese Government keeps track of.\nThe model would jointly consider international mobility, local mobility, BSA environment suitability, and BSA population demographic to predict elevated risk."
+  },
+  {
+    "objectID": "taiwan-bsa-study-results.html#taiwanese-basic-statistics-area-bsa-risk-prediction",
+    "href": "taiwan-bsa-study-results.html#taiwanese-basic-statistics-area-bsa-risk-prediction",
+    "title": "Model Results",
+    "section": "",
+    "text": "As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia, we capitalise on our Southeast Asian interprovincial risk state model to generate “exporter” regions and “importer” regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese Government keeps track of.\nThe model would jointly consider international mobility, local mobility, BSA environment suitability, and BSA population demographic to predict elevated risk."
+  },
+  {
+    "objectID": "sea-provinces-study-results.html",
+    "href": "sea-provinces-study-results.html",
+    "title": "Model Results",
+    "section": "",
+    "text": "The SEA Provinces Study experiment introduces seasonal z-score normalisation of the incidence feature before it is passed to the model. A per-month mean (computed over the 2011–2018 training period) is subtracted and the result is divided by the global standard deviation of that de-seasonalised signal. This removes the large seasonal swing that previously dominated the loss, allowing the model to learn from the residual spatial and climate signals instead. A scaler inverse-transform is applied at inference time to recover real-valued incidence rates.\nThis builds on the baseline_logIR run but with the key difference that input incidence is normalised; all other architecture choices are re-tuned via the same 40-trial Optuna search."
+  },
+  {
+    "objectID": "sea-provinces-study-results.html#what-the-sea-provinces-study",
+    "href": "sea-provinces-study-results.html#what-the-sea-provinces-study",
+    "title": "Model Results",
+    "section": "",
+    "text": "The SEA Provinces Study experiment introduces seasonal z-score normalisation of the incidence feature before it is passed to the model. A per-month mean (computed over the 2011–2018 training period) is subtracted and the result is divided by the global standard deviation of that de-seasonalised signal. This removes the large seasonal swing that previously dominated the loss, allowing the model to learn from the residual spatial and climate signals instead. A scaler inverse-transform is applied at inference time to recover real-valued incidence rates.\nThis builds on the baseline_logIR run but with the key difference that input incidence is normalised; all other architecture choices are re-tuned via the same 40-trial Optuna search."
+  },
+  {
+    "objectID": "sea-provinces-study-results.html#test-set-metrics",
+    "href": "sea-provinces-study-results.html#test-set-metrics",
     "title": "Model Results",
     "section": "Test Set Metrics",
     "text": "Test Set Metrics\nMetrics were computed on 14 held-out test months from the 2011–2018 OpenDengue SEA dataset (162 admin-1 nodes across 10 countries).\n\n\n\nMetric\nValue\n\n\n\n\nHuber loss\n0.1125\n\n\nMAE (IR)\n3.1188\n\n\nMSE (IR)\n40.0297\n\n\nRMSE (IR)\n6.3269\n\n\nBest val loss\n0.0519"
   },
   {
-    "objectID": "model-results.html#hyperparameters",
-    "href": "model-results.html#hyperparameters",
+    "objectID": "sea-provinces-study-results.html#hyperparameters",
+    "href": "sea-provinces-study-results.html#hyperparameters",
     "title": "Model Results",
     "section": "Hyperparameters",
     "text": "Hyperparameters\nFinal architecture and training configuration selected by Optuna (40 trials, masked Huber loss on a 20 % validation split):\n\n\n\n\n\nParameter\nValue\n\n\n\n\nInput window (months)\n12.0\n\n\nGAT layer 1 — hidden dim\n64.0\n\n\nGAT layer 1 — attention heads\n4.0\n\n\nGAT layer 2 — hidden dim\n16.0\n\n\nGAT layer 2 — attention heads\n4.0\n\n\nMLP hidden dim\n32.0\n\n\nMLP layers\n2.0\n\n\nBatch size\n4.0\n\n\nDropout\n0.000000\n\n\nLearning rate\n0.005734"
   },
   {
-    "objectID": "model-results.html#training-curves",
-    "href": "model-results.html#training-curves",
+    "objectID": "sea-provinces-study-results.html#training-curves",
+    "href": "sea-provinces-study-results.html#training-curves",
     "title": "Model Results",
     "section": "Training Curves",
     "text": "Training Curves\n\n\n\n\n                            \n                                            \n\n\nFigure 1: Huber loss per epoch. Hover to inspect exact values. The dashed line marks the best validation epoch."
   },
   {
-    "objectID": "model-results.html#per-country-metrics",
-    "href": "model-results.html#per-country-metrics",
+    "objectID": "sea-provinces-study-results.html#per-country-metrics",
+    "href": "sea-provinces-study-results.html#per-country-metrics",
     "title": "Model Results",
     "section": "Per-Country Metrics",
     "text": "Per-Country Metrics\n\n\n\n\nTable 1: MAE and RMSE broken down by country across the 14 test months.\n\n\n\n\n\n\nCountry\nNodes\nMAE\nRMSE\n\n\n\n\nBrunei Darussalam\n4\n1.988\n2.285\n\n\nCambodia\n1\n3.094\n4.424\n\n\nIndonesia\n34\n1.736\n2.646\n\n\nLao People's Democratic Republic\n1\n4.288\n5.627\n\n\nMalaysia\n15\n8.737\n15.743\n\n\nMyanmar\n18\n1.216\n1.660\n\n\nPhilippines\n10\n0.904\n1.156\n\n\nSingapore\n1\n3.198\n3.624\n\n\nThailand\n77\n3.955\n7.395\n\n\nViet Nam\n1\n3.692\n5.559"
   },
   {
-    "objectID": "model-results.html#predictions-vs-actuals",
-    "href": "model-results.html#predictions-vs-actuals",
+    "objectID": "sea-provinces-study-results.html#predictions-vs-actuals",
+    "href": "sea-provinces-study-results.html#predictions-vs-actuals",
     "title": "Model Results",
     "section": "Predictions vs Actuals",
-    "text": "Predictions vs Actuals\n\nInteractive time-series\nSelect a country from the dropdown to inspect predicted vs actual incidence rate for each admin-1 node over the 14 test months.\n\n\n\n\n                            \n                                            \n\n\nFigure 2: Predicted (dashed) vs actual (solid) IR by admin-1 region. Use the dropdown to filter by country.\n\n\n\n\n\n\nOverview (all nodes, 14 months)\n\n\n\n\n\n\n\n\nFigure 3: All 162 nodes over 14 test months. Predicted (orange) vs actual (blue) IR.\n\n\n\n\n\n\n\nZoomed — final 2 months\n\n\n\n\n\n\n\n\nFigure 4: Predicted vs actual IR for the final 2 test months, showing per-node detail."
+    "text": "Predictions vs Actuals\n\nInteractive time-series\nSelect a country from the dropdown to inspect predicted vs actual incidence rate for each admin-1 node over the 14 test months.\n\n\n\n\n  \n    \n      Country:\n      \n    \n    \n      Node:\n      \n    \n  \n  \n\n\n\n\n\n\nOverview (all nodes, 14 months)\n\n\n\n\n\n\n\n\nFigure 2: All 162 nodes over 14 test months. Predicted (orange) vs actual (blue) IR.\n\n\n\n\n\n\n\nZoomed — final 2 months\n\n\n\n\n\n\n\n\nFigure 3: Predicted vs actual IR for the final 2 test months, showing per-node detail."
   },
   {
-    "objectID": "model-results.html#scatter-plot",
-    "href": "model-results.html#scatter-plot",
+    "objectID": "sea-provinces-study-results.html#scatter-plot",
+    "href": "sea-provinces-study-results.html#scatter-plot",
     "title": "Model Results",
     "section": "Scatter Plot",
-    "text": "Scatter Plot\n\n\n\n\n\n\n\n\nFigure 5: Predicted vs actual IR across all nodes and test months. Points are coloured by country."
+    "text": "Scatter Plot\n\n\n\n\n\n\n\n\nFigure 4: Predicted vs actual IR across all nodes and test months. Points are coloured by country."
   },
   {
-    "objectID": "model-results.html#choropleth-maps",
-    "href": "model-results.html#choropleth-maps",
+    "objectID": "sea-provinces-study-results.html#choropleth-maps",
+    "href": "sea-provinces-study-results.html#choropleth-maps",
     "title": "Model Results",
     "section": "Choropleth Maps",
-    "text": "Choropleth Maps\n\nActual IR — 14 test months\n\n\n\n\n\n\n\n\nFigure 6: Actual dengue incidence rate per admin-1 region for each of the 14 held-out test months.\n\n\n\n\n\n\n\nPredicted vs Actual — side by side\n\n\n\n\n\n\n\n\nFigure 7: Side-by-side comparison of actual (left) and predicted (right) IR per admin-1 region for each test month."
+    "text": "Choropleth Maps\n\nActual IR — 14 test months\n\n\n\n\n\n\n\n\nFigure 5: Actual dengue incidence rate per admin-1 region for each of the 14 held-out test months.\n\n\n\n\n\n\n\nPredicted vs Actual — side by side\n\n\n\n\n\n\n\n\nFigure 6: Side-by-side comparison of actual (left) and predicted (right) IR per admin-1 region for each test month."
   },
   {
-    "objectID": "model-results.html#architecture",
-    "href": "model-results.html#architecture",
+    "objectID": "sea-provinces-study-results.html#architecture",
+    "href": "sea-provinces-study-results.html#architecture",
     "title": "Model Results",
     "section": "Architecture",
     "text": "Architecture\nThe model is a Spatio-Temporal Graph Attention Network with GRU (STGATGRU):\n\nInput normalisation: seasonal z-score of incidence (per-month mean removed, divided by global std)\nGAT layer 1: Spatial message passing over the admin-1 adjacency graph\nMLP: Node-wise feature transformation\nGAT layer 2: Second spatial aggregation pass\nGRU: Temporal sequence modelling over the 12-month sliding window\nLinear head: Single-step incidence rate prediction (inverse-transformed at output)\n\nMissing admin-1 nodes (no reported incidence) receive a learnable missing embedding rather than zeroed features, and the GRU hidden state is carried over without update for those nodes. Loss masking excludes missing targets from the gradient."
   },
   {
-    "objectID": "model-results.html#bias-correction-note",
-    "href": "model-results.html#bias-correction-note",
+    "objectID": "sea-provinces-study-results.html#bias-correction-note",
+    "href": "sea-provinces-study-results.html#bias-correction-note",
     "title": "Model Results",
     "section": "Bias Correction Note",
     "text": "Bias Correction Note\nWhen running inference on current data (post-2018), a climate delta correction is applied before features are passed to the model. The delta is computed as the difference between the AR6 SSP2-4.5 projected monthly climatology for the current year and the 2011–2018 training period climatology. This shifts current observations back into the model’s training feature distribution. See site/scripts/apply_climate_delta.py for implementation."
   },
   {
-    "objectID": "dengue-timelines.html",
-    "href": "dengue-timelines.html",
-    "title": "Dengue Timelines",
+    "objectID": "dengue-data.html",
+    "href": "dengue-data.html",
+    "title": "Dengue Data",
     "section": "",
-    "text": "Interactive dashboards showing temporal and spatial dengue case trends by WHO region, generated from the OpenDengue dataset (SEA, 2011–2018).\n\nTemporal — SEAROTemporal — WPROSpatial — SEAROSpatial — WPRONational\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nData source: OpenDengue — a global open-access dengue surveillance database. Spatial imputation was performed using GAUL 2024 admin-1 boundaries. Spatial autocorrelation was assessed via Moran’s I.\n\n\n\n\n\n\n\n\n\n\nFigure 1: Moran’s I spatial autocorrelation across time slices.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFigure 2: Moran’s I scatter plot."
+    "text": "This page presents the dengue case data underpinning both study arms: the OpenDengue dataset used to train and evaluate the SEA Provinces model, and individual case records from the Taiwan Ministry of Health used by the Taiwan BSA model."
   },
   {
-    "objectID": "climate-data.html",
-    "href": "climate-data.html",
-    "title": "Climate Data",
-    "section": "",
-    "text": "Remote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the STGNN.\n\n\n\nTable 1: Latest monthly zonal statistics by region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first."
+    "objectID": "dengue-data.html#arm-1-southeast-asia-provinces-opendengue",
+    "href": "dengue-data.html#arm-1-southeast-asia-provinces-opendengue",
+    "title": "Dengue Data",
+    "section": "Arm 1 — Southeast Asia Provinces (OpenDengue)",
+    "text": "Arm 1 — Southeast Asia Provinces (OpenDengue)\nInteractive dashboards showing temporal and spatial dengue case trends by WHO region, generated from the OpenDengue dataset (SEA, 2011–2018).\n\nTemporal — SEAROTemporal — WPROSpatial — SEAROSpatial — WPRONational\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nData source: OpenDengue — a global open-access dengue surveillance database. Spatial imputation was performed using GAUL 2024 admin-1 boundaries. Spatial autocorrelation was assessed via Moran’s I.\n\n\n\n\n\n\n\n\n\n\nFigure 1: Moran’s I spatial autocorrelation across time slices.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nFigure 2: Moran’s I scatter plot."
   },
   {
-    "objectID": "climate-data.html#latest-monthly-zonal-statistics",
-    "href": "climate-data.html#latest-monthly-zonal-statistics",
-    "title": "Climate Data",
-    "section": "",
-    "text": "Remote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the STGNN.\n\n\n\nTable 1: Latest monthly zonal statistics by region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first."
-  },
-  {
-    "objectID": "climate-data.html#applied-climate-deltas",
-    "href": "climate-data.html#applied-climate-deltas",
-    "title": "Climate Data",
-    "section": "Applied Climate Deltas",
-    "text": "Applied Climate Deltas\nThe table below shows the bias correction delta applied to each feature this month. A negative delta means the current climate is warmer/wetter than the 2011–2018 baseline, so the raw observation is shifted downward before model inference.\n\n\n\nTable 2: Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month.\n\n\n\n⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first."
-  },
-  {
-    "objectID": "climate-data.html#global-warming-level-projections",
-    "href": "climate-data.html#global-warming-level-projections",
-    "title": "Climate Data",
-    "section": "Global Warming Level Projections",
-    "text": "Global Warming Level Projections\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1"
+    "objectID": "dengue-data.html#arm-2-taiwan-basic-statistics-area-taiwan-ministry-of-health",
+    "href": "dengue-data.html#arm-2-taiwan-basic-statistics-area-taiwan-ministry-of-health",
+    "title": "Dengue Data",
+    "section": "Arm 2 — Taiwan Basic Statistics Area (Taiwan Ministry of Health)",
+    "text": "Arm 2 — Taiwan Basic Statistics Area (Taiwan Ministry of Health)\nIndividual dengue case records from the Taiwan Centers for Disease Control (Taiwan CDC / MoH), aggregated to Basic Statistics Area (BSA) level. BSAs are the finest spatial unit of census data maintained by the Taiwanese government and are used as the prediction target in the Taiwan BSA model.\n\nCase Counts by Year\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Taiwan MoH case data pipeline not yet integrated. This panel will display annual confirmed dengue case counts disaggregated by BSA once the taiwan-bsa-module data pipeline is operational.\n\n\n\n\n\n\n⚠️  Taiwan MoH BSA data not yet available — implement taiwan-bsa-module/data/moh_pipeline.py first.\n\n\n\nFigure 3\n\n\n\n\n\nTemporal Trends — Taiwan\n\n\n\n\n⚠️  Taiwan MoH temporal data not yet available.\n\n\n\nFigure 4\n\n\n\n\n\nSpatial Distribution — Taiwan BSA Choropleth\n\n\n\n\n⚠️  Taiwan BSA spatial data not yet available.\n\n\n\nFigure 5\n\n\n\n\n\nCase Demographics\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Summary statistics of case demographics (age, sex, serotype, clinical severity) from Taiwan MoH individual case reports will appear here once the data pipeline is connected.\n\n\n\n\n\nTable 1: Placeholder: Case demographic breakdown from Taiwan MoH individual case reports.\n\n\n\n⚠️  Taiwan MoH demographic data not yet available.\n\n\n\n\n\n\nImported vs Local Transmission\nA key feature of the Taiwan BSA model is distinguishing imported cases (travellers returning from SEA) from locally-acquired cases. The SEA Provinces model (Arm 1) provides the international risk context feeding into this classification.\n\n\n\n\n⚠️  Imported/local classification data not yet available — requires integration with taiwan-bsa-module and Arm 1 risk states.\n\n\n\nFigure 6"
   }
 ]
