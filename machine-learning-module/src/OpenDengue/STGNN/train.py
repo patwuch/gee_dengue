@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 from torch.utils.data import DataLoader
+from sklearn.metrics import r2_score, roc_auc_score
 
 from model import STGATGRU
 from loss  import masked_huber_loss
@@ -46,11 +47,12 @@ def load_best_params(cfg: dict, override_path: str = None) -> dict:
 # ── Evaluation pass (used for val metrics during training) ────────────────────
 
 def eval_with_metrics(
-    model:      STGATGRU,
-    dataloader: DataLoader,
-    edge_index: torch.Tensor,
-    device:     torch.device,
-    log_scale:  bool = True,
+    model:         STGATGRU,
+    dataloader:    DataLoader,
+    edge_index:    torch.Tensor,
+    device:        torch.device,
+    log_scale:     bool  = True,
+    auc_threshold: float = 1.0,
 ) -> tuple[float, dict, list, list]:
     """
     Run a full evaluation pass over parallel sequence streams.
@@ -100,7 +102,16 @@ def eval_with_metrics(
 
     mae = float(np.abs(valid_preds - valid_targets).mean()) if valid_preds.size > 0 else 0.0
     mse = float(((valid_preds - valid_targets) ** 2).mean()) if valid_preds.size > 0 else 0.0
-    metrics = {"mae": mae, "mse": mse, "rmse": mse ** 0.5}
+    r2  = float(r2_score(valid_targets, valid_preds)) if valid_preds.size > 0 else float("nan")
+
+    binary_targets = (valid_targets > auc_threshold).astype(int)
+    n_pos, n_neg = binary_targets.sum(), (1 - binary_targets).sum()
+    if n_pos > 0 and n_neg > 0:
+        auc = float(roc_auc_score(binary_targets, valid_preds))
+    else:
+        auc = float("nan")
+
+    metrics = {"mae": mae, "mse": mse, "rmse": mse ** 0.5, "r2": r2, "auc_roc": auc}
 
     return mean_loss, metrics, all_preds, all_targets
 
@@ -177,7 +188,7 @@ def train(cfg: dict, params: dict):
         mlp_layers   = params["mlp_layers"],
         gat2_hidden  = params["gat2_hidden"],
         gat2_heads   = params["gat2_heads"],
-        gru_hidden   = params["gat2_hidden"],
+        gru_hidden   = params.get("gru_hidden", params["gat2_hidden"]),
         pred_horizon = 1,
         dropout      = params["dropout"],
     ).to(device)
@@ -213,12 +224,15 @@ def train(cfg: dict, params: dict):
             "val/mae":           val_metrics["mae"],
             "val/mse":           val_metrics["mse"],
             "val/rmse":          val_metrics["rmse"],
+            "val/r2":            val_metrics["r2"],
+            "val/auc_roc":       val_metrics["auc_roc"],
         })
 
         print(
             f"Epoch {epoch+1:>4} | "
             f"train {train_loss:.4f} | val {val_loss:.4f} | "
-            f"MAE {val_metrics['mae']:.4f} | RMSE {val_metrics['rmse']:.4f}"
+            f"MAE {val_metrics['mae']:.4f} | RMSE {val_metrics['rmse']:.4f} | "
+            f"R² {val_metrics['r2']:.4f} | AUC {val_metrics['auc_roc']:.4f}"
         )
 
         if val_loss < best_val_loss:

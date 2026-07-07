@@ -218,7 +218,7 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
         mlp_layers   = params["mlp_layers"],
         gat2_hidden  = params["gat2_hidden"],
         gat2_heads   = params["gat2_heads"],
-        gru_hidden   = params["gat2_hidden"],
+        gru_hidden   = params["gru_hidden"],
         pred_horizon = 1,
         dropout      = params["dropout"],
     ).to(device)

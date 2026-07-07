@@ -1,0 +1,125 @@
+# ============================================================
+# OpenDengue SEA — STGNN Regressor (cyclical month encoding)
+#
+# Variant of no_deseason_large_window: instead of subtracting a
+# fixed per-calendar-month training baseline (which assumes the
+# seasonal cycle is stationary forever), the model is given
+# sin/cos calendar-month encodings as env features and learns
+# the seasonal shape itself via the GRU. This keeps the model
+# valid for inference beyond the training window without hard-
+# coding a seasonal baseline that can drift out of date.
+#
+# Invoke: snakemake results/STGNN/{name}/metrics.json \
+#             --configfile config/OpenDengue/stgnn_logIR_cyclical.yaml \
+#             --cores 4 --resources gpu=1
+# ============================================================
+
+name:    cyclical_seasonal
+dataset: opendengue
+model:   stgnn
+task:    regressor
+scope:   multi-country
+wandb_project: stgnn-dengue
+
+# ---------------------------------------------------------------------------
+# Data
+# ---------------------------------------------------------------------------
+data:
+  path:          data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv
+  time_column:   year_month
+  unit_column:   adm_1_name
+  region_column: adm_0_name
+  split:
+    strategy:     month
+    test_months:  14
+    val_fraction: 0.2
+
+# ---------------------------------------------------------------------------
+# Target
+# ---------------------------------------------------------------------------
+target_column: IR
+
+# ---------------------------------------------------------------------------
+# Preprocessing
+# ---------------------------------------------------------------------------
+preprocessing:
+  log_transform:           true
+  deseasonalise:           false
+  cyclical_month_features: true
+  scale_target:            true
+  add_lag_target:          false
+  lag_steps:               []
+
+# ---------------------------------------------------------------------------
+# Features
+# ---------------------------------------------------------------------------
+features:
+  use_landuse: true
+  quality_vars: ['data_quality']
+  env_vars:
+    - precipitation_sum
+    - temperature_2m_mean
+    - temperature_2m_max_mean
+    - temperature_2m_min_mean
+    - potential_evaporation_sum_mean
+    - total_evaporation_sum_mean
+    - evaporation_from_bare_soil_sum_mean
+    - evaporation_from_open_water_surfaces_excluding_oceans_sum_mean
+    - evaporation_from_the_top_of_canopy_sum_mean
+    - evaporation_from_vegetation_transpiration_sum_mean
+    - LST_Day_1km_mean
+    - LST_Night_1km_mean
+    - NDVI_mean
+    - EVI_mean
+    - month_sin
+    - month_cos
+  climate_vars:  []
+  epidemic_vars: []
+  land_use_vars:
+    - LC_Type1_pct_class1
+    - LC_Type1_pct_class2
+    - LC_Type1_pct_class3
+    - LC_Type1_pct_class4
+    - LC_Type1_pct_class5
+    - LC_Type1_pct_class6
+    - LC_Type1_pct_class7
+    - LC_Type1_pct_class8
+    - LC_Type1_pct_class9
+    - LC_Type1_pct_class10
+    - LC_Type1_pct_class11
+    - LC_Type1_pct_class12
+    - LC_Type1_pct_class13
+    - LC_Type1_pct_class14
+    - LC_Type1_pct_class15
+    - LC_Type1_pct_class16
+    - LC_Type1_pct_class17
+
+# ---------------------------------------------------------------------------
+# Tuning
+# ---------------------------------------------------------------------------
+tune:
+  n_trials:     40
+  metric:       masked_huber_loss
+  device:       cuda
+  num_epochs:   50
+  patience:     15
+  search_space:
+    stgnn:
+      # Lowered ceiling: 5e-1 is too aggressive for a model learning the full
+      # seasonal cycle — it skips over the flat seasonal basin in loss landscape.
+      learning_rate:   {type: log_uniform, low: 1.0e-4, high: 5.0e-2}
+      batch_size:      {type: categorical, choices: [2, 4]}
+      # Short windows can't see a full seasonal cycle without deseasonalisation.
+      # Minimum 6 months; 12 is strongly preferred.
+      window_size:     {type: categorical, choices: [6, 12]}
+      gat1_hidden:     {type: categorical, choices: [16, 32, 64]}
+      gat1_heads:      {type: categorical, choices: [2, 4]}
+      mlp_hidden:      {type: categorical, choices: [32, 64]}
+      gat2_hidden:     {type: categorical, choices: [16, 32, 64]}
+      gat2_heads:      {type: categorical, choices: [2, 4]}
+      mlp_layers:      {type: categorical, choices: [1, 2]}
+      dropout:         {type: categorical, choices: [0.0, 0.2, 0.4]}
+      # Decoupled from gat2_hidden — seasonal memory needs more capacity than
+      # the spatial bottleneck. Larger values give the GRU more room to encode
+      # where in the seasonal cycle a node is.
+      gru_hidden:      {type: categorical, choices: [64, 128, 256]}

@@ -105,6 +105,41 @@ rule choropleth_stgnn:
         "../src/OpenDengue/STGNN/choropleth.py"
 
 
+rule explain_attention_stgnn:
+    message:
+        "Visualising GAT attention weights for experiment '{_name}'."
+    input:
+        model       = f"results/STGNN/{_name}/best_model.pt",
+        best_params = f"results/STGNN/{_name}/best_params.json",
+    output:
+        weights     = f"results/STGNN/{_name}/attention_weights.npz",
+        graph       = f"results/STGNN/{_name}/attention_graph.png",
+        over_time   = f"results/STGNN/{_name}/attention_over_time.png",
+        interactive = f"results/STGNN/{_name}/attention_graph_interactive.html",
+    params:
+        cfg = lambda wc: workflow.configfiles[-1],
+    script:
+        "../src/OpenDengue/STGNN/explain_attention.py"
+
+
+rule explain_shap_stgnn:
+    message:
+        "Computing SHAP Expected Gradients feature attributions for experiment '{_name}'."
+    input:
+        model       = f"results/STGNN/{_name}/best_model.pt",
+        best_params = f"results/STGNN/{_name}/best_params.json",
+    output:
+        attributions = f"results/STGNN/{_name}/shap_attributions.npz",
+        feature_plot = f"results/STGNN/{_name}/shap_feature_importance.png",
+        heatmap      = f"results/STGNN/{_name}/shap_node_time_heatmap.png",
+    params:
+        cfg = lambda wc: workflow.configfiles[-1],
+    resources:
+        gpu = 1,
+    script:
+        "../src/OpenDengue/STGNN/explain_shap.py"
+
+
 # ---------------------------------------------------------------------------
 # Production training rule — only active when best_params_source is set.
 # ---------------------------------------------------------------------------

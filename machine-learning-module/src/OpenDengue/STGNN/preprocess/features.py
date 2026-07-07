@@ -22,6 +22,15 @@ def fit_scaler(x_train: np.ndarray) -> tuple[StandardScaler, np.ndarray]:
 def apply_scaler(x: np.ndarray, scaler: StandardScaler) -> np.ndarray:
     return scaler.transform(x)
 
+def add_cyclical_month_features(df: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """Add sin/cos calendar-month encodings. Deterministic — no fitted params, no leakage."""
+    date_col = cfg["data"]["time_column"]
+    months = pd.to_datetime(df[date_col]).dt.month
+    df["month_sin"] = np.sin(2 * np.pi * months / 12)
+    df["month_cos"] = np.cos(2 * np.pi * months / 12)
+    return df
+
+
 def fit_seasonal_means(train_df: pd.DataFrame, cfg: dict) -> dict:
     """Compute per-month target means from training data only (NaN-aware)."""
     col      = cfg.get("target_column")
@@ -75,8 +84,18 @@ def scale_sources(sources: dict, scale_target: bool = True) -> dict:
         inc_test   = sources["inc"]["test"].values.reshape(-1, 1)
         print("inc scaler: disabled (scale_target=False)")
 
-    scaler_env, env_train = fit_scaler(sources["env"]["train"].values)
-    print("env scaler std:", scaler_env.scale_)
+    env_train_arr = sources["env"]["train"].values
+    if env_train_arr.shape[1] > 0:
+        scaler_env, env_train = fit_scaler(env_train_arr)
+        env_val  = apply_scaler(sources["env"]["val"].values,  scaler_env)
+        env_test = apply_scaler(sources["env"]["test"].values, scaler_env)
+        print("env scaler std:", scaler_env.scale_)
+    else:
+        scaler_env = None
+        env_train  = env_train_arr
+        env_val    = sources["env"]["val"].values
+        env_test   = sources["env"]["test"].values
+        print("env scaler: skipped (no env features)")
 
     return {
         "inc": {
@@ -86,8 +105,8 @@ def scale_sources(sources: dict, scale_target: bool = True) -> dict:
         },
         "env": {
             "train": env_train,
-            "val":   apply_scaler(sources["env"]["val"].values,  scaler_env),
-            "test":  apply_scaler(sources["env"]["test"].values, scaler_env),
+            "val":   env_val,
+            "test":  env_test,
         },
         "lulc": {
             "train": sources["lulc"]["train"].values,

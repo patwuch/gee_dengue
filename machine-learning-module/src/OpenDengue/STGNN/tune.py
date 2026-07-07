@@ -365,7 +365,7 @@ def train_sweep(cfg: dict):
         mlp_layers   = wc.mlp_layers,
         gat2_hidden  = wc.gat2_hidden,
         gat2_heads   = wc.gat2_heads,
-        gru_hidden   = wc.gat2_hidden,
+        gru_hidden   = wc.get("gru_hidden", wc.gat2_hidden),
         pred_horizon = 1,
         dropout      = wc.dropout,
     ).to(device)

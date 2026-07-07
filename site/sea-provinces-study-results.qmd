@@ -19,20 +19,15 @@ ctry_metrics = json.loads((results_dir / "per_country_metrics.json").read_text()
 test_preds   = json.loads((results_dir / "test_predictions.json").read_text())
 ```
 
-## What the SEA Provinces Study?
+## What is the SEA Provinces Study?
 
-The **SEA Provinces Study** experiment introduces seasonal z-score normalisation of the
-incidence feature before it is passed to the model.  A per-month mean
-(computed over the 2011–2018 training period) is subtracted and the result is
-divided by the global standard deviation of that de-seasonalised signal.
-This removes the large seasonal swing that previously dominated the loss,
-allowing the model to learn from the residual spatial and climate signals
-instead.  A scaler inverse-transform is applied at inference time to recover
-real-valued incidence rates.
+The **SEA Provinces Study** examines dengue incidence rate prediction at the admin-1 (province) level across 10 Southeast Asian countries. The study uses a Spatio-Temporal Graph Neural Network (STGNN) to model the temporal dynamics of dengue incidence while leveraging spatial relationships between provinces. The captured relation between provinces is based on the attention mechanism, allowing the model to learn flexibly about both influences to and from neighboring or distant regions.
 
-This builds on the `baseline_logIR` run but with the key difference that
-input incidence is normalised; all other architecture choices are re-tuned
-via the same 40-trial Optuna search.
+In our final risk index for Southeast Asia, we use the same learned temporal and spatial patterns to generate a risk index for each province, which can be used to inform public health interventions and resource allocation. 
+
+Notes:
+The gap of incomplete incidence data between 2019 and 2026 is due to a coverage imbalance. To counter act this, the 2011-2018 model will continue to learn and predict between 2019 and 2026, but the predictions will be unvalidated. Thus, interpretation of the latest monthly risk must be done with caution, and the model's predictions should be used as a guide rather than a definitive measure of risk.
+
 
 ## Test Set Metrics
 
@@ -49,7 +44,7 @@ SEA dataset (162 admin-1 nodes across 10 countries).
 
 ## Hyperparameters
 
-Final architecture and training configuration selected by Optuna (40 trials,
+Final architecture and training configuration selected by W&B (40 trials,
 masked Huber loss on a 20 % validation split):
 
 ```{python}
@@ -273,25 +268,6 @@ HTML(f"""
 """)
 ```
 
-### Overview (all nodes, 14 months)
-
-```{python}
-#| echo: false
-#| label: fig-predictions-static
-#| fig-cap: "All 162 nodes over 14 test months. Predicted (orange) vs actual (blue) IR."
-from IPython.display import Image
-Image(filename=str(results_dir / "predictions.png"), width=850)
-```
-
-### Zoomed — final 2 months
-
-```{python}
-#| echo: false
-#| label: fig-pred-2months
-#| fig-cap: "Predicted vs actual IR for the final 2 test months, showing per-node detail."
-Image(filename=str(results_dir / "pred_vs_actual_2months.png"), width=850)
-```
-
 ## Scatter Plot
 
 ```{python}
@@ -303,16 +279,7 @@ Image(filename=str(results_dir / "scatter.png"), width=700)
 
 ## Choropleth Maps
 
-### Actual IR — 14 test months
-
-```{python}
-#| echo: false
-#| label: fig-choropleth-actual
-#| fig-cap: "Actual dengue incidence rate per admin-1 region for each of the 14 held-out test months."
-Image(filename=str(results_dir / "actual_ir_14months.png"), width=900)
-```
-
-### Predicted vs Actual — side by side
+### Predicted vs Actual — side by side (Nov 2017 - Dec 2018)
 
 ```{python}
 #| echo: false

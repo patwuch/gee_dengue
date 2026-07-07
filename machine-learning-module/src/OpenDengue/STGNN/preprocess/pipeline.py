@@ -4,6 +4,7 @@ import torch
 from utils import load_config, save_tensors, save_preprocessing_params, save_edge_index, get_window_sizes
 from dataset import load_data, build_node_index
 from features import log_transform, separate_sources, build_masks, fill_missing_inc, reshape_all
+from features import add_cyclical_month_features
 from features import fit_seasonal_means, apply_seasonal_means
 from features import fill_node_from_donors, impute_env_naive, assert_no_nans, encode_quality_flags
 from features import diagnose_feature_composition, scale_sources
@@ -69,6 +70,11 @@ def main(config_path: str, data_path: str | None = None):
     # computes monthly means (NaN rows are correctly excluded from the mean).
     df = log_transform(df, cfg) if prep.get("log_transform") else df
     print("Log transform applied.")
+
+    # ── Cyclical calendar-month encoding ─────────────────────────────────────
+    # Deterministic function of calendar date — no fitted params, so applying
+    # it before the split introduces no leakage (same reasoning as log_transform).
+    df = add_cyclical_month_features(df, cfg) if prep.get("cyclical_month_features") else df
 
     # ── Encode categorical quality flags ─────────────────────────────────────
     quality_vars = cfg.get("features", {}).get("quality_vars", [])

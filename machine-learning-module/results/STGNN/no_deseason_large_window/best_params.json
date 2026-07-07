@@ -1,0 +1,15 @@
+{
+  "dropout": 0.2,
+  "batch_size": 4,
+  "gat1_heads": 2,
+  "gat2_heads": 2,
+  "gru_hidden": 256,
+  "mlp_hidden": 64,
+  "mlp_layers": 1,
+  "gat1_hidden": 64,
+  "gat2_hidden": 32,
+  "window_size": 6,
+  "learning_rate": 0.0013501111026862122,
+  "experiment_name": "no_deseason_large_window",
+  "best_val_loss": 0.07184294114510219
+}
