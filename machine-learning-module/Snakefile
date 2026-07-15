@@ -29,6 +29,7 @@ MODIS_NDVI_EVI_CALI_PATH = ZONAL_STATS_DIR / "MODIS_NDVI_EVI_2019-01-01_to_2026-
 
 INFECTON_DATA      = PROJECT_ROOT / "data" / "processed" / "dengue-infection" / "filtered_sea_2011_2018_SLVC_imputed.csv"
 MERGED_DENGUE_ENV_DATA = PROJECT_ROOT / "data" / "interim"   / "machine-learning" / "SEA_dengue_env_monthly_2011-2018.csv"
+GEOM_PATH              = PROJECT_ROOT / "data" / "processed" / "dengue-infection" / "geoparquet" / "gaul_2024_sea_filtered.parquet"
 
 rule merge_env_infection:
     message:

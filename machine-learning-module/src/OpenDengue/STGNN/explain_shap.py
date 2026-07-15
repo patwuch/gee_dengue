@@ -38,6 +38,15 @@ Run via Snakemake (script mode) or directly:
         [--n-background 20] [--n-explain 5]
 """
 
+import json
+import sys
+from pathlib import Path
+
+_SCRIPT_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPT_DIR in sys.path:
+    sys.path.remove(_SCRIPT_DIR)
+sys.path.insert(0, _SCRIPT_DIR)
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -46,11 +55,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import yaml
-from pathlib import Path
 
 from model import STGATGRU
 from tune import STGNNDataset, load_tensors, load_edge_index
-from test import _results_dir, load_best_params
 from choropleth import _node_names
 
 
@@ -133,10 +140,10 @@ def plot_node_time_heatmap(attrs: np.ndarray, node_names: list, out_path: Path,
 
 # ── Main ────────────────────────────────────────────────────────────────────────
 
-def explain_shap(cfg: dict, params: dict, model_path, split: str = "test",
-                  n_background: int = 20, n_explain: int = 5, seed: int = 0) -> None:
+def explain_shap(cfg: dict, params: dict, model_path, out_dir: Path,
+                  csv_path: str, split: str = "test", n_background: int = 20,
+                  n_explain: int = 5, seed: int = 0) -> None:
     model_path = Path(model_path)
-    out_dir    = _results_dir(cfg)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     device      = torch.device(cfg.get("device", "cpu"))
@@ -176,7 +183,7 @@ def explain_shap(cfg: dict, params: dict, model_path, split: str = "test",
     n_explain   = min(n_explain, len(explain_dataset))
     explain_idx = np.linspace(0, len(explain_dataset) - 1, n_explain, dtype=int)
 
-    node_names    = _node_names(cfg)
+    node_names    = _node_names(csv_path)
     feature_names = _feature_names(cfg, in_channels)
 
     months_t = tensors.get(f"{split}_months")
@@ -245,27 +252,47 @@ def _main_cli():
                     help="Number of background (reference) windows sampled from train.")
     ap.add_argument("--n-explain", type=int, default=5,
                     help="Number of windows to explain, spread evenly across the split.")
+    ap.add_argument("--csv-path", default=None,
+                    help="Path to merged dengue-env CSV (default: computed from project root).")
     args = ap.parse_args()
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
-    params     = load_best_params(cfg, override_path=args.params)
-    model_path = Path(args.model) if args.model else _results_dir(cfg) / "best_model.pt"
-    explain_shap(cfg, params, model_path, split=args.split,
+    out_dir     = Path("results/STGNN") / cfg["name"]
+    params_path = Path(args.params) if args.params else out_dir / "best_params.json"
+    with open(params_path) as f:
+        params = json.load(f)
+    model_path = Path(args.model) if args.model else out_dir / "best_model.pt"
+    csv_path = _resolve_csv_path(args.csv_path)
+    explain_shap(cfg, params, model_path, out_dir, csv_path, split=args.split,
                  n_background=args.n_background, n_explain=args.n_explain)
+
+
+def _resolve_csv_path(csv_path: str | None) -> str:
+    if csv_path:
+        return csv_path
+    _root = Path(__file__).resolve().parent
+    for _ in range(6):
+        if (_root / ".git").exists():
+            break
+        _root = _root.parent
+    return str(_root / "data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv")
 
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        with open(snakemake.params.cfg) as f:                        # noqa: F821
+        with open(snakemake.params.cfg) as f:            # noqa: F821
             cfg = yaml.safe_load(f)
-        override    = getattr(snakemake.params, "best_params", None)  # noqa: F821
-        params      = load_best_params(cfg, override_path=override)
-        model_path  = getattr(snakemake.input, "model", None)          # noqa: F821
-        model_path  = Path(model_path) if model_path else _results_dir(cfg) / "best_model.pt"
+        out_dir    = Path(snakemake.params.results_dir)    # noqa: F821
+        with open(snakemake.params.best_params) as f:     # noqa: F821
+            params = json.load(f)
+        model_path = getattr(snakemake.input, "model", None)  # noqa: F821
+        model_path = Path(model_path) if model_path else out_dir / "best_model.pt"
         explain_cfg = cfg.get("explain", {})
         explain_shap(
-            cfg, params, model_path, split="test",
+            cfg, params, model_path, out_dir,
+            csv_path=snakemake.params.csv_path,  # noqa: F821
+            split="test",
             n_background = explain_cfg.get("n_background", 20),
             n_explain    = explain_cfg.get("n_explain_windows", 5),
         )

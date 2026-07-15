@@ -26,28 +26,14 @@ import wandb
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
+from scipy.stats import pearsonr, spearmanr
+from sklearn.metrics import roc_auc_score, precision_recall_fscore_support
 
 from model import STGATGRU
 from loss  import masked_huber_loss
 from torch.utils.data import DataLoader
 from tune  import STGNNDataset, load_tensors, load_edge_index
 from preprocess.utils import load_preprocessing_params
-
-
-# ── Paths / params ────────────────────────────────────────────────────────────
-
-def _results_dir(cfg: dict) -> Path:
-    return Path("results/STGNN") / cfg["name"]
-
-
-def _best_params_path(cfg: dict) -> Path:
-    return _results_dir(cfg) / "best_params.json"
-
-
-def load_best_params(cfg: dict, override_path: str = None) -> dict:
-    path = Path(override_path) if override_path else _best_params_path(cfg)
-    with open(path) as f:
-        return json.load(f)
 
 
 # ── Inverse transform ─────────────────────────────────────────────────────────
@@ -174,12 +160,107 @@ def plot_scatter(
     return path
 
 
+# ── Additional metrics ────────────────────────────────────────────────────────
+
+def persistence_skill_score(
+    preds:   np.ndarray,  # (W, N) IR scale, time-ordered
+    targets: np.ndarray,  # (W, N) IR scale, time-ordered
+    masks:   np.ndarray,  # (W, N) bool
+) -> tuple[float, float]:
+    """MSE skill vs. a naive persistence baseline (predict last window's true value).
+
+    Both the model and the baseline are scored on the same subset of positions
+    (current window valid AND previous window valid) so the comparison is apples
+    to apples. Returns (skill_score, naive_mse); skill_score > 0 means the model
+    beats persistence, 0 means it ties, negative means it's worse.
+    """
+    combined_mask = masks & np.roll(masks, shift=1, axis=0)
+    combined_mask[0, :] = False  # no prior window to persist from
+
+    if not combined_mask.any():
+        return float("nan"), float("nan")
+
+    naive_preds = np.roll(targets, shift=1, axis=0)[combined_mask]
+    model_preds = preds[combined_mask]
+    true_vals   = targets[combined_mask]
+
+    naive_mse = float(((naive_preds - true_vals) ** 2).mean())
+    model_mse = float(((model_preds - true_vals) ** 2).mean())
+
+    skill_score = float("nan") if naive_mse == 0 else 1.0 - model_mse / naive_mse
+    return skill_score, naive_mse
+
+
+def outbreak_classification_metrics(
+    valid_preds:   np.ndarray,
+    valid_targets: np.ndarray,
+    threshold_pct: float = 75.0,
+) -> dict:
+    """Binarise IR at a percentile-based epidemic threshold and score the model
+    as an outbreak detector (precision/recall/F1/AUROC), since low pointwise
+    error doesn't guarantee the model catches outbreak onset."""
+    threshold = float(np.percentile(valid_targets, threshold_pct))
+    labels      = (valid_targets > threshold).astype(int)
+    pred_labels = (valid_preds   > threshold).astype(int)
+
+    if labels.min() == labels.max():
+        # Degenerate split (no positive or no negative class) — AUROC/F1 undefined.
+        return {"threshold": threshold, "precision": None, "recall": None,
+                "f1": None, "auroc": None}
+
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        labels, pred_labels, average="binary", zero_division=0
+    )
+    try:
+        auroc = float(roc_auc_score(labels, valid_preds))
+    except ValueError:
+        auroc = None
+
+    return {
+        "threshold": threshold, "precision": float(precision),
+        "recall": float(recall), "f1": float(f1), "auroc": auroc,
+    }
+
+
+def morans_i(
+    residual_per_node: np.ndarray,       # (N,), NaN where a node has no valid residual
+    edge_index:        torch.Tensor,
+    n_nodes:            int,
+) -> float:
+    """Spatial autocorrelation (Moran's I) of per-node mean residuals, using the
+    model's graph adjacency as spatial weights. Reveals whether prediction error
+    clusters geographically — i.e. whether the GAT is fully exploiting the graph.
+    Nodes with no valid residual are dropped from both the values and the adjacency."""
+    valid = ~np.isnan(residual_per_node)
+    if valid.sum() < 2:
+        return float("nan")
+
+    adj = np.zeros((n_nodes, n_nodes), dtype=np.float64)
+    src, dst = edge_index.cpu().numpy()
+    adj[src, dst] = 1.0
+    adj[dst, src] = 1.0
+    np.fill_diagonal(adj, 0.0)
+    adj = adj[valid][:, valid]
+
+    w_sum = adj.sum()
+    if w_sum == 0:
+        return float("nan")
+
+    values = residual_per_node[valid]
+    x = values - values.mean()
+    denom = (x ** 2).sum()
+    if denom == 0:
+        return float("nan")
+
+    numerator = x @ adj @ x
+    return float((valid.sum() / w_sum) * (numerator / denom))
+
+
 # ── Test / evaluation ─────────────────────────────────────────────────────────
 
-def test(cfg: dict, params: dict, model_path, split: str = "test"):
+def test(cfg: dict, params: dict, model_path, out_dir: Path, split: str = "test"):
     """Load a trained model and evaluate it on the given split."""
     model_path = Path(model_path)
-    out_dir    = _results_dir(cfg)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     device      = torch.device(cfg.get("device", "cpu"))
@@ -243,11 +324,36 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     valid_targets = targets[masks]
     mae     = float(np.abs(valid_preds - valid_targets).mean())
     mse     = float(((valid_preds - valid_targets) ** 2).mean())
-    metrics = {"mae": mae, "mse": mse, "rmse": mse ** 0.5}
+    ss_res  = float(((valid_preds - valid_targets) ** 2).sum())
+    ss_tot  = float(((valid_targets - valid_targets.mean()) ** 2).sum())
+    r2      = float("nan") if ss_tot == 0 else 1.0 - ss_res / ss_tot
+    pearson_r,  _ = pearsonr(valid_preds, valid_targets)
+    spearman_r, _ = spearmanr(valid_preds, valid_targets)
+    metrics = {
+        "mae": mae, "mse": mse, "rmse": mse ** 0.5, "r2": r2,
+        "pearson_r": float(pearson_r), "spearman_r": float(spearman_r),
+    }
+
+    skill_score, naive_mse = persistence_skill_score(preds, targets, masks)
+    metrics["skill_vs_persistence"] = skill_score
+    metrics["persistence_mse"]      = naive_mse
+
+    outbreak = outbreak_classification_metrics(valid_preds, valid_targets)
+    metrics["outbreak"] = outbreak
+
+    residual_per_node = np.full(preds.shape[1], np.nan)
+    for j in range(preds.shape[1]):
+        node_mask = masks[:, j]
+        if node_mask.any():
+            residual_per_node[j] = (preds[node_mask, j] - targets[node_mask, j]).mean()
+    moran_i = morans_i(residual_per_node, edge_index, preds.shape[1])
+    metrics["morans_i_residuals"] = moran_i
 
     print(
         f"\n{split} results | Huber {loss:.4f} | "
-        f"MAE {metrics['mae']:.4f} | RMSE {metrics['rmse']:.4f}"
+        f"MAE {metrics['mae']:.4f} | RMSE {metrics['rmse']:.4f} | R2 {metrics['r2']:.4f} | "
+        f"Spearman {metrics['spearman_r']:.4f} | Skill(vs persistence) {skill_score:.4f} | "
+        f"Moran's I {moran_i:.4f}"
     )
 
     # ── Save predictions ──────────────────────────────────────────────────────
@@ -264,10 +370,17 @@ def test(cfg: dict, params: dict, model_path, split: str = "test"):
     # ── Metrics summary ───────────────────────────────────────────────────────
     # Keys are always prefixed "test_" so metrics.json is stable across splits.
     summary = {
-        "test_huber": loss,
-        "test_mae":   metrics["mae"],
-        "test_mse":   metrics["mse"],
-        "test_rmse":  metrics["rmse"],
+        "test_huber":      loss,
+        "test_mae":        metrics["mae"],
+        "test_mse":        metrics["mse"],
+        "test_rmse":       metrics["rmse"],
+        "test_r2":         metrics["r2"],
+        "test_pearson_r":  metrics["pearson_r"],
+        "test_spearman_r": metrics["spearman_r"],
+        "test_skill_vs_persistence": metrics["skill_vs_persistence"],
+        "test_persistence_mse":      metrics["persistence_mse"],
+        "test_outbreak":             metrics["outbreak"],
+        "test_morans_i_residuals":   metrics["morans_i_residuals"],
     }
     # Fold in best_val_loss from training if it's available.
     losses_path = out_dir / "train_val_losses.json"
@@ -315,19 +428,23 @@ def _main_cli():
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
-    params     = load_best_params(cfg, override_path=args.params)
-    model_path = Path(args.model) if args.model else _results_dir(cfg) / "best_model.pt"
-    test(cfg, params, model_path, split=args.split)
+    out_dir    = Path("results/STGNN") / cfg["name"]
+    params_path = Path(args.params) if args.params else out_dir / "best_params.json"
+    with open(params_path) as f:
+        params = json.load(f)
+    model_path = Path(args.model) if args.model else out_dir / "best_model.pt"
+    test(cfg, params, model_path, out_dir, split=args.split)
 
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        with open(snakemake.params.cfg) as f:                       # noqa: F821
+        with open(snakemake.params.cfg) as f:            # noqa: F821
             cfg = yaml.safe_load(f)
-        override   = getattr(snakemake.params, "best_params", None)  # noqa: F821
-        params     = load_best_params(cfg, override_path=override)
-        model_path = getattr(snakemake.input, "model", None)         # noqa: F821
-        model_path = Path(model_path) if model_path else _results_dir(cfg) / "best_model.pt"
-        test(cfg, params, model_path, split="test")
+        out_dir    = Path(snakemake.params.results_dir)    # noqa: F821
+        with open(snakemake.params.best_params) as f:     # noqa: F821
+            params = json.load(f)
+        model_path = getattr(snakemake.input, "model", None)  # noqa: F821
+        model_path = Path(model_path) if model_path else out_dir / "best_model.pt"
+        test(cfg, params, model_path, out_dir, split="test")
     else:
         _main_cli()

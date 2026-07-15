@@ -36,11 +36,7 @@ class STGNNDataset(Dataset):
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _find_git_root(start: Path) -> Path:
-    for p in (start,) + tuple(start.parents):
-        if (p / ".git").exists():
-            return p
-    return start
+from preprocess.utils import _find_git_root
 
 
 def _processed_dir(cfg: dict) -> Path:

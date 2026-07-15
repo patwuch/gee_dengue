@@ -288,6 +288,35 @@ Image(filename=str(results_dir / "scatter.png"), width=700)
 Image(filename=str(results_dir / "pred_vs_actual.png"), width=900)
 ```
 
+## Attention Mechanism
+
+Interactive views of the spatial attention learned by the GAT layers, from the
+`cyclical_seasonal` run.
+
+::: {.panel-tabset}
+
+## Attention Graph
+
+```{=html}
+<iframe
+  src="../machine-learning-module/results/STGNN/cyclical_seasonal/attention_graph_interactive.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+## Attention Shift
+
+```{=html}
+<iframe
+  src="../machine-learning-module/results/STGNN/cyclical_seasonal/attention_shift_interactive.html"
+  width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;">
+</iframe>
+```
+
+:::
+
 ## Architecture
 
 The model is a **Spatio-Temporal Graph Attention Network with GRU** (STGATGRU):

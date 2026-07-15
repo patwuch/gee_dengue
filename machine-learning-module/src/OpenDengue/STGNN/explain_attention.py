@@ -33,6 +33,17 @@ Run via Snakemake (script mode) or directly:
 """
 
 import json
+import sys
+from pathlib import Path
+
+# Ensure the script's own directory is on sys.path before the stdlib so local
+# imports (model, tune, choropleth, test) resolve to the files in this
+# directory, not to stdlib packages that share their name.
+_SCRIPT_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPT_DIR in sys.path:
+    sys.path.remove(_SCRIPT_DIR)
+sys.path.insert(0, _SCRIPT_DIR)
+
 import numpy as np
 import pandas as pd
 import torch
@@ -41,21 +52,19 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import yaml
-from pathlib import Path
 from matplotlib.collections import LineCollection
 from torch.utils.data import DataLoader
 
 from model import STGATGRU
 from tune import STGNNDataset, load_tensors, load_edge_index
-from test import _results_dir, load_best_params
-from choropleth import _node_names, _load_geometry, _CSV_PATH
+from choropleth import _node_names, _load_geometry
 
 
-def _window_target_dates(n_windows: int) -> list:
+def _window_target_dates(csv_path: str, n_windows: int) -> list:
     """Calendar (year, month) of the target prediction for each of the last
     n_windows windows in chronological order — i.e. what month each window's
     prediction is actually for, not just its position in the split."""
-    df = pd.read_csv(str(_CSV_PATH), usecols=["year_month"])
+    df = pd.read_csv(csv_path, usecols=["year_month"])
     all_dates = sorted(pd.to_datetime(df["year_month"].unique()))
     return all_dates[-n_windows:]
 
@@ -91,10 +100,14 @@ def collect_attention(model: STGATGRU, dataloader: DataLoader,
     this model exists to capture.
 
     Returns:
-        edges      (2, E) — edge_index as returned by GATConv (includes the
-                             self-loops it adds internally)
-        attn1_all  (W, T, E) — gat1 attention per window, per lag step (heads averaged)
-        attn2_all  (W, T, E) — gat2 attention per window, per lag step (heads averaged)
+        edges      (2, E)   — edge_index as returned by GATConv (includes the
+                               self-loops it adds internally)
+        attn1      (E,)     — gat1 overall mean across windows and lags
+        attn2      (E,)     — gat2 overall mean across windows and lags
+        attn1_by_t (T, E)   — gat1 per-lag mean across windows
+        attn2_by_t (T, E)   — gat2 per-lag mean across windows
+        attn1_all  (W, T, E) — gat1, one value per window and lag (unpooled)
+        attn2_all  (W, T, E) — gat2, one value per window and lag (unpooled)
     """
     model.eval()
     ref_edges = None
@@ -130,7 +143,13 @@ def collect_attention(model: STGATGRU, dataloader: DataLoader,
 
     attn1_all = torch.stack(per_window_attn1).numpy()  # (W, T, E)
     attn2_all = torch.stack(per_window_attn2).numpy()
-    return ref_edges.numpy(), attn1_all, attn2_all
+
+    attn1_mean = attn1_all.mean(axis=(0, 1))   # (E,)  overall mean
+    attn2_mean = attn2_all.mean(axis=(0, 1))
+    attn1_by_t = attn1_all.mean(axis=0)         # (T, E) per-lag mean across windows
+    attn2_by_t = attn2_all.mean(axis=0)
+
+    return ref_edges.numpy(), attn1_mean, attn2_mean, attn1_by_t, attn2_by_t, attn1_all, attn2_all
 
 
 # ── Plotting ────────────────────────────────────────────────────────────────────
@@ -317,7 +336,7 @@ _INTERACTIVE_BODY = """
 <div class="attn-root">
   <div class="attn-header">
     <h1>__TITLE__</h1>
-    <p>GAT attention here is close to a complete graph — every node attends to nearly every other node, so direction alone isn't informative. Click or focus a node instead to see, for each neighbour, which side of the relationship dominates: colour is the <em>imbalance</em> between how much the selected node attends the neighbour and how much the neighbour attends it back; line weight is their combined attention strength. Everything unrelated fades. The slider scrubs through the model's input window lag-by-lag — the whole point of an ST-GNN over a plain GAT is that this relationship isn't static across time.</p>
+    <p>GAT attention here is close to a complete graph — every node attends to nearly every other node, so direction alone isn't informative. Click or focus a node instead to see, for each neighbour, which side of the relationship dominates: colour is the <em>imbalance</em> between how much the selected node attends the neighbour and how much the neighbour attends it back; line weight is their combined attention strength. Everything unrelated fades. Two sliders pick an exact point in the model's attention: which prediction month you're looking at, and which lag step in that month's input lookback — nothing here is averaged across time, since collapsing that structure away would erase the whole reason an ST-GNN exists over a plain GAT.</p>
   </div>
   <div class="attn-toolbar">
     <div class="attn-search">
@@ -332,9 +351,14 @@ _INTERACTIVE_BODY = """
     <button class="attn-clear" id="attn-clear-btn" type="button">Clear selection</button>
   </div>
   <div class="attn-timeline">
+    <span>Month:</span>
+    <input type="range" id="attn-month-slider" min="0" max="0" value="0" step="1">
+    <span class="lag-label" id="attn-month-label">—</span>
+  </div>
+  <div class="attn-timeline">
     <span>Lag:</span>
-    <input type="range" id="attn-time-slider" min="0" max="__T__" value="0" step="1">
-    <span class="lag-label" id="attn-time-label">All months (mean)</span>
+    <input type="range" id="attn-lag-slider" min="0" max="0" value="0" step="1">
+    <span class="lag-label" id="attn-lag-label">—</span>
   </div>
   <div class="attn-layout">
     <div class="attn-canvas-wrap">
@@ -353,7 +377,8 @@ _INTERACTIVE_BODY = """
   const root = document.querySelector(".attn-root");
   const data = JSON.parse(document.getElementById("attn-data").textContent);
   const nodes = data.nodes;   // [{name, x, y}]
-  const edges = data.edges;   // [{s, d, w}]
+  const edges = data.edges;   // [{s, d, g}] — g is (month, lag) -> attention
+  const months = data.months; // [label, ...] one per prediction window
 
   const svg = document.getElementById("attn-svg");
   const NS = "http://www.w3.org/2000/svg";
@@ -369,16 +394,17 @@ _INTERACTIVE_BODY = """
   // attention weight indexed the same way: alpha for edge (s, d) is how much
   // the TARGET (d) attends to the SOURCE (s) — i.e. "d attends to s", not the
   // other way round. wMap keys on "attender_attendee"; each record holds the
-  // overall mean plus one value per lag step, so att() below can answer
-  // "how much does i attend j" either pooled over the whole window (frame 0)
-  // or at one specific lag (frame 1..T).
-  const T = edges.length ? edges[0].t.length : 0;
+  // full (month, lag) grid, so att() below always answers "how much does i
+  // attend j" for one specific prediction window at one specific lag step —
+  // nothing is pooled across either axis.
+  const W = months.length;
+  const T = edges.length ? edges[0].g[0].length : 0;
   const wMap = new Map();
-  edges.forEach(e => wMap.set(e.d + "_" + e.s, { mean: e.w, byT: e.t }));
-  function att(i, j, frame) {
+  edges.forEach(e => wMap.set(e.d + "_" + e.s, e.g));
+  function att(i, j, monthIdx, lagIdx) {
     const rec = wMap.get(i + "_" + j);
     if (!rec) return undefined;
-    return frame === 0 ? rec.mean : rec.byT[frame - 1];
+    return rec[monthIdx][lagIdx];
   }
 
   const neighborSet = nodes.map(() => new Set());
@@ -388,10 +414,9 @@ _INTERACTIVE_BODY = """
   // squeezed into a narrow, right-skewed band (a handful of outliers set the
   // max and compress everything else toward the low end of a linear scale).
   // Rank each pair's combined magnitude against every other pair *within the
-  // same lag frame* instead, so line weight spreads across the full visual
-  // range regardless of skew, and stays comparable across frames (frame 0 =
-  // pooled mean, frame f = lag t = f-1).
-  function buildFrame(frame) {
+  // same (month, lag) frame* instead, so line weight spreads across the full
+  // visual range regardless of skew, and stays comparable across frames.
+  function buildFrame(monthIdx, lagIdx) {
     const seen = new Set();
     const pairs = [];
     let maxAbsDiff = 0;
@@ -400,7 +425,7 @@ _INTERACTIVE_BODY = """
       const key = Math.min(i, j) + "_" + Math.max(i, j);
       if (seen.has(key)) return;
       seen.add(key);
-      const w1 = att(i, j, frame) ?? 0, w2 = att(j, i, frame) ?? 0;
+      const w1 = att(i, j, monthIdx, lagIdx) ?? 0, w2 = att(j, i, monthIdx, lagIdx) ?? 0;
       pairs.push({ i, j, mag: (w1 + w2) / 2 });
       maxAbsDiff = Math.max(maxAbsDiff, Math.abs(w1 - w2));
     });
@@ -408,12 +433,19 @@ _INTERACTIVE_BODY = """
     const sortedMags = pairs.map(p => p.mag).slice().sort((a, b) => a - b);
     return { pairs, sortedMags, maxAbsDiff };
   }
+  // W x T frames precomputed up front — cheap (a few million comparisons at
+  // most) and keeps every slider move a plain array lookup.
   const frames = [];
-  for (let f = 0; f <= T; f++) frames.push(buildFrame(f));
-  let currentFrame = 0;
+  for (let m = 0; m < W; m++) {
+    const row = [];
+    for (let t = 0; t < T; t++) row.push(buildFrame(m, t));
+    frames.push(row);
+  }
+  let currentMonth = W - 1;
+  let currentLag = T - 1;
 
-  function magPercentileAt(w, frame) {
-    const mags = frames[frame].sortedMags;
+  function magPercentileAt(w, monthIdx, lagIdx) {
+    const mags = frames[monthIdx][lagIdx].sortedMags;
     if (mags.length === 0) return 0.5;
     let lo = 0, hi = mags.length;
     while (lo < hi) {
@@ -423,8 +455,12 @@ _INTERACTIVE_BODY = """
     return lo / mags.length;
   }
 
-  function lagLabel(frame) {
-    return frame === 0 ? "All months (mean)" : `t-${T - frame}`;
+  function monthLabel(monthIdx) {
+    return months[monthIdx];
+  }
+
+  function lagLabel(lagIdx) {
+    return `t-${T - 1 - lagIdx}`;
   }
 
   function hexToRgb(hex) {
@@ -445,10 +481,11 @@ _INTERACTIVE_BODY = """
 
   // diff > 0: i attends j MORE than j attends i -> cool/blue.
   // diff < 0: j attends i MORE than i attends j -> warm/red.
-  // Scale is per-frame (frames[frame].maxAbsDiff) so a given colour means the
-  // same imbalance regardless of which node or lag is currently selected.
-  function divergingColor(diff, frame) {
-    const maxAbsDiff = frames[frame].maxAbsDiff;
+  // Scale is per-frame (frames[monthIdx][lagIdx].maxAbsDiff) so a given colour
+  // means the same imbalance regardless of which node, month, or lag is
+  // currently selected.
+  function divergingColor(diff, monthIdx, lagIdx) {
+    const maxAbsDiff = frames[monthIdx][lagIdx].maxAbsDiff;
     if (maxAbsDiff <= 0) return cMid;
     const t = Math.max(-1, Math.min(1, diff / maxAbsDiff));
     return t >= 0 ? lerpColor(cMid, cPos, t) : lerpColor(cMid, cNeg, -t);
@@ -465,10 +502,10 @@ _INTERACTIVE_BODY = """
   const gContext = document.createElementNS(NS, "g");
   svg.appendChild(gContext);
 
-  function rebuildContext(frame) {
+  function rebuildContext(monthIdx, lagIdx) {
     while (gContext.firstChild) gContext.removeChild(gContext.firstChild);
     contextEls = [];
-    frames[frame].pairs.slice(0, CONTEXT_EDGE_COUNT).forEach(p => {
+    frames[monthIdx][lagIdx].pairs.slice(0, CONTEXT_EDGE_COUNT).forEach(p => {
       const line = document.createElementNS(NS, "line");
       line.setAttribute("x1", sx(nodes[p.i].x));
       line.setAttribute("y1", sy(nodes[p.i].y));
@@ -582,8 +619,8 @@ _INTERACTIVE_BODY = """
       return;
     }
     const rows = neighbours.map(j => {
-      const toJ   = att(i, j, currentFrame) ?? 0; // selected attends neighbour
-      const fromJ = att(j, i, currentFrame) ?? 0; // neighbour attends selected
+      const toJ   = att(i, j, currentMonth, currentLag) ?? 0; // selected attends neighbour
+      const fromJ = att(j, i, currentMonth, currentLag) ?? 0; // neighbour attends selected
       return { j, toJ, fromJ, diff: toJ - fromJ, mag: (toJ + fromJ) / 2 };
     });
     rows.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
@@ -595,7 +632,7 @@ _INTERACTIVE_BODY = """
       nameSpan.className = "name";
       const key = document.createElement("span");
       key.className = "key";
-      key.style.background = divergingColor(r.diff, currentFrame);
+      key.style.background = divergingColor(r.diff, currentMonth, currentLag);
       nameSpan.appendChild(key);
       const label = document.createElement("span");
       label.textContent = nodes[r.j].name;
@@ -629,19 +666,19 @@ _INTERACTIVE_BODY = """
     // with the size of the whole (near-complete) attention graph.
     const neighbours = Array.from(neighborSet[i]);
     const rows = neighbours.map(j => {
-      const toJ   = att(i, j, currentFrame) ?? 0;
-      const fromJ = att(j, i, currentFrame) ?? 0;
+      const toJ   = att(i, j, currentMonth, currentLag) ?? 0;
+      const fromJ = att(j, i, currentMonth, currentLag) ?? 0;
       return { j, diff: toJ - fromJ, mag: (toJ + fromJ) / 2 };
     });
 
     rows.forEach(r => {
-      const n = magPercentileAt(r.mag, currentFrame); // rank, not raw magnitude — see note above
+      const n = magPercentileAt(r.mag, currentMonth, currentLag); // rank, not raw magnitude — see note above
       const line = document.createElementNS(NS, "line");
       line.setAttribute("x1", sx(nodes[i].x));
       line.setAttribute("y1", sy(nodes[i].y));
       line.setAttribute("x2", sx(nodes[r.j].x));
       line.setAttribute("y2", sy(nodes[r.j].y));
-      line.setAttribute("stroke", divergingColor(r.diff, currentFrame));
+      line.setAttribute("stroke", divergingColor(r.diff, currentMonth, currentLag));
       line.setAttribute("opacity", (0.25 + 0.75 * n).toFixed(2));
       line.setAttribute("stroke-width", (0.75 + 6 * n).toFixed(2));
       gSel.appendChild(line);
@@ -658,9 +695,9 @@ _INTERACTIVE_BODY = """
       } else if (neighborSet[i].has(idx)) {
         const diff = rows.find(r => r.j === idx).diff;
         el.setAttribute("r", "4");
-        el.setAttribute("fill", divergingColor(diff, currentFrame));
+        el.setAttribute("fill", divergingColor(diff, currentMonth, currentLag));
         el.setAttribute("opacity", "1");
-        if (labelSet.has(idx)) addLabel(idx, divergingColor(diff, currentFrame));
+        if (labelSet.has(idx)) addLabel(idx, divergingColor(diff, currentMonth, currentLag));
       } else {
         el.setAttribute("r", "2");
         el.setAttribute("fill", "var(--muted)");
@@ -693,32 +730,46 @@ _INTERACTIVE_BODY = """
     highlight(null);
   });
 
-  const timeSlider = document.getElementById("attn-time-slider");
-  const timeLabel  = document.getElementById("attn-time-label");
-  timeSlider.addEventListener("input", () => {
-    currentFrame = Number(timeSlider.value);
-    timeLabel.textContent = lagLabel(currentFrame);
-    rebuildContext(currentFrame);
+  const monthSlider = document.getElementById("attn-month-slider");
+  const monthLabelEl = document.getElementById("attn-month-label");
+  const lagSlider = document.getElementById("attn-lag-slider");
+  const lagLabelEl = document.getElementById("attn-lag-label");
+
+  monthSlider.min = 0; monthSlider.max = Math.max(0, W - 1); monthSlider.value = currentMonth;
+  lagSlider.min = 0; lagSlider.max = Math.max(0, T - 1); lagSlider.value = currentLag;
+  monthLabelEl.textContent = monthLabel(currentMonth);
+  lagLabelEl.textContent = lagLabel(currentLag);
+
+  monthSlider.addEventListener("input", () => {
+    currentMonth = Number(monthSlider.value);
+    monthLabelEl.textContent = monthLabel(currentMonth);
+    rebuildContext(currentMonth, currentLag);
+    if (pinned !== null) highlight(pinned);
+  });
+  lagSlider.addEventListener("input", () => {
+    currentLag = Number(lagSlider.value);
+    lagLabelEl.textContent = lagLabel(currentLag);
+    rebuildContext(currentMonth, currentLag);
     if (pinned !== null) highlight(pinned);
   });
 
-  rebuildContext(0);
+  rebuildContext(currentMonth, currentLag);
   highlight(null);
 })();
 </script>
 """
 
 
-def write_interactive_graph(edges: np.ndarray, attn1: np.ndarray, attn2: np.ndarray,
-                             attn1_by_t: np.ndarray, attn2_by_t: np.ndarray,
-                             node_names: list, gdf, out_path: Path, split: str) -> None:
+def write_interactive_graph(edges: np.ndarray, attn1_all: np.ndarray, attn2_all: np.ndarray,
+                             node_names: list, gdf, out_path: Path, split: str,
+                             window_dates: list) -> None:
     """Self-contained HTML: click/hover a node to isolate its edges and grey
-    out the rest of the network. A slider scrubs through lag steps so the
-    model's temporal structure — its whole point over a plain GAT — isn't
-    collapsed away by averaging over time. No server or external assets
-    required."""
-    combined      = (attn1 + attn2) / 2                      # (E,)  overall mean, all lags pooled
-    combined_by_t = (attn1_by_t + attn2_by_t) / 2             # (T,E) per-lag mean
+    out the rest of the network. Two sliders — calendar month and lag step —
+    index into the model's actual (window, lag) attention grid, so nothing is
+    pooled away: what you see is the attention for one specific prediction
+    window at one specific point in its input lookback. No server or
+    external assets required."""
+    combined_all = (attn1_all + attn2_all) / 2   # (W, T, E) — gat1/gat2 mean, nothing else pooled
     centroids = gdf.set_index("name").loc[node_names].geometry.centroid
     keep = edges[0] != edges[1]  # drop self-loops, as in the static plot
 
@@ -726,16 +777,21 @@ def write_interactive_graph(edges: np.ndarray, attn1: np.ndarray, attn2: np.ndar
         {"name": name, "x": float(pt.x), "y": float(pt.y)}
         for name, pt in zip(node_names, centroids)
     ]
-    # Round to keep the embedded JSON a reasonable size — T x E floats adds up
-    # (T=12, E~26k is already ~300k numbers) — 5 significant figures is far
-    # below the noise floor of an attention weight anyway.
-    by_t_kept = combined_by_t[:, keep].T  # (E_kept, T)
+    # Round to keep the embedded JSON a manageable size — W x T x E floats adds
+    # up fast (W~14, T=12, E~26k is already millions of numbers) — 5
+    # significant figures is far below the noise floor of an attention weight.
+    grid_kept = combined_all[:, :, keep].transpose(2, 0, 1)  # (E_kept, W, T)
     edges_json = [
-        {"s": int(s), "d": int(d), "w": round(float(w), 6), "t": [round(float(v), 6) for v in row]}
-        for s, d, w, row in zip(edges[0][keep], edges[1][keep], combined[keep], by_t_kept)
+        {"s": int(s), "d": int(d),
+         "g": [[round(float(v), 5) for v in lag_row] for lag_row in window_grid]}
+        for s, d, window_grid in zip(edges[0][keep], edges[1][keep], grid_kept)
     ]
 
-    payload = json.dumps({"nodes": nodes_json, "edges": edges_json}).replace("</", "<\\/")
+    month_labels = [d.strftime("%b %Y") for d in window_dates]
+
+    payload = json.dumps({
+        "nodes": nodes_json, "edges": edges_json, "months": month_labels,
+    }).replace("</", "<\\/")
 
     # viewBox matches the data's lon/lat aspect ratio so the map isn't stretched
     # (equivalent to matplotlib's ax.set_aspect("equal") in the static plot).
@@ -754,7 +810,6 @@ def write_interactive_graph(edges: np.ndarray, attn1: np.ndarray, attn2: np.ndar
         .replace("__DATA__", payload)
         .replace("__TITLE__", "STGNN attention network")
         .replace("__SPLIT__", split)
-        .replace("__T__", str(combined_by_t.shape[0]))
         .replace("__VB_W__", str(vb_w))
         .replace("__VB_H__", str(vb_h))
         .replace("__VB_PAD__", "40")
@@ -770,10 +825,10 @@ def write_interactive_graph(edges: np.ndarray, attn1: np.ndarray, attn2: np.ndar
 
 # ── Main ────────────────────────────────────────────────────────────────────────
 
-def explain_attention(cfg: dict, params: dict, model_path, split: str = "test",
-                       top_k: int = 15) -> None:
+def explain_attention(cfg: dict, params: dict, model_path, out_dir: Path,
+                       csv_path: str, geom_path: str,
+                       split: str = "test", top_k: int = 15) -> None:
     model_path = Path(model_path)
-    out_dir    = _results_dir(cfg)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     device      = torch.device(cfg.get("device", "cpu"))
@@ -804,22 +859,30 @@ def explain_attention(cfg: dict, params: dict, model_path, split: str = "test",
     print(f"Loading model from {model_path} ...")
     model.load_state_dict(torch.load(model_path, weights_only=True))
 
-    edges, attn1, attn2, attn1_by_t, attn2_by_t = collect_attention(
+    edges, attn1, attn2, attn1_by_t, attn2_by_t, attn1_all, attn2_all = collect_attention(
         model, dataloader, edge_index, device
     )
 
-    node_names = _node_names(cfg)
-    gdf        = _load_geometry()
+    node_names   = _node_names(csv_path)
+    gdf          = _load_geometry(geom_path)
+    window_dates = _window_target_dates(csv_path, attn1_all.shape[0])
 
+    # combined_by_window is (gat1+gat2)/2 per (window, lag, edge) — the same
+    # unpooled resolution the interactive HTML uses, saved here so downstream
+    # scripts (e.g. attention_shift.py) don't need to reload the model just
+    # to recompute it.
+    combined_by_window = (attn1_all + attn2_all) / 2
     npz_path = out_dir / "attention_weights.npz"
-    np.savez(
+    np.savez_compressed(
         npz_path,
-        edges         = edges,
-        attn1_mean    = attn1,
-        attn2_mean    = attn2,
-        attn1_by_time = attn1_by_t,
-        attn2_by_time = attn2_by_t,
-        node_names    = np.array(node_names),
+        edges              = edges,
+        attn1_mean         = attn1,
+        attn2_mean         = attn2,
+        attn1_by_time      = attn1_by_t,
+        attn2_by_time      = attn2_by_t,
+        combined_by_window = combined_by_window.astype(np.float32),
+        window_dates       = np.array([d.isoformat() for d in window_dates]),
+        node_names         = np.array(node_names),
     )
     print(f"Attention weights saved to {npz_path}")
 
@@ -833,7 +896,8 @@ def explain_attention(cfg: dict, params: dict, model_path, split: str = "test",
 
     interactive_path = out_dir / "attention_graph_interactive.html"
     write_interactive_graph(
-        edges, attn1, attn2, attn1_by_t, attn2_by_t, node_names, gdf, interactive_path, split=split
+        edges, attn1_all, attn2_all, node_names, gdf, interactive_path,
+        split=split, window_dates=window_dates,
     )
     print(f"  -> {interactive_path}")
 
@@ -855,24 +919,54 @@ def _main_cli():
                     help="Which split to compute attention over (default: test).")
     ap.add_argument("--top-k", type=int, default=15,
                     help="Number of top edges to highlight in the plots.")
+    ap.add_argument("--csv-path", default=None,
+                    help="Path to merged dengue-env CSV (default: computed from project root).")
+    ap.add_argument("--geom-path", default=None,
+                    help="Path to geometry Parquet (default: computed from project root).")
     args = ap.parse_args()
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
-    params     = load_best_params(cfg, override_path=args.params)
-    model_path = Path(args.model) if args.model else _results_dir(cfg) / "best_model.pt"
-    explain_attention(cfg, params, model_path, split=args.split, top_k=args.top_k)
+    out_dir     = Path("results/STGNN") / cfg["name"]
+    params_path = Path(args.params) if args.params else out_dir / "best_params.json"
+    with open(params_path) as f:
+        params = json.load(f)
+    model_path = Path(args.model) if args.model else out_dir / "best_model.pt"
+    csv_path, geom_path = _resolve_data_paths(args.csv_path, args.geom_path)
+    explain_attention(cfg, params, model_path, out_dir, csv_path, geom_path,
+                      split=args.split, top_k=args.top_k)
+
+
+def _resolve_data_paths(csv_path: str | None, geom_path: str | None) -> tuple[str, str]:
+    """Resolve CSV and geometry paths; compute from project root if not given."""
+    if csv_path and geom_path:
+        return csv_path, geom_path
+    _root = Path(__file__).resolve().parent
+    for _ in range(6):
+        if (_root / ".git").exists():
+            break
+        _root = _root.parent
+    return (
+        csv_path or str(_root / "data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv"),
+        geom_path or str(_root / "data/processed/dengue-infection/geoparquet/gaul_2024_sea_filtered.parquet"),
+    )
 
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        with open(snakemake.params.cfg) as f:                        # noqa: F821
+        with open(snakemake.params.cfg) as f:            # noqa: F821
             cfg = yaml.safe_load(f)
-        override    = getattr(snakemake.params, "best_params", None)  # noqa: F821
-        params      = load_best_params(cfg, override_path=override)
-        model_path  = getattr(snakemake.input, "model", None)          # noqa: F821
-        model_path  = Path(model_path) if model_path else _results_dir(cfg) / "best_model.pt"
-        top_k       = cfg.get("explain", {}).get("attention_top_k", 15)
-        explain_attention(cfg, params, model_path, split="test", top_k=top_k)
+        out_dir    = Path(snakemake.params.results_dir)    # noqa: F821
+        with open(snakemake.params.best_params) as f:     # noqa: F821
+            params = json.load(f)
+        model_path = getattr(snakemake.input, "model", None)  # noqa: F821
+        model_path = Path(model_path) if model_path else out_dir / "best_model.pt"
+        top_k = cfg.get("explain", {}).get("attention_top_k", 15)
+        explain_attention(
+            cfg, params, model_path, out_dir,
+            csv_path=snakemake.params.csv_path,   # noqa: F821
+            geom_path=snakemake.params.geom_path,  # noqa: F821
+            split="test", top_k=top_k,
+        )
     else:
         _main_cli()

@@ -1,12 +1,9 @@
 """
 choropleth.py
 
-Produce two figures saved to results/STGNN/<name>/:
+Produce a figure saved to results/STGNN/<name>/:
 
-  1. actual_ir_14months.png
-       One choropleth per test month (14 panels), actual IR only.
-
-  2. pred_vs_actual.png
+  pred_vs_actual.png
        Side-by-side actual vs predicted IR for every predicted month.
        Covers all test months when the inference split is used
        (requires re-running preprocessing after the inference-window change);
@@ -31,25 +28,6 @@ import yaml
 matplotlib.use("Agg")
 
 
-# ── Path helpers ──────────────────────────────────────────────────────────────
-
-def _git_root() -> Path:
-    for p in (Path(__file__).resolve(),) + tuple(Path(__file__).resolve().parents):
-        if (p / ".git").exists():
-            return p
-    return Path(__file__).resolve().parent
-
-
-_ROOT       = _git_root()
-_GEOM_PATH  = _ROOT / "data/processed/dengue-infection/geoparquet/gaul_2024_sea_filtered.parquet"
-_CSV_PATH   = _ROOT / "data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv"
-_RESULTS    = _ROOT / "machine-learning-module/results/STGNN"
-
-
-def _results_dir(cfg: dict) -> Path:
-    return _RESULTS / cfg["name"]
-
-
 # ── Data loaders ──────────────────────────────────────────────────────────────
 
 def _load_cfg(path: str) -> dict:
@@ -57,33 +35,33 @@ def _load_cfg(path: str) -> dict:
         return yaml.safe_load(f)
 
 
-def _node_names(cfg: dict) -> list[str]:
+def _node_names(csv_path: str) -> list[str]:
     """adm_1_name list in node-index order (alphabetical, matches preprocessing)."""
-    df = pd.read_csv(str(_CSV_PATH), usecols=["adm_1_name"])
+    df = pd.read_csv(csv_path, usecols=["adm_1_name"])
     return df["adm_1_name"].sort_values().unique().tolist()
 
 
-def _load_actuals(cfg: dict) -> pd.DataFrame:
-    df = pd.read_csv(str(_CSV_PATH), usecols=["adm_1_name", "year_month", "IR"])
+def _load_actuals(csv_path: str, cfg: dict) -> pd.DataFrame:
+    df = pd.read_csv(csv_path, usecols=["adm_1_name", "year_month", "IR"])
     df["year_month"] = pd.to_datetime(df["year_month"])
     n_test     = cfg["data"]["split"]["test_months"]
     test_dates = sorted(df["year_month"].unique())[-n_test:]
     return df[df["year_month"].isin(test_dates)].copy()
 
 
-def _load_predictions(cfg: dict) -> tuple[np.ndarray, list[pd.Timestamp]]:
+def _load_predictions(csv_path: str, out_dir: Path) -> tuple[np.ndarray, list[pd.Timestamp]]:
     """Return (W, N) IR predictions and matching timestamps."""
-    npz   = np.load(_results_dir(cfg) / "test_predictions.npz")
+    npz   = np.load(out_dir / "test_predictions.npz")
     preds = npz["predictions"]
     if preds.ndim == 3:
         preds = preds.squeeze(-1)
 
-    with open(_results_dir(cfg) / "best_params.json") as f:
+    with open(out_dir / "best_params.json") as f:
         window_size = json.load(f)["window_size"]
 
-    df         = pd.read_csv(str(_CSV_PATH), usecols=["year_month"])
+    df         = pd.read_csv(csv_path, usecols=["year_month"])
     all_dates  = sorted(pd.to_datetime(df["year_month"].unique()))
-    n_test     = cfg["data"]["split"]["test_months"]
+    n_test     = 14  # cfg is not available here; this is overridden by _load_actuals
     test_dates = all_dates[-n_test:]
 
     W = preds.shape[0]
@@ -98,8 +76,8 @@ def _load_predictions(cfg: dict) -> tuple[np.ndarray, list[pd.Timestamp]]:
     return preds, pred_dates
 
 
-def _load_geometry() -> gpd.GeoDataFrame:
-    return gpd.read_parquet(_GEOM_PATH)[["name", "geometry"]].copy()
+def _load_geometry(geom_path: str) -> gpd.GeoDataFrame:
+    return gpd.read_parquet(geom_path)[["name", "geometry"]].copy()
 
 
 # ── Plotting helpers ──────────────────────────────────────────────────────────
@@ -129,44 +107,14 @@ def _colorbar(fig, axes, norm, cmap, label):
     cb.ax.tick_params(labelsize=7)
 
 
-# ── Figure 1: actual IR for all test months ───────────────────────────────────
+# ── Figure: actual vs predicted ───────────────────────────────────────────────
 
-def plot_actuals(cfg: dict, out_path: Path) -> None:
-    gdf     = _load_geometry()
-    actuals = _load_actuals(cfg)
-    dates   = sorted(actuals["year_month"].unique())
-    n       = len(dates)
-    ncols   = 4
-    nrows   = int(np.ceil(n / ncols))
-    cmap    = "YlOrRd"
-
-    norm = _norm(actuals["IR"].dropna().values)
-    fig, axes = plt.subplots(nrows, ncols, figsize=(ncols * 4.5, nrows * 3.5))
-    flat = axes.flatten()
-
-    for i, date in enumerate(dates):
-        month_df = actuals[actuals["year_month"] == date][["adm_1_name", "IR"]]
-        merged   = gdf.merge(month_df, left_on="name", right_on="adm_1_name", how="left")
-        _draw_map(flat[i], merged, "IR", norm, cmap, date.strftime("%b %Y"))
-
-    for j in range(i + 1, len(flat)):
-        flat[j].set_visible(False)
-
-    _colorbar(fig, flat[:n], norm, cmap, "Incidence Rate (IR)")
-    date_range = f"{dates[0].strftime('%b %Y')} – {dates[-1].strftime('%b %Y')}"
-    fig.suptitle(f"Actual Dengue IR — {n} Test Months ({date_range})", fontsize=13, y=1.01)
-    fig.tight_layout()
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
-    plt.close(fig)
-
-
-# ── Figure 2: actual vs predicted ─────────────────────────────────────────────
-
-def plot_pred_vs_actual(cfg: dict, out_path: Path) -> None:
-    gdf        = _load_geometry()
-    actuals    = _load_actuals(cfg)
-    preds, pred_dates = _load_predictions(cfg)
-    nodes      = _node_names(cfg)
+def plot_pred_vs_actual(cfg: dict, csv_path: str, geom_path: str,
+                        out_dir: Path, out_path: Path) -> None:
+    gdf        = _load_geometry(geom_path)
+    actuals    = _load_actuals(csv_path, cfg)
+    preds, pred_dates = _load_predictions(csv_path, out_dir)
+    nodes      = _node_names(csv_path)
     n_test     = cfg["data"]["split"]["test_months"]
     n          = len(pred_dates)
     cmap       = "YlOrRd"
@@ -200,26 +148,43 @@ def plot_pred_vs_actual(cfg: dict, out_path: Path) -> None:
 
 # ── Entry points ──────────────────────────────────────────────────────────────
 
-def main(config_path: str) -> None:
-    cfg     = _load_cfg(config_path)
-    out_dir = _results_dir(cfg)
+def main(config_path: str, out_dir: Path, csv_path: str, geom_path: str) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
+    cfg = _load_cfg(config_path)
 
-    p1 = out_dir / "actual_ir_14months.png"
     p2 = out_dir / "pred_vs_actual.png"
 
-    print("Generating actual IR choropleths…")
-    plot_actuals(cfg, p1)
-    print(f"  → {p1}")
-
     print("Generating predicted vs actual choropleths…")
-    plot_pred_vs_actual(cfg, p2)
+    plot_pred_vs_actual(cfg, csv_path, geom_path, out_dir, p2)
     print(f"  → {p2}")
 
 
 if "snakemake" in dir():
-    main(config_path=snakemake.params.cfg)
+    main(config_path=snakemake.params.cfg,
+         out_dir=Path(snakemake.params.results_dir),
+         csv_path=snakemake.params.csv_path,
+         geom_path=snakemake.params.geom_path)
 elif __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", required=True)
-    main(config_path=parser.parse_args().config)
+    parser.add_argument("--csv-path", default=None,
+                        help="Path to the merged CSV (default: computed from project root).")
+    parser.add_argument("--geom-path", default=None,
+                        help="Path to the geometry Parquet (default: computed from project root).")
+    args = parser.parse_args()
+    cfg   = _load_cfg(args.config)
+
+    def _git_root() -> Path:
+        for p in (Path(__file__).resolve(),) + tuple(Path(__file__).resolve().parents):
+            if (p / ".git").exists():
+                return p
+        return Path(__file__).resolve().parent
+
+    _root     = _git_root()
+    csv_path  = args.csv_path or str(_root / "data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv")
+    geom_path = args.geom_path or str(_root / "data/processed/dengue-infection/geoparquet/gaul_2024_sea_filtered.parquet")
+
+    main(config_path=args.config,
+         out_dir=Path("results/STGNN") / cfg["name"],
+         csv_path=csv_path,
+         geom_path=geom_path)

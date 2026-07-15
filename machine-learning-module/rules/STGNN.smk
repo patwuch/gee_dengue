@@ -10,6 +10,8 @@
 # Scripts receive all experiment parameters via snakemake.config.
 # ============================================================
 
+import json
+
 _name = config.get("name", "")
 
 _window_sizes = (
@@ -21,6 +23,7 @@ _window_sizes = (
 )
 
 _ML_PROCESSED = PROJECT_ROOT / "data" / "processed" / "machine-learning"
+_RESULTS      = f"results/STGNN/{_name}"
 
 
 rule preprocess_stgnn:
@@ -40,7 +43,7 @@ rule preprocess_stgnn:
     script:
         f"{workflow.basedir}/src/OpenDengue/STGNN/preprocess/pipeline.py"
 
-rule tune_stgnn:
+checkpoint tune_stgnn:
     input:
         tensors = expand(
             str(_ML_PROCESSED / "STGNN/{name}/window_{w}/tensors.pt"),
@@ -49,7 +52,7 @@ rule tune_stgnn:
         ),
         scaler  = str(_ML_PROCESSED / f"STGNN/{_name}/preprocessing_params.json"),
     output:
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        best_params = f"{_RESULTS}/best_params.json",
     resources:
         gpu = 1,
     params:
@@ -58,16 +61,37 @@ rule tune_stgnn:
         "../src/OpenDengue/STGNN/tune.py"
 
 
+def _tensors_for_best_window(wildcards):
+    """Resolve the tensor file for the window size tune_stgnn actually picked,
+    so Snakemake knows about this dependency instead of it being an implicit
+    read inside train.py/test.py/explain_*.py."""
+    best_params_path = checkpoints.tune_stgnn.get(**wildcards).output.best_params
+    with open(best_params_path) as f:
+        window = json.load(f)["window_size"]
+    return str(_ML_PROCESSED / f"STGNN/{_name}/window_{window}/tensors.pt")
+
+
+def _tensors_for_production_window(wildcards):
+    """Same as above, but for train_stgnn_production: best_params.json comes
+    from a previously completed experiment (_params_source), not one produced
+    within this workflow run, so no checkpoint indirection is needed."""
+    with open(f"results/STGNN/{_params_source}/best_params.json") as f:
+        window = json.load(f)["window_size"]
+    return str(_ML_PROCESSED / f"STGNN/{_name}/window_{window}/tensors.pt")
+
+
 rule train_stgnn:
     input:
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        best_params = f"{_RESULTS}/best_params.json",
+        tensors     = _tensors_for_best_window,
     output:
-        checkpoint = f"results/STGNN/{_name}/best_model.pt",
-        losses     = f"results/STGNN/{_name}/train_val_losses.json",
-        loss_curve = f"results/STGNN/{_name}/loss_curves.png",
+        checkpoint = f"{_RESULTS}/best_model.pt",
+        losses     = f"{_RESULTS}/train_val_losses.json",
+        loss_curve = f"{_RESULTS}/loss_curves.png",
     params:
         cfg         = lambda wc: workflow.configfiles[-1],
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        results_dir = _RESULTS,
+        best_params = f"{_RESULTS}/best_params.json",
     resources:
         gpu = 1,
     script:
@@ -76,16 +100,18 @@ rule train_stgnn:
 
 rule test_stgnn:
     input:
-        model       = f"results/STGNN/{_name}/best_model.pt",
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        model       = f"{_RESULTS}/best_model.pt",
+        best_params = f"{_RESULTS}/best_params.json",
+        tensors     = _tensors_for_best_window,
     output:
-        predictions = f"results/STGNN/{_name}/test_predictions.npz",
-        metrics     = f"results/STGNN/{_name}/metrics.json",
-        pred_plot   = f"results/STGNN/{_name}/predictions.png",
-        scatter     = f"results/STGNN/{_name}/scatter.png",
+        predictions = f"{_RESULTS}/test_predictions.npz",
+        metrics     = f"{_RESULTS}/metrics.json",
+        pred_plot   = f"{_RESULTS}/predictions.png",
+        scatter     = f"{_RESULTS}/scatter.png",
     params:
         cfg         = lambda wc: workflow.configfiles[-1],
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        results_dir = _RESULTS,
+        best_params = f"{_RESULTS}/best_params.json",
     resources:
         gpu = 1,
     script:
@@ -94,13 +120,17 @@ rule test_stgnn:
 
 rule choropleth_stgnn:
     input:
-        predictions = f"results/STGNN/{_name}/test_predictions.npz",
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        predictions = f"{_RESULTS}/test_predictions.npz",
+        best_params = f"{_RESULTS}/best_params.json",
+        geom        = str(GEOM_PATH),
+        csv_data    = str(MERGED_DENGUE_ENV_DATA),
     output:
-        actuals       = f"results/STGNN/{_name}/actual_ir_14months.png",
-        pred_vs_actual = f"results/STGNN/{_name}/pred_vs_actual.png",
+        pred_vs_actual = f"{_RESULTS}/pred_vs_actual.png",
     params:
-        cfg = lambda wc: workflow.configfiles[-1],
+        cfg         = lambda wc: workflow.configfiles[-1],
+        results_dir = _RESULTS,
+        csv_path    = str(MERGED_DENGUE_ENV_DATA),
+        geom_path   = str(GEOM_PATH),
     script:
         "../src/OpenDengue/STGNN/choropleth.py"
 
@@ -109,15 +139,22 @@ rule explain_attention_stgnn:
     message:
         "Visualising GAT attention weights for experiment '{_name}'."
     input:
-        model       = f"results/STGNN/{_name}/best_model.pt",
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        model       = f"{_RESULTS}/best_model.pt",
+        best_params = f"{_RESULTS}/best_params.json",
+        geom        = str(GEOM_PATH),
+        csv_data    = str(MERGED_DENGUE_ENV_DATA),
+        tensors     = _tensors_for_best_window,
     output:
-        weights     = f"results/STGNN/{_name}/attention_weights.npz",
-        graph       = f"results/STGNN/{_name}/attention_graph.png",
-        over_time   = f"results/STGNN/{_name}/attention_over_time.png",
-        interactive = f"results/STGNN/{_name}/attention_graph_interactive.html",
+        weights     = f"{_RESULTS}/attention_weights.npz",
+        graph       = f"{_RESULTS}/attention_graph.png",
+        over_time   = f"{_RESULTS}/attention_over_time.png",
+        interactive = f"{_RESULTS}/attention_graph_interactive.html",
     params:
-        cfg = lambda wc: workflow.configfiles[-1],
+        cfg         = lambda wc: workflow.configfiles[-1],
+        results_dir = _RESULTS,
+        best_params = f"{_RESULTS}/best_params.json",
+        csv_path    = str(MERGED_DENGUE_ENV_DATA),
+        geom_path   = str(GEOM_PATH),
     script:
         "../src/OpenDengue/STGNN/explain_attention.py"
 
@@ -126,14 +163,19 @@ rule explain_shap_stgnn:
     message:
         "Computing SHAP Expected Gradients feature attributions for experiment '{_name}'."
     input:
-        model       = f"results/STGNN/{_name}/best_model.pt",
-        best_params = f"results/STGNN/{_name}/best_params.json",
+        model       = f"{_RESULTS}/best_model.pt",
+        best_params = f"{_RESULTS}/best_params.json",
+        csv_data    = str(MERGED_DENGUE_ENV_DATA),
+        tensors     = _tensors_for_best_window,
     output:
-        attributions = f"results/STGNN/{_name}/shap_attributions.npz",
-        feature_plot = f"results/STGNN/{_name}/shap_feature_importance.png",
-        heatmap      = f"results/STGNN/{_name}/shap_node_time_heatmap.png",
+        attributions = f"{_RESULTS}/shap_attributions.npz",
+        feature_plot = f"{_RESULTS}/shap_feature_importance.png",
+        heatmap      = f"{_RESULTS}/shap_node_time_heatmap.png",
     params:
-        cfg = lambda wc: workflow.configfiles[-1],
+        cfg         = lambda wc: workflow.configfiles[-1],
+        results_dir = _RESULTS,
+        best_params = f"{_RESULTS}/best_params.json",
+        csv_path    = str(MERGED_DENGUE_ENV_DATA),
     resources:
         gpu = 1,
     script:
@@ -150,18 +192,15 @@ if config.get("best_params_source"):
     rule train_stgnn_production:
         input:
             best_params = f"results/STGNN/{_params_source}/best_params.json",
-            tensors     = expand(
-                str(_ML_PROCESSED / "STGNN/{name}/window_{w}/tensors.pt"),
-                name = _name,
-                w    = _window_sizes,
-            ),
+            tensors     = _tensors_for_production_window,
             scaler      = str(_ML_PROCESSED / f"STGNN/{_name}/preprocessing_params.json"),
         output:
-            checkpoint = f"results/STGNN/{_name}/best_model.pt",
-            losses     = f"results/STGNN/{_name}/train_val_losses.json",
-            loss_curve = f"results/STGNN/{_name}/loss_curves.png",
+            checkpoint = f"{_RESULTS}/best_model.pt",
+            losses     = f"{_RESULTS}/train_val_losses.json",
+            loss_curve = f"{_RESULTS}/loss_curves.png",
         params:
             cfg         = lambda wc: workflow.configfiles[-1],
+            results_dir = _RESULTS,
             best_params = f"results/STGNN/{_params_source}/best_params.json",
         resources:
             gpu = 1,

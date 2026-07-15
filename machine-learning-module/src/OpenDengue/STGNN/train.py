@@ -28,22 +28,6 @@ from tune  import (
 )
 
 
-# ── Paths / params ────────────────────────────────────────────────────────────
-
-def _results_dir(cfg: dict) -> Path:
-    return Path("results/STGNN") / cfg["name"]
-
-
-def _best_params_path(cfg: dict) -> Path:
-    return _results_dir(cfg) / "best_params.json"
-
-
-def load_best_params(cfg: dict, override_path: str = None) -> dict:
-    path = Path(override_path) if override_path else _best_params_path(cfg)
-    with open(path) as f:
-        return json.load(f)
-
-
 # ── Evaluation pass (used for val metrics during training) ────────────────────
 
 def eval_with_metrics(
@@ -141,9 +125,8 @@ def plot_loss_curves(
 
 # ── Training ──────────────────────────────────────────────────────────────────
 
-def train(cfg: dict, params: dict):
+def train(cfg: dict, params: dict, out_dir: Path):
     """Full training run with the given hyperparameters."""
-    out_dir = _results_dir(cfg)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     run = wandb.init(
@@ -279,16 +262,20 @@ def _main_cli():
 
     with open(args.config) as f:
         cfg = yaml.safe_load(f)
-    params = load_best_params(cfg, override_path=args.params)
-    train(cfg, params)
+    out_dir = Path("results/STGNN") / cfg["name"]
+    params_path = Path(args.params) if args.params else out_dir / "best_params.json"
+    with open(params_path) as f:
+        params = json.load(f)
+    train(cfg, params, out_dir)
 
 
 if __name__ == "__main__":
     if "snakemake" in globals():
-        with open(snakemake.params.cfg) as f:          # noqa: F821
+        with open(snakemake.params.cfg) as f:            # noqa: F821
             cfg = yaml.safe_load(f)
-        override = getattr(snakemake.params, "best_params", None)  # noqa: F821
-        params   = load_best_params(cfg, override_path=override)
-        train(cfg, params)
+        out_dir = Path(snakemake.params.results_dir)      # noqa: F821
+        with open(snakemake.params.best_params) as f:     # noqa: F821
+            params = json.load(f)
+        train(cfg, params, out_dir)
     else:
         _main_cli()
