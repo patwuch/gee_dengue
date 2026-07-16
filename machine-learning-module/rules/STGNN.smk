@@ -145,10 +145,11 @@ rule explain_attention_stgnn:
         csv_data    = str(MERGED_DENGUE_ENV_DATA),
         tensors     = _tensors_for_best_window,
     output:
-        weights     = f"{_RESULTS}/attention_weights.npz",
-        graph       = f"{_RESULTS}/attention_graph.png",
-        over_time   = f"{_RESULTS}/attention_over_time.png",
-        interactive = f"{_RESULTS}/attention_graph_interactive.html",
+        weights       = f"{_RESULTS}/attention_weights.npz",
+        graph         = f"{_RESULTS}/attention_graph.png",
+        over_time     = f"{_RESULTS}/attention_over_time.png",
+        self_vs_degree = f"{_RESULTS}/self_attention_vs_degree.png",
+        interactive   = f"{_RESULTS}/attention_graph_interactive.html",
     params:
         cfg         = lambda wc: workflow.configfiles[-1],
         results_dir = _RESULTS,

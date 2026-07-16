@@ -17,6 +17,14 @@ Outputs (results/STGNN/<name>/):
     attention_weights.npz      — raw per-edge attention (gat1/gat2 mean + by-lag)
     attention_graph.png        — spatial graph, edge width/colour = mean attention
     attention_over_time.png    — heatmap of top-K edges' gat2 attention by lag step
+    self_attention_vs_degree.png
+        — diagnostic scatter: each node's self-loop attention weight against
+          its degree. Self-loop attention competes with every neighbour in
+          the same softmax, so nothing guarantees it survives as degree
+          grows — unlike a residual connection. A negative trend here is
+          evidence that high-degree nodes' own signal is getting diluted
+          before the GRU ever sees it (the GRU has no other path to a
+          node's own current-timestep features).
     attention_graph_interactive.html
         — same spatial graph, but click/hover a node to isolate its edges and
           grey out the rest. Colour is the pairwise imbalance (does the
@@ -214,6 +222,77 @@ def plot_attention_over_time(edges: np.ndarray, attn2_by_t: np.ndarray,
     fig.tight_layout()
     fig.savefig(out_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
+
+
+def compute_self_attention_diagnostics(edges: np.ndarray, attn1: np.ndarray, attn2: np.ndarray,
+                                        n_nodes: int) -> tuple:
+    """Per-node self-loop attention and degree, aligned by node index.
+
+    GATConv's self-loop weight competes with every geographic neighbour in
+    the same softmax, so it isn't guaranteed to survive as degree grows —
+    unlike a residual/skip connection, nothing forces the model to keep a
+    node's own signal. That matters here because the GRU has no other path
+    to a node's own current-timestep features; everything is filtered
+    through gat1/gat2 first. Degree is read off edges[1] (softmax's target
+    axis) after GATConv's own self-loop insertion, so it exactly matches the
+    neighbour count the model normalised over — not a re-derivation from the
+    original edge_index.
+
+    Returns:
+        degree      (N,) — neighbours per node, self-loop excluded
+        self_attn1  (N,) — gat1 self-loop weight per node
+        self_attn2  (N,) — gat2 self-loop weight per node
+    """
+    self_mask  = edges[0] == edges[1]
+    self_nodes = edges[0][self_mask]
+    degree     = np.bincount(edges[1], minlength=n_nodes) - 1
+
+    self_attn1 = np.zeros(n_nodes)
+    self_attn2 = np.zeros(n_nodes)
+    self_attn1[self_nodes] = attn1[self_mask]
+    self_attn2[self_nodes] = attn2[self_mask]
+
+    return degree, self_attn1, self_attn2
+
+
+def plot_self_attention_vs_degree(degree: np.ndarray, self_attn1: np.ndarray, self_attn2: np.ndarray,
+                                   node_names: list, out_path: Path) -> None:
+    """Self-loop attention against degree only has something to say if
+    degree actually varies across nodes — on a near-complete graph (every
+    node attends nearly every other node, as is the case for this SEA
+    province adjacency) degree is constant and a raw scatter is degenerate.
+    The question that still has an answer either way is whether a node's
+    self-loop weight is above or below its "fair share" if attention were
+    split evenly across its degree+1 softmax entries (uniform baseline =
+    1/(degree+1)) — that's what's plotted, as a ratio, against degree.
+    """
+    combined = (self_attn1 + self_attn2) / 2
+    uniform  = 1.0 / (degree + 1)
+    ratio    = combined / uniform  # >1: self attended more than a fair share; <1: diluted below it
+
+    degree_varies = degree.max() > degree.min()
+    r = float(np.corrcoef(degree, combined)[0, 1]) if len(degree) > 1 and degree_varies else float("nan")
+
+    fig, ax = plt.subplots(figsize=(7, 6))
+    ax.axhline(1.0, color="#898781", linestyle="--", linewidth=1, zorder=1,
+               label="uniform baseline (1 / (degree+1))")
+    ax.scatter(degree, ratio, s=30, color="#2a78d6", zorder=3)
+    for name, x0, y0 in zip(node_names, degree, ratio):
+        ax.annotate(name, (x0, y0), fontsize=6, xytext=(3, 3), textcoords="offset points")
+    ax.set_xlabel("Node degree (neighbours in softmax, self-loop excluded)")
+    ax.set_ylabel("Self-loop attention ÷ uniform baseline")
+    below_frac = float((ratio < 1.0).mean())
+    title = f"Self-attention vs. fair share — {below_frac:.0%} of nodes below baseline"
+    if degree_varies:
+        title += f" (r vs. degree = {r:.3f})"
+    else:
+        title += " (degree is constant — graph is near-complete)"
+    ax.set_title(title, fontsize=10)
+    ax.legend(fontsize=8, loc="upper right")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    return below_frac, r
 
 
 # ── Interactive HTML graph ──────────────────────────────────────────────────────
@@ -872,6 +951,9 @@ def explain_attention(cfg: dict, params: dict, model_path, out_dir: Path,
     # scripts (e.g. attention_shift.py) don't need to reload the model just
     # to recompute it.
     combined_by_window = (attn1_all + attn2_all) / 2
+    degree, self_attn1, self_attn2 = compute_self_attention_diagnostics(
+        edges, attn1, attn2, len(node_names)
+    )
     npz_path = out_dir / "attention_weights.npz"
     np.savez_compressed(
         npz_path,
@@ -883,6 +965,9 @@ def explain_attention(cfg: dict, params: dict, model_path, out_dir: Path,
         combined_by_window = combined_by_window.astype(np.float32),
         window_dates       = np.array([d.isoformat() for d in window_dates]),
         node_names         = np.array(node_names),
+        node_degree        = degree,
+        self_attn1         = self_attn1,
+        self_attn2         = self_attn2,
     )
     print(f"Attention weights saved to {npz_path}")
 
@@ -893,6 +978,10 @@ def explain_attention(cfg: dict, params: dict, model_path, out_dir: Path,
     time_path = out_dir / "attention_over_time.png"
     plot_attention_over_time(edges, attn2_by_t, node_names, time_path, top_k=top_k)
     print(f"  -> {time_path}")
+
+    self_attn_path = out_dir / "self_attention_vs_degree.png"
+    below_frac, r = plot_self_attention_vs_degree(degree, self_attn1, self_attn2, node_names, self_attn_path)
+    print(f"  -> {self_attn_path}  ({below_frac:.0%} of nodes below uniform self-attention baseline)")
 
     interactive_path = out_dir / "attention_graph_interactive.html"
     write_interactive_graph(

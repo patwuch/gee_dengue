@@ -1,197 +1,165 @@
 ---
 title: "Model Results"
-subtitle: "STGNN (scaledv2) performance on held-out test data (2011–2018)"
+subtitle: "STGNN performance on held-out test data (2011–2018), by experiment"
 ---
 
 ```{python}
 #| echo: false
 #| output: false
-import json, pathlib
+import base64
+import json
+import pathlib
+
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 
-results_dir = pathlib.Path("../machine-learning-module/results/STGNN/scaledv2")
+stgnn_dir = pathlib.Path("../machine-learning-module/results/STGNN")
+experiment_names = sorted(p.name for p in stgnn_dir.iterdir() if p.is_dir())
 
-metrics     = json.loads((results_dir / "metrics.json").read_text())
-best_params = json.loads((results_dir / "best_params.json").read_text())
-losses      = json.loads((results_dir / "train_val_losses.json").read_text())
-ctry_metrics = json.loads((results_dir / "per_country_metrics.json").read_text())
-test_preds   = json.loads((results_dir / "test_predictions.json").read_text())
-```
-
-## What is the SEA Provinces Study?
-
-The **SEA Provinces Study** examines dengue incidence rate prediction at the admin-1 (province) level across 10 Southeast Asian countries. The study uses a Spatio-Temporal Graph Neural Network (STGNN) to model the temporal dynamics of dengue incidence while leveraging spatial relationships between provinces. The captured relation between provinces is based on the attention mechanism, allowing the model to learn flexibly about both influences to and from neighboring or distant regions.
-
-In our final risk index for Southeast Asia, we use the same learned temporal and spatial patterns to generate a risk index for each province, which can be used to inform public health interventions and resource allocation. 
-
-Notes:
-The gap of incomplete incidence data between 2019 and 2026 is due to a coverage imbalance. To counter act this, the 2011-2018 model will continue to learn and predict between 2019 and 2026, but the predictions will be unvalidated. Thus, interpretation of the latest monthly risk must be done with caution, and the model's predictions should be used as a guide rather than a definitive measure of risk.
-
-
-## Test Set Metrics
-
-Metrics were computed on 14 held-out test months from the 2011–2018 OpenDengue
-SEA dataset (162 admin-1 nodes across 10 countries).
-
-| Metric | Value |
-|---|---|
-| Huber loss | `{python} f"{metrics['test_huber']:.4f}"` |
-| MAE (IR) | `{python} f"{metrics['test_mae']:.4f}"` |
-| MSE (IR) | `{python} f"{metrics['test_mse']:.4f}"` |
-| RMSE (IR) | `{python} f"{metrics['test_rmse']:.4f}"` |
-| Best val loss | `{python} f"{metrics['best_val_loss']:.4f}"` |
-
-## Hyperparameters
-
-Final architecture and training configuration selected by W&B (40 trials,
-masked Huber loss on a 20 % validation split):
-
-```{python}
-#| echo: false
 param_labels = {
     "window_size":   "Input window (months)",
     "gat1_hidden":   "GAT layer 1 — hidden dim",
     "gat1_heads":    "GAT layer 1 — attention heads",
     "gat2_hidden":   "GAT layer 2 — hidden dim",
     "gat2_heads":    "GAT layer 2 — attention heads",
+    "gru_hidden":    "GRU hidden dim",
     "mlp_hidden":    "MLP hidden dim",
     "mlp_layers":    "MLP layers",
     "batch_size":    "Batch size",
     "dropout":       "Dropout",
     "learning_rate": "Learning rate",
 }
-rows = [(label, best_params[key]) for key, label in param_labels.items() if key in best_params]
-df_hp = pd.DataFrame(rows, columns=["Parameter", "Value"])
-df_hp["Value"] = df_hp["Value"].apply(lambda v: f"{v:.6f}" if isinstance(v, float) and v < 0.1 else v)
-from IPython.display import HTML
-HTML(df_hp.to_html(index=False, border=0, classes="table table-sm table-striped"))
-```
 
-## Training Curves
 
-```{python}
-#| echo: false
-#| label: fig-loss-curves
-#| fig-cap: "Huber loss per epoch. Hover to inspect exact values. The dashed line marks the best validation epoch."
+def load_json(path):
+    return json.loads(path.read_text()) if path.exists() else None
 
-import plotly.graph_objects as go
 
-epochs     = list(range(1, len(losses["train"]) + 1))
-best_epoch = int(np.argmin(losses["val"])) + 1
-best_vl    = float(losses["best_val_loss"])
+def img_data_uri(path):
+    if not path.exists():
+        return None
+    b64 = base64.b64encode(path.read_bytes()).decode()
+    return f"data:image/png;base64,{b64}"
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(
-    x=epochs, y=losses["train"],
-    mode="lines", name="Train loss",
-    line=dict(color="#2196F3", width=2),
-))
-fig.add_trace(go.Scatter(
-    x=epochs, y=losses["val"],
-    mode="lines", name="Val loss",
-    line=dict(color="#FF5722", width=2),
-))
-fig.add_vline(
-    x=best_epoch, line_dash="dash", line_color="grey",
-    annotation_text=f"Best val epoch {best_epoch}<br>loss={best_vl:.4f}",
-    annotation_position="top right",
-    annotation_font_size=11,
-)
-fig.update_layout(
-    xaxis_title="Epoch",
-    yaxis_title="Masked Huber Loss",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    margin=dict(l=40, r=40, t=40, b=40),
-    hovermode="x unified",
-)
-fig.show()
-```
 
-## Per-Country Metrics
+def table_html(df):
+    return df.to_html(index=False, border=0, classes="table table-sm table-striped")
 
-```{python}
-#| echo: false
-#| label: tbl-country-metrics
-#| tbl-cap: "MAE and RMSE broken down by country across the 14 test months."
 
-df_ctry = pd.DataFrame([
-    {"Country": r["country"], "Nodes": r["n_nodes"],
-     "MAE": f"{r['mae']:.3f}", "RMSE": f"{r['rmse']:.3f}"}
-    for r in ctry_metrics
-])
-HTML(df_ctry.to_html(index=False, border=0, classes="table table-sm table-striped"))
-```
+def metrics_table_html(metrics):
+    rows = [
+        ("Huber loss", f"{metrics['test_huber']:.4f}"),
+        ("MAE (IR)", f"{metrics['test_mae']:.4f}"),
+        ("MSE (IR)", f"{metrics['test_mse']:.4f}"),
+        ("RMSE (IR)", f"{metrics['test_rmse']:.4f}"),
+        ("Best val loss", f"{metrics['best_val_loss']:.4f}"),
+    ]
+    return table_html(pd.DataFrame(rows, columns=["Metric", "Value"]))
 
-## Predictions vs Actuals
 
-### Interactive time-series
+def params_table_html(best_params):
+    rows = [(label, best_params[key]) for key, label in param_labels.items() if key in best_params]
+    df = pd.DataFrame(rows, columns=["Parameter", "Value"])
+    df["Value"] = df["Value"].apply(lambda v: f"{v:.6f}" if isinstance(v, float) and v < 0.1 else v)
+    return table_html(df)
 
-Select a country from the dropdown to inspect predicted vs actual incidence
-rate for each admin-1 node over the 14 test months.
 
-```{python}
-#| echo: false
+def loss_curves_html(losses, div_id):
+    epochs     = list(range(1, len(losses["train"]) + 1))
+    best_epoch = int(np.argmin(losses["val"])) + 1
+    best_vl    = float(losses["best_val_loss"])
 
-import json
-from IPython.display import HTML
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=epochs, y=losses["train"],
+        mode="lines", name="Train loss",
+        line=dict(color="#2196F3", width=2),
+    ))
+    fig.add_trace(go.Scatter(
+        x=epochs, y=losses["val"],
+        mode="lines", name="Val loss",
+        line=dict(color="#FF5722", width=2),
+    ))
+    fig.add_vline(
+        x=best_epoch, line_dash="dash", line_color="grey",
+        annotation_text=f"Best val epoch {best_epoch}<br>loss={best_vl:.4f}",
+        annotation_position="top right",
+        annotation_font_size=11,
+    )
+    fig.update_layout(
+        xaxis_title="Epoch",
+        yaxis_title="Masked Huber Loss",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=40, r=40, t=40, b=40),
+        hovermode="x unified",
+    )
+    return fig.to_html(full_html=False, include_plotlyjs=False, div_id=div_id)
 
-dates             = test_preds["dates"]
-nodes_data        = test_preds["nodes"]
-countries_ordered = sorted({n["country"] for n in nodes_data})
-first_country     = countries_ordered[0]
 
-# Build flat trace list and a metadata index consumed by the JS layer.
-# Each node gets two consecutive traces: actual (even idx) and pred (odd idx).
-trace_list = []
-trace_meta = []  # {country, name, ai (actual trace idx), pi (pred trace idx)}
-idx = 0
+def per_country_table_html(ctry_metrics):
+    df = pd.DataFrame([
+        {"Country": r["country"], "Nodes": r["n_nodes"],
+         "MAE": f"{r['mae']:.3f}", "RMSE": f"{r['rmse']:.3f}"}
+        for r in ctry_metrics
+    ])
+    return table_html(df)
 
-for cname in countries_ordered:
-    for node in [n for n in nodes_data if n["country"] == cname]:
-        visible = cname == first_country
-        trace_list.append({
-            "type": "scatter", "x": dates, "y": node["actual"],
-            "mode": "lines+markers", "name": f"{node['name']} — actual",
-            "line": {"width": 2}, "visible": visible,
-        })
-        trace_list.append({
-            "type": "scatter", "x": dates, "y": node["pred"],
-            "mode": "lines+markers", "name": f"{node['name']} — pred",
-            "line": {"width": 2, "dash": "dash"}, "visible": visible,
-        })
-        trace_meta.append({"country": cname, "name": node["name"], "ai": idx, "pi": idx + 1})
-        idx += 2
 
-layout = {
-    "xaxis": {"title": "Month"},
-    "yaxis": {"title": "Incidence Rate (IR)"},
-    "title": f"Predicted vs Actual IR — {first_country}",
-    "hovermode": "x unified",
-    "legend": {"orientation": "v", "x": 1.01, "y": 1},
-    "margin": {"l": 40, "r": 180, "t": 80, "b": 40},
-    "height": 500,
-}
+def interactive_preds_html(test_preds, id_prefix):
+    dates             = test_preds["dates"]
+    nodes_data        = test_preds["nodes"]
+    countries_ordered = sorted({n["country"] for n in nodes_data})
+    first_country     = countries_ordered[0]
 
-_traces_j = json.dumps(trace_list)
-_meta_j   = json.dumps(trace_meta)
-_layout_j = json.dumps(layout)
-_ctry_j   = json.dumps(countries_ordered)
-_first_j  = json.dumps(first_country)
+    trace_list = []
+    trace_meta = []
+    idx = 0
+    for cname in countries_ordered:
+        for node in [n for n in nodes_data if n["country"] == cname]:
+            visible = cname == first_country
+            trace_list.append({
+                "type": "scatter", "x": dates, "y": node["actual"],
+                "mode": "lines+markers", "name": f"{node['name']} — actual",
+                "line": {"width": 2}, "visible": visible,
+            })
+            trace_list.append({
+                "type": "scatter", "x": dates, "y": node["pred"],
+                "mode": "lines+markers", "name": f"{node['name']} — pred",
+                "line": {"width": 2, "dash": "dash"}, "visible": visible,
+            })
+            trace_meta.append({"country": cname, "name": node["name"], "ai": idx, "pi": idx + 1})
+            idx += 2
 
-HTML(f"""
+    layout = {
+        "xaxis": {"title": "Month"},
+        "yaxis": {"title": "Incidence Rate (IR)"},
+        "title": f"Predicted vs Actual IR — {first_country}",
+        "hovermode": "x unified",
+        "legend": {"orientation": "v", "x": 1.01, "y": 1},
+        "margin": {"l": 40, "r": 180, "t": 80, "b": 40},
+        "height": 500,
+    }
+
+    _traces_j = json.dumps(trace_list)
+    _meta_j   = json.dumps(trace_meta)
+    _layout_j = json.dumps(layout)
+    _ctry_j   = json.dumps(countries_ordered)
+    _first_j  = json.dumps(first_country)
+
+    return f"""
 <div>
   <div style="display:flex;gap:20px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
     <div>
-      <label for="ts-csel" style="font-weight:600;">Country:</label>
-      <select id="ts-csel" style="margin-left:6px;padding:3px 8px;"></select>
+      <label for="{id_prefix}-csel" style="font-weight:600;">Country:</label>
+      <select id="{id_prefix}-csel" style="margin-left:6px;padding:3px 8px;"></select>
     </div>
     <div>
-      <label for="ts-nsel" style="font-weight:600;">Node:</label>
-      <select id="ts-nsel" style="margin-left:6px;padding:3px 8px;min-width:220px;"></select>
+      <label for="{id_prefix}-nsel" style="font-weight:600;">Node:</label>
+      <select id="{id_prefix}-nsel" style="margin-left:6px;padding:3px 8px;min-width:220px;"></select>
     </div>
   </div>
-  <div id="ts-plot" style="width:100%;"></div>
+  <div id="{id_prefix}-plot" style="width:100%;"></div>
 </div>
 <script>
 (function() {{
@@ -202,20 +170,18 @@ HTML(f"""
   var firstC   = {_first_j};
 
   function init() {{
-    var div  = document.getElementById('ts-plot');
-    var csel = document.getElementById('ts-csel');
-    var nsel = document.getElementById('ts-nsel');
+    var div  = document.getElementById('{id_prefix}-plot');
+    var csel = document.getElementById('{id_prefix}-csel');
+    var nsel = document.getElementById('{id_prefix}-nsel');
 
     Plotly.newPlot(div, traces, layout, {{responsive: true}});
 
-    // Populate country dropdown
     countries.forEach(function(c) {{
       var o = document.createElement('option');
       o.value = c; o.textContent = c;
       csel.appendChild(o);
     }});
 
-    // Rebuild node dropdown whenever the country changes
     function buildNodeDropdown(c) {{
       nsel.innerHTML = '';
       var all = document.createElement('option');
@@ -228,7 +194,6 @@ HTML(f"""
       }});
     }}
 
-    // Set trace visibility based on current country + node selection
     function applyFilter(c, node) {{
       var vis = new Array(traces.length).fill(false);
       meta.forEach(function(m) {{
@@ -256,7 +221,6 @@ HTML(f"""
     buildNodeDropdown(firstC);
   }}
 
-  // Plotly.js is loaded by an earlier figure in the document; poll until ready.
   function waitForPlotly(fn, n) {{
     if (window.Plotly) {{ fn(); return; }}
     if (n <= 0) {{ console.error('Plotly not available'); return; }}
@@ -265,57 +229,139 @@ HTML(f"""
   waitForPlotly(init, 50);
 }})();
 </script>
+"""
+
+
+def build_experiment_block(name):
+    exp_dir      = stgnn_dir / name
+    metrics      = load_json(exp_dir / "metrics.json")
+    best_params  = load_json(exp_dir / "best_params.json")
+    losses       = load_json(exp_dir / "train_val_losses.json")
+    ctry_metrics = load_json(exp_dir / "per_country_metrics.json")
+    test_preds   = load_json(exp_dir / "test_predictions.json")
+
+    safe_id = name.replace("_", "-")
+    sections = [f'<h3 style="margin-top:0;">{name}</h3>']
+
+    if metrics is not None:
+        sections.append(f"""
+<h4>Test Set Metrics</h4>
+{metrics_table_html(metrics)}""")
+
+    if best_params is not None:
+        sections.append(f"""
+<h4>Hyperparameters</h4>
+{params_table_html(best_params)}""")
+
+    if losses is not None:
+        sections.append(f"""
+<h4>Training Curves</h4>
+{loss_curves_html(losses, f"{safe_id}-loss")}""")
+
+    if ctry_metrics is not None:
+        sections.append(f"""
+<h4>Per-Country Metrics</h4>
+{per_country_table_html(ctry_metrics)}""")
+
+    if test_preds is not None:
+        sections.append(f"""
+<h4>Predictions vs Actuals — Interactive time-series</h4>
+{interactive_preds_html(test_preds, f"{safe_id}-ts")}""")
+
+    scatter_uri = img_data_uri(exp_dir / "scatter.png")
+    if scatter_uri is not None:
+        sections.append(f"""
+<h4>Scatter Plot</h4>
+<img src="{scatter_uri}" width="700" style="max-width:100%;" alt="Predicted vs actual scatter for {name}"/>""")
+
+    choropleth_uri = img_data_uri(exp_dir / "pred_vs_actual.png")
+    if choropleth_uri is not None:
+        sections.append(f"""
+<h4>Choropleth Maps — Predicted vs Actual</h4>
+<img src="{choropleth_uri}" width="900" style="max-width:100%;" alt="Predicted vs actual choropleth for {name}"/>""")
+
+    attn_graph = exp_dir / "attention_graph_interactive.html"
+    attn_shift = exp_dir / "attention_shift_interactive.html"
+    if attn_graph.exists() and attn_shift.exists():
+        rel_graph = f"../machine-learning-module/results/STGNN/{name}/attention_graph_interactive.html"
+        rel_shift = f"../machine-learning-module/results/STGNN/{name}/attention_shift_interactive.html"
+        sections.append(f"""
+<h4>Attention Mechanism</h4>
+<div class="panel-tabset">
+<p><strong>Attention Graph</strong></p>
+<iframe src="{rel_graph}" width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;"></iframe>
+<p><strong>Attention Shift</strong></p>
+<iframe src="{rel_shift}" width="100%" height="600px" frameborder="0"
+  style="border-radius:6px; border:1px solid #dee2e6;"></iframe>
+</div>""")
+
+    body = "\n".join(sections)
+    return f'<div class="experiment-block" id="exp-{safe_id}" data-experiment="{name}" style="display:none;">{body}</div>'
+
+
+experiment_blocks = "\n".join(build_experiment_block(name) for name in experiment_names)
+experiment_options = "".join(f'<option value="{name}">{name}</option>' for name in experiment_names)
+first_experiment = experiment_names[0]
+```
+
+## What is the SEA Provinces Study?
+
+The **SEA Provinces Study** examines dengue incidence rate prediction at the admin-1 (province) level across 10 Southeast Asian countries. The study uses a Spatio-Temporal Graph Neural Network (STGNN) to model the temporal dynamics of dengue incidence while leveraging spatial relationships between provinces. The captured relation between provinces is based on the attention mechanism, allowing the model to learn flexibly about both influences to and from neighboring or distant regions.
+
+In our final risk index for Southeast Asia, we use the same learned temporal and spatial patterns to generate a risk index for each province, which can be used to inform public health interventions and resource allocation.
+
+Notes:
+The gap of incomplete incidence data between 2019 and 2026 is due to a coverage imbalance. To counter act this, the 2011-2018 model will continue to learn and predict between 2019 and 2026, but the predictions will be unvalidated. Thus, interpretation of the latest monthly risk must be done with caution, and the model's predictions should be used as a guide rather than a definitive measure of risk.
+
+## Experiment Results
+
+Each experiment below is a distinct config/training run under
+`machine-learning-module/results/STGNN/`. Pick one to see its metrics,
+hyperparameters, training curves, and available plots — sections a given
+experiment's artifacts don't include (e.g. attention plots, per-country
+breakdown) are omitted for that experiment.
+
+```{python}
+#| echo: false
+from IPython.display import HTML
+
+HTML(f"""
+<div style="margin-bottom:16px;">
+  <label for="exp-sel" style="font-weight:600;">Experiment:</label>
+  <select id="exp-sel" style="margin-left:8px;padding:4px 10px;min-width:260px;">
+    {experiment_options}
+  </select>
+</div>
+<div id="experiment-container">
+{experiment_blocks}
+</div>
+<script>
+(function() {{
+  var sel  = document.getElementById('exp-sel');
+  var cont = document.getElementById('experiment-container');
+
+  function showExperiment(name) {{
+    cont.querySelectorAll('.experiment-block').forEach(function(block) {{
+      var active = block.dataset.experiment === name;
+      block.style.display = active ? 'block' : 'none';
+      if (active && window.Plotly) {{
+        block.querySelectorAll('.js-plotly-plot').forEach(function(el) {{
+          Plotly.Plots.resize(el);
+        }});
+      }}
+    }});
+  }}
+
+  sel.addEventListener('change', function() {{
+    showExperiment(this.value);
+  }});
+
+  showExperiment('{first_experiment}');
+}})();
+</script>
 """)
 ```
-
-## Scatter Plot
-
-```{python}
-#| echo: false
-#| label: fig-scatter
-#| fig-cap: "Predicted vs actual IR across all nodes and test months. Points are coloured by country."
-Image(filename=str(results_dir / "scatter.png"), width=700)
-```
-
-## Choropleth Maps
-
-### Predicted vs Actual — side by side (Nov 2017 - Dec 2018)
-
-```{python}
-#| echo: false
-#| label: fig-choropleth-pred
-#| fig-cap: "Side-by-side comparison of actual (left) and predicted (right) IR per admin-1 region for each test month."
-Image(filename=str(results_dir / "pred_vs_actual.png"), width=900)
-```
-
-## Attention Mechanism
-
-Interactive views of the spatial attention learned by the GAT layers, from the
-`cyclical_seasonal` run.
-
-::: {.panel-tabset}
-
-## Attention Graph
-
-```{=html}
-<iframe
-  src="../machine-learning-module/results/STGNN/cyclical_seasonal/attention_graph_interactive.html"
-  width="100%" height="600px" frameborder="0"
-  style="border-radius:6px; border:1px solid #dee2e6;">
-</iframe>
-```
-
-## Attention Shift
-
-```{=html}
-<iframe
-  src="../machine-learning-module/results/STGNN/cyclical_seasonal/attention_shift_interactive.html"
-  width="100%" height="600px" frameborder="0"
-  style="border-radius:6px; border:1px solid #dee2e6;">
-</iframe>
-```
-
-:::
 
 ## Architecture
 
@@ -325,7 +371,7 @@ The model is a **Spatio-Temporal Graph Attention Network with GRU** (STGATGRU):
 - **GAT layer 1:** Spatial message passing over the admin-1 adjacency graph
 - **MLP:** Node-wise feature transformation
 - **GAT layer 2:** Second spatial aggregation pass
-- **GRU:** Temporal sequence modelling over the `{python} best_params['window_size']`-month sliding window
+- **GRU:** Temporal sequence modelling over a sliding window (window length is a per-experiment hyperparameter — see each experiment's Hyperparameters table above)
 - **Linear head:** Single-step incidence rate prediction (inverse-transformed at output)
 
 Missing admin-1 nodes (no reported incidence) receive a learnable missing embedding

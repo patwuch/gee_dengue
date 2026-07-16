@@ -25,12 +25,17 @@ class STGATGRU(nn.Module):
 
         gat1_in = in_channels + 1 
 
+        # residual=True gives each layer a guaranteed additive skip path (via
+        # GATConv's internal Linear projection) alongside the self-loop, so a
+        # node's own signal doesn't depend entirely on surviving softmax
+        # competition against its neighbours before reaching the GRU.
         self.gat1 = GATConv(
             gat1_in,
             gat1_hidden,
             heads=gat1_heads,
             concat=True,
-            dropout=dropout
+            dropout=dropout,
+            residual=True
         )
         self.mlp = self._build_mlp(
             gat1_hidden * gat1_heads,
@@ -42,7 +47,8 @@ class STGATGRU(nn.Module):
             mlp_hidden,
             gat2_hidden,
             heads=gat2_heads,
-            concat=False
+            concat=False,
+            residual=True
         )
         
         self.gru = nn.GRU(gat2_hidden, gru_hidden, batch_first=True)
