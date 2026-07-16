@@ -56,6 +56,83 @@
     "text": "Contact\nFor questions or collaboration inquiries, please open an issue on the GitHub repository."
   },
   {
+    "objectID": "shared-socioeconomic-pathways.html",
+    "href": "shared-socioeconomic-pathways.html",
+    "title": "Shared Socioeconomic Pathways",
+    "section": "",
+    "text": "Shared Socioeconomic Pathways (SSPs) are a set of five global scenarios describing plausible futures for societal development through 2100 (SSP1–SSP5). They were developed by the climate research community alongside the IPCC AR6 process and are widely used to contextualise climate impact projections. In this study:"
+  },
+  {
+    "objectID": "shared-socioeconomic-pathways.html#arm-1-southeast-asia-provinces",
+    "href": "shared-socioeconomic-pathways.html#arm-1-southeast-asia-provinces",
+    "title": "Shared Socioeconomic Pathways",
+    "section": "Arm 1 — Southeast Asia Provinces",
+    "text": "Arm 1 — Southeast Asia Provinces\n\nSSP Population Projections by Province\nPopulation projections at admin-1 level under SSP1 (sustainability), SSP2 (middle of the road), and SSP3 (regional rivalry) scenarios, derived from the CMIP6-aligned SSP database.\n\n\n\n\n⚠️  SEA SSP population data not found — run climate-projection-module/scripts/extract_ssp_population.py first.\n\n\n\nFigure 1\n\n\n\n\n\nSSP Urbanisation Rate by Province\nUrban fraction of population is a key driver of dengue vector density. SSP2 and SSP3 diverge substantially in projected urbanisation rates across SEA countries.\n\n\n\n\n⚠️  SEA SSP urbanisation data not found — run climate-projection-module/scripts/extract_ssp_urbanisation.py first.\n\n\n\nFigure 2\n\n\n\n\n\nSSP Feature Contribution to STGNN\nThe table below summarises how SSP variables are incorporated into the SEA STGNN feature set.\n\n\n\n\n\n\n\n\nSSP Variable\nScenario(s) Used\nRole in Model\n\n\n\n\nPopulation (total)\nSSP2 (baseline)\nNode feature — scales absolute case counts\n\n\nPopulation density\nSSP2\nNode feature — proxy for human-vector contact rate\n\n\nUrban fraction\nSSP1, SSP2, SSP3\nNode feature — affects vector habitat availability\n\n\nGDP per capita\nSSP2\nNode feature — proxy for healthcare access / reporting capacity"
+  },
+  {
+    "objectID": "shared-socioeconomic-pathways.html#arm-2-taiwan-basic-statistics-area",
+    "href": "shared-socioeconomic-pathways.html#arm-2-taiwan-basic-statistics-area",
+    "title": "Shared Socioeconomic Pathways",
+    "section": "Arm 2 — Taiwan Basic Statistics Area",
+    "text": "Arm 2 — Taiwan Basic Statistics Area\n\nTCCIP Population Projections (Taiwan BSA)\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Taiwan BSA population projections from the TCCIP dataset are not yet integrated. This section will display BSA-level demographic trajectories under different SSP scenarios once the taiwan-bsa-module/data/tccip_ssp_pipeline.py is operational.\n\n\n\n\n\n\n⚠️  Taiwan BSA SSP population data not yet available — implement taiwan-bsa-module/data/tccip_ssp_pipeline.py first.\n\n\n\nFigure 3\n\n\n\n\n\nAgeing Population and Dengue Vulnerability (Taiwan)\nTaiwan’s rapidly ageing population is an important modulator of dengue severity. Older adults face higher hospitalisation and case fatality rates. SSP projections indicate Taiwan’s median age rising significantly through 2050, which will be incorporated as a BSA-level demographic covariate.\n\n\n\n\n⚠️  Taiwan age structure projections not yet available.\n\n\n\nFigure 4\n\n\n\n\n\nUrbanisation and Heat Island Risk (Taiwan BSA)\n\n\n\n\n⚠️  Taiwan BSA urbanisation SSP data not yet available.\n\n\n\nFigure 5\n\n\n\n\n\nNote on scenario selection: The SEA STGNN is trained and validated under historical conditions (2011–2018) and uses SSP2 population data as the primary covariate. SSP1 and SSP3 are included as sensitivity scenarios for prospective risk projections only. For operational monthly inference, SSP2-4.5 is used throughout for consistency with the AR6 climate delta correction."
+  },
+  {
+    "objectID": "monthly-zonal-stats.html",
+    "href": "monthly-zonal-stats.html",
+    "title": "Monthly Environmental Data",
+    "section": "",
+    "text": "Environmental features feed both study arms, but at different spatial granularities: admin-1 zonal statistics for the SEA Provinces model, and BSA-level indicators for the Taiwan model. All zonal statistics between 2011 and 2026 have been computed with the Easy-Earth-Engine application, which provides a data-provenance pipeline ensuring reproducibility of the remote sensing extraction."
+  },
+  {
+    "objectID": "monthly-zonal-stats.html#arm-1-southeast-asia-provinces-admin-1-zonal-statistics",
+    "href": "monthly-zonal-stats.html#arm-1-southeast-asia-provinces-admin-1-zonal-statistics",
+    "title": "Monthly Environmental Data",
+    "section": "Arm 1 — Southeast Asia Provinces (Admin-1 Zonal Statistics)",
+    "text": "Arm 1 — Southeast Asia Provinces (Admin-1 Zonal Statistics)\nRemote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the SEA STGNN.\n\nLatest Monthly Zonal Statistics\n\n\n\nTable 1: Latest monthly zonal statistics by SEA admin-1 region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first.\n\n\n\n\n\n\nApplied Climate Deltas (SEA)\nThe table below shows the bias correction delta applied to each SEA feature this month. A negative delta means the current climate is warmer/wetter than the 2011–2018 baseline, so the raw observation is shifted downward before model inference.\n\n\n\nTable 2: Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month.\n\n\n\n⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first.\n\n\n\n\n\n\nGlobal Warming Level Projections (SEA Domain)\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1"
+  },
+  {
+    "objectID": "monthly-zonal-stats.html#arm-2-taiwan-basic-statistics-area-bsa-level-environmental-data",
+    "href": "monthly-zonal-stats.html#arm-2-taiwan-basic-statistics-area-bsa-level-environmental-data",
+    "title": "Monthly Environmental Data",
+    "section": "Arm 2 — Taiwan Basic Statistics Area (BSA-Level Environmental Data)",
+    "text": "Arm 2 — Taiwan Basic Statistics Area (BSA-Level Environmental Data)\nEnvironmental features for the Taiwan BSA model are derived from TCCIP (Taiwan Climate Change Projection Information and Adaptation Knowledge Platform) and local remote sensing products, aggregated to BSA granularity. These complement the individual case report data from Taiwan MoH.\n\nLatest Monthly BSA Zonal Statistics\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — BSA-level zonal statistics for Taiwan are not yet available. This table will show per-BSA averages of temperature, precipitation, NDVI, and other suitability indicators once the taiwan-bsa-module environmental pipeline is operational.\n\n\n\n\n\nTable 3: Placeholder: Monthly zonal statistics by Taiwan BSA (temperature, precipitation, NDVI, EVI).\n\n\n\n⚠️  Taiwan BSA zonal statistics not yet available — implement taiwan-bsa-module/data/gee_bsa_pipeline.py first.\n\n\n\n\n\n\nApplied Climate Deltas (Taiwan)\n\n\n\nTable 4: Placeholder: Per-variable TCCIP climate deltas applied to Taiwan BSA features this month.\n\n\n\n⚠️  Taiwan BSA climate deltas not yet available — requires TCCIP baseline computation.\n\n\n\n\n\n\nVegetation and Urban Heat Island Indicators (Taiwan BSA)\nBSA-level NDVI and LST are particularly important for identifying urban heat island effects that increase vector reproduction rates in dense Taiwanese cities.\n\n\n\n\n⚠️  Taiwan BSA LST/NDVI data not yet available.\n\n\n\nFigure 2"
+  },
+  {
+    "objectID": "climate-projection-data.html",
+    "href": "climate-projection-data.html",
+    "title": "Climate Projection Data",
+    "section": "",
+    "text": "Climate projection data informs both study arms, but from different sources suited to each geography:"
+  },
+  {
+    "objectID": "climate-projection-data.html#arm-1-southeast-asia-provinces-cmip6-gwl",
+    "href": "climate-projection-data.html#arm-1-southeast-asia-provinces-cmip6-gwl",
+    "title": "Climate Projection Data",
+    "section": "Arm 1 — Southeast Asia Provinces (CMIP6 / GWL)",
+    "text": "Arm 1 — Southeast Asia Provinces (CMIP6 / GWL)\n\nGlobal Warming Level Projections (SEA Domain)\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain. These trajectories are used to compute the monthly bias correction applied before STGNN inference.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1\n\n\n\n\n\nGWL Precipitation Projections (SEA Domain)\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 2\n\n\n\n\n\nCMIP6 SSP2-4.5 Bias Correction Baseline\nThe bias correction applied to operational inference computes the difference between the CMIP6 SSP2-4.5 projected climatology for the current calendar month and the 2011–2018 ERA5-Land training climatology. This delta is subtracted from current observations before they are passed to the STGNN.\n\n\n\nTable 1: Monthly bias correction deltas (CMIP6 SSP2-4.5 minus 2011–2018 ERA5 baseline) across all calendar months.\n\n\n\n⚠️  climate_deltas.json not found — run site/scripts/apply_climate_delta.py first.\n\n\n\n\n\n\nCMIP6 Multi-Model Spread (SEA)\n\n\n\n\n⚠️  CMIP6 ensemble spread TSV not found — run climate-projection-module/scripts/compute_cmip6_spread.py first.\n\n\n\nFigure 3"
+  },
+  {
+    "objectID": "climate-projection-data.html#arm-2-taiwan-basic-statistics-area-tccip",
+    "href": "climate-projection-data.html#arm-2-taiwan-basic-statistics-area-tccip",
+    "title": "Climate Projection Data",
+    "section": "Arm 2 — Taiwan Basic Statistics Area (TCCIP)",
+    "text": "Arm 2 — Taiwan Basic Statistics Area (TCCIP)\nTCCIP provides high-resolution statistically and dynamically downscaled climate projections specifically covering Taiwan. The projections are used to characterise future dengue suitability at BSA level under different warming scenarios.\n\nTCCIP Temperature Projections (Taiwan)\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — TCCIP temperature projections for Taiwan are not yet integrated into the site pipeline. This section will display county- and BSA-level temperature trajectories under RCP4.5 and RCP8.5 (TCCIP uses RCP rather than SSP nomenclature for its downscaled products) once the climate-projection-module/scripts/extract_tccip.py pipeline is operational.\n\n\n\n\n\n\n⚠️  TCCIP temperature TSV not found — run climate-projection-module/scripts/extract_tccip.py first.\n\n\n\nFigure 4\n\n\n\n\n\nTCCIP Precipitation Projections (Taiwan)\n\n\n\n\n⚠️  TCCIP precipitation TSV not found — run climate-projection-module/scripts/extract_tccip.py first.\n\n\n\nFigure 5\n\n\n\n\n\nDengue Suitability Index — Taiwan Future Projections\nThe climate suitability index for Aedes aegypti and Aedes albopictus transmission is computed from TCCIP temperature and precipitation projections using the Mordecai et al. thermal performance curve framework.\n\n\n\n\n⚠️  TCCIP suitability index not yet computed — implement climate-projection-module/scripts/compute_suitability_taiwan.py first.\n\n\n\nFigure 6\n\n\n\n\n\nComparison: SEA vs Taiwan Climate Trajectories\n\n\n\n\n⚠️  Comparison figure not yet available — requires both CMIP6 and TCCIP pipelines to be complete.\n\n\n\nFigure 7\n\n\n\n\n\nNote on scenario alignment: The SEA Provinces model uses CMIP6 SSP2-4.5 for its operational bias correction. The Taiwan BSA model uses TCCIP RCP4.5 as the primary scenario, which is approximately equivalent in radiative forcing. SSP5-8.5 / RCP8.5 projections are included for sensitivity analysis only."
+  },
+  {
+    "objectID": "taiwan-bsa-study-results.html",
+    "href": "taiwan-bsa-study-results.html",
+    "title": "Model Results",
+    "section": "",
+    "text": "As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia, we capitalise on our Southeast Asian interprovincial risk state model to generate “exporter” regions and “importer” regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese Government keeps track of.\nThe model would jointly consider international mobility, local mobility, BSA environment suitability, and BSA population demographic to predict elevated risk."
+  },
+  {
+    "objectID": "taiwan-bsa-study-results.html#taiwanese-basic-statistics-area-bsa-risk-prediction",
+    "href": "taiwan-bsa-study-results.html#taiwanese-basic-statistics-area-bsa-risk-prediction",
+    "title": "Model Results",
+    "section": "",
+    "text": "As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia, we capitalise on our Southeast Asian interprovincial risk state model to generate “exporter” regions and “importer” regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese Government keeps track of.\nThe model would jointly consider international mobility, local mobility, BSA environment suitability, and BSA population demographic to predict elevated risk."
+  },
+  {
     "objectID": "sea-provinces-study-results.html",
     "href": "sea-provinces-study-results.html",
     "title": "Model Results",
@@ -91,27 +168,6 @@
     "text": "Bias Correction Note\nWhen running inference on current data (post-2018), a climate delta correction is applied before features are passed to the model. The delta is computed as the difference between the AR6 SSP2-4.5 projected monthly climatology for the current year and the 2011–2018 training period climatology. This shifts current observations back into the model’s training feature distribution. See site/scripts/apply_climate_delta.py for implementation."
   },
   {
-    "objectID": "climate-projection-data.html",
-    "href": "climate-projection-data.html",
-    "title": "Climate Projection Data",
-    "section": "",
-    "text": "Climate projection data informs both study arms, but from different sources suited to each geography:"
-  },
-  {
-    "objectID": "climate-projection-data.html#arm-1-southeast-asia-provinces-cmip6-gwl",
-    "href": "climate-projection-data.html#arm-1-southeast-asia-provinces-cmip6-gwl",
-    "title": "Climate Projection Data",
-    "section": "Arm 1 — Southeast Asia Provinces (CMIP6 / GWL)",
-    "text": "Arm 1 — Southeast Asia Provinces (CMIP6 / GWL)\n\nGlobal Warming Level Projections (SEA Domain)\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain. These trajectories are used to compute the monthly bias correction applied before STGNN inference.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1\n\n\n\n\n\nGWL Precipitation Projections (SEA Domain)\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 2\n\n\n\n\n\nCMIP6 SSP2-4.5 Bias Correction Baseline\nThe bias correction applied to operational inference computes the difference between the CMIP6 SSP2-4.5 projected climatology for the current calendar month and the 2011–2018 ERA5-Land training climatology. This delta is subtracted from current observations before they are passed to the STGNN.\n\n\n\nTable 1: Monthly bias correction deltas (CMIP6 SSP2-4.5 minus 2011–2018 ERA5 baseline) across all calendar months.\n\n\n\n⚠️  climate_deltas.json not found — run site/scripts/apply_climate_delta.py first.\n\n\n\n\n\n\nCMIP6 Multi-Model Spread (SEA)\n\n\n\n\n⚠️  CMIP6 ensemble spread TSV not found — run climate-projection-module/scripts/compute_cmip6_spread.py first.\n\n\n\nFigure 3"
-  },
-  {
-    "objectID": "climate-projection-data.html#arm-2-taiwan-basic-statistics-area-tccip",
-    "href": "climate-projection-data.html#arm-2-taiwan-basic-statistics-area-tccip",
-    "title": "Climate Projection Data",
-    "section": "Arm 2 — Taiwan Basic Statistics Area (TCCIP)",
-    "text": "Arm 2 — Taiwan Basic Statistics Area (TCCIP)\nTCCIP provides high-resolution statistically and dynamically downscaled climate projections specifically covering Taiwan. The projections are used to characterise future dengue suitability at BSA level under different warming scenarios.\n\nTCCIP Temperature Projections (Taiwan)\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — TCCIP temperature projections for Taiwan are not yet integrated into the site pipeline. This section will display county- and BSA-level temperature trajectories under RCP4.5 and RCP8.5 (TCCIP uses RCP rather than SSP nomenclature for its downscaled products) once the climate-projection-module/scripts/extract_tccip.py pipeline is operational.\n\n\n\n\n\n\n⚠️  TCCIP temperature TSV not found — run climate-projection-module/scripts/extract_tccip.py first.\n\n\n\nFigure 4\n\n\n\n\n\nTCCIP Precipitation Projections (Taiwan)\n\n\n\n\n⚠️  TCCIP precipitation TSV not found — run climate-projection-module/scripts/extract_tccip.py first.\n\n\n\nFigure 5\n\n\n\n\n\nDengue Suitability Index — Taiwan Future Projections\nThe climate suitability index for Aedes aegypti and Aedes albopictus transmission is computed from TCCIP temperature and precipitation projections using the Mordecai et al. thermal performance curve framework.\n\n\n\n\n⚠️  TCCIP suitability index not yet computed — implement climate-projection-module/scripts/compute_suitability_taiwan.py first.\n\n\n\nFigure 6\n\n\n\n\n\nComparison: SEA vs Taiwan Climate Trajectories\n\n\n\n\n⚠️  Comparison figure not yet available — requires both CMIP6 and TCCIP pipelines to be complete.\n\n\n\nFigure 7\n\n\n\n\n\nNote on scenario alignment: The SEA Provinces model uses CMIP6 SSP2-4.5 for its operational bias correction. The Taiwan BSA model uses TCCIP RCP4.5 as the primary scenario, which is approximately equivalent in radiative forcing. SSP5-8.5 / RCP8.5 projections are included for sensitivity analysis only."
-  },
-  {
     "objectID": "dengue-data.html",
     "href": "dengue-data.html",
     "title": "Dengue Data",
@@ -131,61 +187,5 @@
     "title": "Dengue Data",
     "section": "Arm 2 — Taiwan Basic Statistics Area (Taiwan Ministry of Health)",
     "text": "Arm 2 — Taiwan Basic Statistics Area (Taiwan Ministry of Health)\nIndividual dengue case records from the Taiwan Centers for Disease Control (Taiwan CDC / MoH), aggregated to Basic Statistics Area (BSA) level. BSAs are the finest spatial unit of census data maintained by the Taiwanese government and are used as the prediction target in the Taiwan BSA model.\n\nCase Counts by Year\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Taiwan MoH case data pipeline not yet integrated. This panel will display annual confirmed dengue case counts disaggregated by BSA once the taiwan-bsa-module data pipeline is operational.\n\n\n\n\n\n\n⚠️  Taiwan MoH BSA data not yet available — implement taiwan-bsa-module/data/moh_pipeline.py first.\n\n\n\nFigure 3\n\n\n\n\n\nTemporal Trends — Taiwan\n\n\n\n\n⚠️  Taiwan MoH temporal data not yet available.\n\n\n\nFigure 4\n\n\n\n\n\nSpatial Distribution — Taiwan BSA Choropleth\n\n\n\n\n⚠️  Taiwan BSA spatial data not yet available.\n\n\n\nFigure 5\n\n\n\n\n\nCase Demographics\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Summary statistics of case demographics (age, sex, serotype, clinical severity) from Taiwan MoH individual case reports will appear here once the data pipeline is connected.\n\n\n\n\n\nTable 1: Placeholder: Case demographic breakdown from Taiwan MoH individual case reports.\n\n\n\n⚠️  Taiwan MoH demographic data not yet available.\n\n\n\n\n\n\nImported vs Local Transmission\nA key feature of the Taiwan BSA model is distinguishing imported cases (travellers returning from SEA) from locally-acquired cases. The SEA Provinces model (Arm 1) provides the international risk context feeding into this classification.\n\n\n\n\n⚠️  Imported/local classification data not yet available — requires integration with taiwan-bsa-module and Arm 1 risk states.\n\n\n\nFigure 6"
-  },
-  {
-    "objectID": "monthly-zonal-stats.html",
-    "href": "monthly-zonal-stats.html",
-    "title": "Monthly Environmental Data",
-    "section": "",
-    "text": "Environmental features feed both study arms, but at different spatial granularities: admin-1 zonal statistics for the SEA Provinces model, and BSA-level indicators for the Taiwan model. All zonal statistics between 2011 and 2026 have been computed with the Easy-Earth-Engine application, which provides a data-provenance pipeline ensuring reproducibility of the remote sensing extraction."
-  },
-  {
-    "objectID": "monthly-zonal-stats.html#arm-1-southeast-asia-provinces-admin-1-zonal-statistics",
-    "href": "monthly-zonal-stats.html#arm-1-southeast-asia-provinces-admin-1-zonal-statistics",
-    "title": "Monthly Environmental Data",
-    "section": "Arm 1 — Southeast Asia Provinces (Admin-1 Zonal Statistics)",
-    "text": "Arm 1 — Southeast Asia Provinces (Admin-1 Zonal Statistics)\nRemote sensing data fetched from Google Earth Engine for —. These are per-admin-1 spatial averages (zonal statistics) of the environmental features used by the SEA STGNN.\n\nLatest Monthly Zonal Statistics\n\n\n\nTable 1: Latest monthly zonal statistics by SEA admin-1 region (raw, pre-correction).\n\n\n\n⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first.\n\n\n\n\n\n\nApplied Climate Deltas (SEA)\nThe table below shows the bias correction delta applied to each SEA feature this month. A negative delta means the current climate is warmer/wetter than the 2011–2018 baseline, so the raw observation is shifted downward before model inference.\n\n\n\nTable 2: Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month.\n\n\n\n⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first.\n\n\n\n\n\n\nGlobal Warming Level Projections (SEA Domain)\nSummary of regional climate trajectories from the GWL dataset covering the SEA domain.\n\n\n\n\n⚠️  GWL TSV not found — run climate-projection-module pipeline first.\n\n\n\nFigure 1"
-  },
-  {
-    "objectID": "monthly-zonal-stats.html#arm-2-taiwan-basic-statistics-area-bsa-level-environmental-data",
-    "href": "monthly-zonal-stats.html#arm-2-taiwan-basic-statistics-area-bsa-level-environmental-data",
-    "title": "Monthly Environmental Data",
-    "section": "Arm 2 — Taiwan Basic Statistics Area (BSA-Level Environmental Data)",
-    "text": "Arm 2 — Taiwan Basic Statistics Area (BSA-Level Environmental Data)\nEnvironmental features for the Taiwan BSA model are derived from TCCIP (Taiwan Climate Change Projection Information and Adaptation Knowledge Platform) and local remote sensing products, aggregated to BSA granularity. These complement the individual case report data from Taiwan MoH.\n\nLatest Monthly BSA Zonal Statistics\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — BSA-level zonal statistics for Taiwan are not yet available. This table will show per-BSA averages of temperature, precipitation, NDVI, and other suitability indicators once the taiwan-bsa-module environmental pipeline is operational.\n\n\n\n\n\nTable 3: Placeholder: Monthly zonal statistics by Taiwan BSA (temperature, precipitation, NDVI, EVI).\n\n\n\n⚠️  Taiwan BSA zonal statistics not yet available — implement taiwan-bsa-module/data/gee_bsa_pipeline.py first.\n\n\n\n\n\n\nApplied Climate Deltas (Taiwan)\n\n\n\nTable 4: Placeholder: Per-variable TCCIP climate deltas applied to Taiwan BSA features this month.\n\n\n\n⚠️  Taiwan BSA climate deltas not yet available — requires TCCIP baseline computation.\n\n\n\n\n\n\nVegetation and Urban Heat Island Indicators (Taiwan BSA)\nBSA-level NDVI and LST are particularly important for identifying urban heat island effects that increase vector reproduction rates in dense Taiwanese cities.\n\n\n\n\n⚠️  Taiwan BSA LST/NDVI data not yet available.\n\n\n\nFigure 2"
-  },
-  {
-    "objectID": "shared-socioeconomic-pathways.html",
-    "href": "shared-socioeconomic-pathways.html",
-    "title": "Shared Socioeconomic Pathways",
-    "section": "",
-    "text": "Shared Socioeconomic Pathways (SSPs) are a set of five global scenarios describing plausible futures for societal development through 2100 (SSP1–SSP5). They were developed by the climate research community alongside the IPCC AR6 process and are widely used to contextualise climate impact projections. In this study:"
-  },
-  {
-    "objectID": "shared-socioeconomic-pathways.html#arm-1-southeast-asia-provinces",
-    "href": "shared-socioeconomic-pathways.html#arm-1-southeast-asia-provinces",
-    "title": "Shared Socioeconomic Pathways",
-    "section": "Arm 1 — Southeast Asia Provinces",
-    "text": "Arm 1 — Southeast Asia Provinces\n\nSSP Population Projections by Province\nPopulation projections at admin-1 level under SSP1 (sustainability), SSP2 (middle of the road), and SSP3 (regional rivalry) scenarios, derived from the CMIP6-aligned SSP database.\n\n\n\n\n⚠️  SEA SSP population data not found — run climate-projection-module/scripts/extract_ssp_population.py first.\n\n\n\nFigure 1\n\n\n\n\n\nSSP Urbanisation Rate by Province\nUrban fraction of population is a key driver of dengue vector density. SSP2 and SSP3 diverge substantially in projected urbanisation rates across SEA countries.\n\n\n\n\n⚠️  SEA SSP urbanisation data not found — run climate-projection-module/scripts/extract_ssp_urbanisation.py first.\n\n\n\nFigure 2\n\n\n\n\n\nSSP Feature Contribution to STGNN\nThe table below summarises how SSP variables are incorporated into the SEA STGNN feature set.\n\n\n\n\n\n\n\n\nSSP Variable\nScenario(s) Used\nRole in Model\n\n\n\n\nPopulation (total)\nSSP2 (baseline)\nNode feature — scales absolute case counts\n\n\nPopulation density\nSSP2\nNode feature — proxy for human-vector contact rate\n\n\nUrban fraction\nSSP1, SSP2, SSP3\nNode feature — affects vector habitat availability\n\n\nGDP per capita\nSSP2\nNode feature — proxy for healthcare access / reporting capacity"
-  },
-  {
-    "objectID": "shared-socioeconomic-pathways.html#arm-2-taiwan-basic-statistics-area",
-    "href": "shared-socioeconomic-pathways.html#arm-2-taiwan-basic-statistics-area",
-    "title": "Shared Socioeconomic Pathways",
-    "section": "Arm 2 — Taiwan Basic Statistics Area",
-    "text": "Arm 2 — Taiwan Basic Statistics Area\n\nTCCIP Population Projections (Taiwan BSA)\n\n\n\n\n\n\nWarning\n\n\n\nPlaceholder — Taiwan BSA population projections from the TCCIP dataset are not yet integrated. This section will display BSA-level demographic trajectories under different SSP scenarios once the taiwan-bsa-module/data/tccip_ssp_pipeline.py is operational.\n\n\n\n\n\n\n⚠️  Taiwan BSA SSP population data not yet available — implement taiwan-bsa-module/data/tccip_ssp_pipeline.py first.\n\n\n\nFigure 3\n\n\n\n\n\nAgeing Population and Dengue Vulnerability (Taiwan)\nTaiwan’s rapidly ageing population is an important modulator of dengue severity. Older adults face higher hospitalisation and case fatality rates. SSP projections indicate Taiwan’s median age rising significantly through 2050, which will be incorporated as a BSA-level demographic covariate.\n\n\n\n\n⚠️  Taiwan age structure projections not yet available.\n\n\n\nFigure 4\n\n\n\n\n\nUrbanisation and Heat Island Risk (Taiwan BSA)\n\n\n\n\n⚠️  Taiwan BSA urbanisation SSP data not yet available.\n\n\n\nFigure 5\n\n\n\n\n\nNote on scenario selection: The SEA STGNN is trained and validated under historical conditions (2011–2018) and uses SSP2 population data as the primary covariate. SSP1 and SSP3 are included as sensitivity scenarios for prospective risk projections only. For operational monthly inference, SSP2-4.5 is used throughout for consistency with the AR6 climate delta correction."
-  },
-  {
-    "objectID": "taiwan-bsa-study-results.html",
-    "href": "taiwan-bsa-study-results.html",
-    "title": "Model Results",
-    "section": "",
-    "text": "As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia, we capitalise on our Southeast Asian interprovincial risk state model to generate “exporter” regions and “importer” regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese Government keeps track of.\nThe model would jointly consider international mobility, local mobility, BSA environment suitability, and BSA population demographic to predict elevated risk."
-  },
-  {
-    "objectID": "taiwan-bsa-study-results.html#taiwanese-basic-statistics-area-bsa-risk-prediction",
-    "href": "taiwan-bsa-study-results.html#taiwanese-basic-statistics-area-bsa-risk-prediction",
-    "title": "Model Results",
-    "section": "",
-    "text": "As dengue epidemics in Taiwan are results of imported cases from circulating dengue transmission in Southeast Asia, we capitalise on our Southeast Asian interprovincial risk state model to generate “exporter” regions and “importer” regions into our Taiwanese BSA model. A BSA is the smallest unit of census data the Taiwanese Government keeps track of.\nThe model would jointly consider international mobility, local mobility, BSA environment suitability, and BSA population demographic to predict elevated risk."
   }
 ]
