@@ -9,6 +9,7 @@ subtitle: "STGNN performance on held-out test data (2011–2018), by experiment"
 import base64
 import json
 import pathlib
+import shutil
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,12 @@ import plotly.graph_objects as go
 
 stgnn_dir = pathlib.Path("../machine-learning-module/results/STGNN")
 experiment_names = sorted(p.name for p in stgnn_dir.iterdir() if p.is_dir())
+
+# Attention HTML files live under machine-learning-module/, outside the docs/
+# output dir that gets published to GitHub Pages, so a relative iframe src
+# pointing there would 404 once deployed. Copy them into a _files folder next
+# to this page's rendered output so they ship as part of the published site.
+attention_assets_dir = pathlib.Path("../docs/sea-provinces-study-results_files/attention")
 
 param_labels = {
     "window_size":   "Input window (months)",
@@ -283,8 +290,12 @@ def build_experiment_block(name):
     attn_graph = exp_dir / "attention_graph_interactive.html"
     attn_shift = exp_dir / "attention_shift_interactive.html"
     if attn_graph.exists() and attn_shift.exists():
-        rel_graph = f"../machine-learning-module/results/STGNN/{name}/attention_graph_interactive.html"
-        rel_shift = f"../machine-learning-module/results/STGNN/{name}/attention_shift_interactive.html"
+        exp_assets_dir = attention_assets_dir / name
+        exp_assets_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(attn_graph, exp_assets_dir / attn_graph.name)
+        shutil.copyfile(attn_shift, exp_assets_dir / attn_shift.name)
+        rel_graph = f"sea-provinces-study-results_files/attention/{name}/{attn_graph.name}"
+        rel_shift = f"sea-provinces-study-results_files/attention/{name}/{attn_shift.name}"
         sections.append(f"""
 <h4>Attention Mechanism</h4>
 <div class="panel-tabset">
