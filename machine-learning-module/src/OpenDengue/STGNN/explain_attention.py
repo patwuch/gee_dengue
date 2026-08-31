@@ -299,6 +299,7 @@ def plot_self_attention_vs_degree(degree: np.ndarray, self_attn1: np.ndarray, se
 
 _INTERACTIVE_BODY = """
 <style>
+  html, body { height: 100%; margin: 0; }
   .attn-root {
     --surface-1:      #fcfcfb;
     --text-primary:   #0b0b0b;
@@ -352,13 +353,17 @@ _INTERACTIVE_BODY = """
     --diverge-mid:    #c3c2b7;
     --accent:         #0b0b0b;
   }
-  .attn-root { padding: 16px; box-sizing: border-box; }
-  .attn-header { margin-bottom: 8px; }
+  .attn-root {
+    height: 100%; box-sizing: border-box; padding: 16px;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .attn-header { margin-bottom: 8px; flex: 0 0 auto; }
   .attn-header h1 { font-size: 16px; margin: 0 0 4px; }
   .attn-header p { font-size: 12.5px; color: var(--text-secondary); margin: 0; max-width: 70ch; }
   .attn-toolbar {
     display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
     margin: 12px 0; padding-bottom: 12px; border-bottom: 1px solid var(--gridline);
+    flex: 0 0 auto;
   }
   .attn-search input {
     font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 6px;
@@ -379,14 +384,18 @@ _INTERACTIVE_BODY = """
   .attn-timeline {
     display: flex; align-items: center; gap: 10px; margin: 0 0 12px;
     font-size: 12.5px; color: var(--text-secondary);
+    flex: 0 0 auto;
   }
   .attn-timeline input[type="range"] { flex: 1 1 auto; accent-color: var(--diverge-pos); }
   .attn-timeline .lag-label {
     font-variant-numeric: tabular-nums; color: var(--text-primary); width: 8.5em; flex: none;
   }
-  .attn-layout { display: flex; gap: 16px; align-items: flex-start; }
-  .attn-canvas-wrap { flex: 1 1 auto; min-width: 0; border: 1px solid var(--gridline); border-radius: 8px; }
-  .attn-canvas-wrap svg { display: block; width: 100%; height: auto; }
+  .attn-layout { display: flex; gap: 16px; flex: 1 1 auto; min-height: 0; }
+  .attn-canvas-wrap {
+    flex: 1 1 auto; min-width: 0; min-height: 0;
+    border: 1px solid var(--gridline); border-radius: 8px;
+  }
+  .attn-canvas-wrap svg { display: block; width: 100%; height: 100%; }
   .attn-node-hit { cursor: pointer; }
   .attn-node-hit:focus { outline: none; }
   .attn-node-hit:focus-visible + circle.attn-node-dot { stroke: var(--text-primary); stroke-width: 2; }
@@ -394,7 +403,7 @@ _INTERACTIVE_BODY = """
   .attn-sidebar {
     flex: 0 0 260px; font-size: 12.5px; color: var(--text-secondary);
     border: 1px solid var(--gridline); border-radius: 8px; padding: 12px;
-    max-height: 640px; overflow-y: auto;
+    height: 100%; overflow-y: auto; box-sizing: border-box;
   }
   .attn-sidebar h2 { font-size: 13.5px; color: var(--text-primary); margin: 0 0 8px; }
   .attn-sidebar h3 {

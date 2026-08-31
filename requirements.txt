@@ -3,6 +3,7 @@ torch-geometric
 xgboost
 shap
 scikit-learn
+matplotlib
 
 # Data engineering
 dask[complete]

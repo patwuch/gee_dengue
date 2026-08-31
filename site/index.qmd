@@ -66,11 +66,11 @@ import pandas as pd
 data_dir = pathlib.Path("data")
 preds_path = data_dir / "latest_predictions.json"
 
-if not preds_path.exists():
+preds = json.loads(preds_path.read_text()) if preds_path.exists() else {}
+regions = preds.get("regions", {})
+if not regions:
     print("⚠️  No prediction data found — run site/scripts/run_inference.py first.")
 else:
-    preds = json.loads(preds_path.read_text())
-    regions = preds.get("regions", {})
     df = pd.DataFrame([
         {"region": k, "country": v["country"], "risk_index": v["risk_index"]}
         for k, v in regions.items()

@@ -1,0 +1,14 @@
+{
+  "dropout": 0.2,
+  "batch_size": 4,
+  "gat1_heads": 2,
+  "gat2_heads": 2,
+  "mlp_hidden": 64,
+  "mlp_layers": 1,
+  "gat1_hidden": 64,
+  "gat2_hidden": 64,
+  "window_size": 12,
+  "learning_rate": 0.000241684408478247,
+  "experiment_name": "logIR_only",
+  "best_val_loss": 0.039955731481313705
+}

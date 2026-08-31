@@ -135,7 +135,7 @@ def train(cfg: dict, params: dict, out_dir: Path):
         config  = params,
     )
 
-    device      = torch.device(cfg.get("device", "cpu"))
+    device      = torch.device(cfg["tune"].get("device", "cpu"))
     window_size = params["window_size"]
     max_epochs  = 1000
     patience    = cfg["tune"].get("patience", 15)

@@ -16,7 +16,19 @@ import pandas as pd
 import plotly.graph_objects as go
 
 stgnn_dir = pathlib.Path("../machine-learning-module/results/STGNN")
-experiment_names = sorted(p.name for p in stgnn_dir.iterdir() if p.is_dir())
+# Only surface the two experiments we stand behind for this study: both predict
+# log IR and both use the cyclical (sin/cos) month encoding rather than naive
+# per-month deseasonalisation; the only difference is whether environmental/
+# land-use covariates are included (cyclical_seasonal) or the model sees IR
+# alone (logIR_only). See the "Which experiments are shown" note below.
+experiment_names = [n for n in ["cyclical_seasonal", "logIR_only"] if (stgnn_dir / n).is_dir()]
+
+# test.py only ever writes raw (W, N) arrays to test_predictions.npz — no node
+# names, countries, or dates attached. Reconstruct those from the merged
+# training CSV the same way choropleth.py does, so experiments that only have
+# the .npz (i.e. all of them, going forward) still get the interactive plot.
+merged_csv_path = pathlib.Path("../data/interim/machine-learning/SEA_dengue_env_monthly_2011-2018.csv")
+N_TEST_MONTHS = 14  # test_months in every OpenDengue STGNN config; see choropleth.py
 
 # Attention HTML files live under machine-learning-module/, outside the docs/
 # output dir that gets published to GitHub Pages, so a relative iframe src
@@ -111,6 +123,52 @@ def per_country_table_html(ctry_metrics):
         for r in ctry_metrics
     ])
     return table_html(df)
+
+
+def build_test_preds(exp_dir):
+    """Reconstruct the {dates, nodes} structure interactive_preds_html expects
+    from test_predictions.npz + the merged CSV (mirrors choropleth.py's
+    _load_predictions / _node_names)."""
+    preds_path = exp_dir / "test_predictions.npz"
+    params_path = exp_dir / "best_params.json"
+    if not preds_path.exists() or not params_path.exists() or not merged_csv_path.exists():
+        return None
+
+    preds = np.load(preds_path)["predictions"]
+    if preds.ndim == 3:
+        preds = preds.squeeze(-1)
+    window_size = json.loads(params_path.read_text())["window_size"]
+
+    df = pd.read_csv(merged_csv_path, usecols=["adm_0_name", "adm_1_name", "year_month", "IR"])
+    df["year_month"] = pd.to_datetime(df["year_month"])
+
+    nodes = sorted(df["adm_1_name"].unique())
+    countries = df.drop_duplicates("adm_1_name").set_index("adm_1_name")["adm_0_name"]
+
+    test_dates = sorted(df["year_month"].unique())[-N_TEST_MONTHS:]
+    W = preds.shape[0]
+    pred_dates = test_dates if W == len(test_dates) else test_dates[window_size:]
+    if len(pred_dates) != W or preds.shape[1] != len(nodes):
+        return None
+
+    pivot = (
+        df[df["year_month"].isin(pred_dates)]
+        .pivot_table(index="year_month", columns="adm_1_name", values="IR")
+        .reindex(index=pred_dates, columns=nodes)
+    )
+
+    return {
+        "dates": [d.strftime("%Y-%m") for d in pred_dates],
+        "nodes": [
+            {
+                "name": name,
+                "country": countries.get(name, ""),
+                "actual": pivot[name].tolist(),
+                "pred": preds[:, j].tolist(),
+            }
+            for j, name in enumerate(nodes)
+        ],
+    }
 
 
 def interactive_preds_html(test_preds, id_prefix):
@@ -245,7 +303,7 @@ def build_experiment_block(name):
     best_params  = load_json(exp_dir / "best_params.json")
     losses       = load_json(exp_dir / "train_val_losses.json")
     ctry_metrics = load_json(exp_dir / "per_country_metrics.json")
-    test_preds   = load_json(exp_dir / "test_predictions.json")
+    test_preds   = load_json(exp_dir / "test_predictions.json") or build_test_preds(exp_dir)
 
     safe_id = name.replace("_", "-")
     sections = [f'<h3 style="margin-top:0;">{name}</h3>']
@@ -300,10 +358,10 @@ def build_experiment_block(name):
 <h4>Attention Mechanism</h4>
 <div class="panel-tabset">
 <p><strong>Attention Graph</strong></p>
-<iframe src="{rel_graph}" width="100%" height="600px" frameborder="0"
+<iframe src="{rel_graph}" width="100%" height="820px" frameborder="0"
   style="border-radius:6px; border:1px solid #dee2e6;"></iframe>
 <p><strong>Attention Shift</strong></p>
-<iframe src="{rel_shift}" width="100%" height="600px" frameborder="0"
+<iframe src="{rel_shift}" width="100%" height="820px" frameborder="0"
   style="border-radius:6px; border:1px solid #dee2e6;"></iframe>
 </div>""")
 
@@ -318,14 +376,52 @@ first_experiment = experiment_names[0]
 
 ## What is the SEA Provinces Study?
 
-The **SEA Provinces Study** examines dengue incidence rate prediction at the admin-1 (province) level across 10 Southeast Asian countries. The study uses a Spatio-Temporal Graph Neural Network (STGNN) to model the temporal dynamics of dengue incidence while leveraging spatial relationships between provinces. The captured relation between provinces is based on the attention mechanism, allowing the model to learn flexibly about both influences to and from neighboring or distant regions.
+The **SEA Provinces Study** examines dengue incidence rate prediction at the admin-1 (province) level across 10 Southeast Asian countries. The study uses a Spatio-Temporal Graph Neural Network (STGNN) to model the temporal dynamics of dengue incidence while leveraging spatial relationships between provinces. We experiment with a number of message passing configurations to empirically examine both how well and through what mechanism does a model manage to capture whether dengue risk ebbs and flows display interprovincial effects. 
 
 In our final risk index for Southeast Asia, we use the same learned temporal and spatial patterns to generate a risk index for each province, which can be used to inform public health interventions and resource allocation.
 
 Notes:
 The gap of incomplete incidence data between 2019 and 2026 is due to a coverage imbalance. To counter act this, the 2011-2018 model will continue to learn and predict between 2019 and 2026, but the predictions will be unvalidated. Thus, interpretation of the latest monthly risk must be done with caution, and the model's predictions should be used as a guide rather than a definitive measure of risk.
 
+## Architecture
+
+The model is a **Spatio-Temporal Graph Attention Network with GRU** (STGATGRU):
+
+- **Input normalisation:** log1p target transform, then standard-scaled (mean/std from training data); calendar seasonality is supplied as sin/cos month-of-year features rather than removed from the target (see the experiment descriptions below)
+- **GAT layer 1:** Spatial message passing over the admin-1 adjacency graph
+- **MLP:** Node-wise feature transformation
+- **GAT layer 2:** Second spatial aggregation pass
+- **GRU:** Temporal sequence modelling over a sliding window (window length is a per-experiment hyperparameter — see each experiment's Hyperparameters table below)
+- **Linear head:** Single-step incidence rate prediction (inverse-transformed at output)
+
+Missing admin-1 nodes (no reported incidence) receive a learnable missing embedding
+rather than zeroed features, and the GRU hidden state is carried over without update
+for those nodes.  Loss masking excludes missing targets from the gradient.
+
+## Bias Correction Note
+
+When running inference on current data (post-2018), a climate delta correction is
+applied before features are passed to the model.  The delta is computed as the
+difference between the AR6 SSP2-4.5 projected monthly climatology for the current
+year and the 2011–2018 training period climatology.  This shifts current observations
+back into the model's training feature distribution.  See
+[site/scripts/apply_climate_delta.py](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/blob/main/site/scripts/apply_climate_delta.py)
+for implementation.
+
 ## Experiment Results
+
+We show two experiments here: **`cyclical_seasonal`** and **`logIR_only`**.
+Both predict log incidence rate (log IR), both encode calendar month with the
+sin/cos cyclical encoding (rather than subtracting a fixed per-month training
+baseline — see the [Bias Correction Note](#bias-correction-note) above for why
+that matters beyond the training window), and both give missing admin-1 nodes
+a learned trainable embedding rather than zeroed-out features (see
+[Architecture](#architecture) above). The only substantive difference between them
+is input features: `cyclical_seasonal` includes climate and land-use
+covariates alongside lagged IR, while `logIR_only` is a purely autoregressive
+baseline that sees IR (plus the month encoding) and nothing else — it exists
+to quantify how much the environmental features actually buy us over and
+above the signal already present in lagged incidence.
 
 Each experiment below is a distinct config/training run under
 `machine-learning-module/results/STGNN/`. Pick one to see its metrics,
@@ -338,6 +434,7 @@ breakdown) are omitted for that experiment.
 from IPython.display import HTML
 
 HTML(f"""
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 <div style="margin-bottom:16px;">
   <label for="exp-sel" style="font-weight:600;">Experiment:</label>
   <select id="exp-sel" style="margin-left:8px;padding:4px 10px;min-width:260px;">
@@ -373,28 +470,3 @@ HTML(f"""
 </script>
 """)
 ```
-
-## Architecture
-
-The model is a **Spatio-Temporal Graph Attention Network with GRU** (STGATGRU):
-
-- **Input normalisation:** seasonal z-score of incidence (per-month mean removed, divided by global std)
-- **GAT layer 1:** Spatial message passing over the admin-1 adjacency graph
-- **MLP:** Node-wise feature transformation
-- **GAT layer 2:** Second spatial aggregation pass
-- **GRU:** Temporal sequence modelling over a sliding window (window length is a per-experiment hyperparameter — see each experiment's Hyperparameters table above)
-- **Linear head:** Single-step incidence rate prediction (inverse-transformed at output)
-
-Missing admin-1 nodes (no reported incidence) receive a learnable missing embedding
-rather than zeroed features, and the GRU hidden state is carried over without update
-for those nodes.  Loss masking excludes missing targets from the gradient.
-
-## Bias Correction Note
-
-When running inference on current data (post-2018), a climate delta correction is
-applied before features are passed to the model.  The delta is computed as the
-difference between the AR6 SSP2-4.5 projected monthly climatology for the current
-year and the 2011–2018 training period climatology.  This shifts current observations
-back into the model's training feature distribution.  See
-[site/scripts/apply_climate_delta.py](https://github.com/chuang-lab-DMPTD-TMU/dengue-fever-EWS/blob/main/site/scripts/apply_climate_delta.py)
-for implementation.

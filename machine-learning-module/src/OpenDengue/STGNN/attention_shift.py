@@ -234,6 +234,7 @@ def plot_cluster_trajectories(centroids: np.ndarray, mass_frac: np.ndarray,
 
 _SHIFT_INTERACTIVE_BODY = """
 <style>
+  html, body { height: 100%; margin: 0; }
   .shift-root {
     --surface-1:      #fcfcfb;
     --text-primary:   #0b0b0b;
@@ -263,14 +264,18 @@ _SHIFT_INTERACTIVE_BODY = """
     --surface-1: #fcfcfb; --text-primary: #0b0b0b; --text-secondary: #52514e;
     --muted: #898781; --gridline: #e1e0d9; --border: rgba(11,11,11,0.10);
   }
-  .shift-root { padding: 16px; box-sizing: border-box; }
-  .shift-header { margin-bottom: 8px; }
+  .shift-root {
+    height: 100%; box-sizing: border-box; padding: 16px;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .shift-header { margin-bottom: 8px; flex: 0 0 auto; }
   .shift-header h1 { font-size: 16px; margin: 0 0 4px; }
   .shift-header p { font-size: 12.5px; color: var(--text-secondary); margin: 0; max-width: 78ch; }
   .shift-toolbar {
     display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
     margin: 12px 0; padding-bottom: 12px; border-bottom: 1px solid var(--gridline);
     font-size: 12.5px; color: var(--text-secondary);
+    flex: 0 0 auto;
   }
   .shift-toolbar label { display: flex; align-items: center; gap: 6px; }
   .shift-toolbar input[type="number"] {
@@ -282,11 +287,13 @@ _SHIFT_INTERACTIVE_BODY = """
   .shift-timeline {
     display: flex; align-items: center; gap: 10px; margin: 0 0 12px;
     font-size: 12.5px; color: var(--text-secondary);
+    flex: 0 0 auto;
   }
   .shift-timeline input[type="range"] { flex: 1 1 auto; accent-color: #1f77b4; }
   .shift-timeline .lag-label {
     font-variant-numeric: tabular-nums; color: var(--text-primary); width: 10em; flex: none;
   }
+  .shift-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
   .shift-canvas-wrap { border: 1px solid var(--gridline); border-radius: 8px; }
   .shift-canvas-wrap svg { display: block; width: 100%; height: auto; }
   .shift-node-label { font-size: 9px; fill: var(--text-primary); pointer-events: none; }
@@ -321,14 +328,16 @@ _SHIFT_INTERACTIVE_BODY = """
     <input type="range" id="shift-lag-slider" min="0" max="0" value="0" step="1">
     <span class="lag-label" id="shift-lag-label">—</span>
   </div>
-  <div class="shift-canvas-wrap">
-    <svg id="shift-svg" viewBox="0 0 __VB_W__ __VB_H__" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="shift-scroll">
+    <div class="shift-canvas-wrap">
+      <svg id="shift-svg" viewBox="0 0 __VB_W__ __VB_H__" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <p class="shift-warn">A dashed ring is the weighted radius of gyration of each cluster's members around its centroid —
+    small means the centroid sits on a real attention hotspot, large means it's an average of spatially distant nodes and
+    may not correspond to any actual place. Lines from a centroid to member nodes are weighted by that node's share of the
+    cluster's attention mass (nodes below 3% share are omitted to limit clutter). Click any dot to inspect that month.</p>
+    <div class="shift-legend" id="shift-legend"></div>
   </div>
-  <p class="shift-warn">A dashed ring is the weighted radius of gyration of each cluster's members around its centroid —
-  small means the centroid sits on a real attention hotspot, large means it's an average of spatially distant nodes and
-  may not correspond to any actual place. Lines from a centroid to member nodes are weighted by that node's share of the
-  cluster's attention mass (nodes below 3% share are omitted to limit clutter). Click any dot to inspect that month.</p>
-  <div class="shift-legend" id="shift-legend"></div>
 </div>
 
 <script type="application/json" id="shift-data">__DATA__</script>

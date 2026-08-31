@@ -11,7 +11,7 @@
 #             --cores 4 --resources gpu=1
 # ============================================================
 
-name:    ir_only
+name:    logIR_only
 dataset: opendengue
 model:   stgnn
 task:    regressor
@@ -43,6 +43,7 @@ preprocessing:
   log_transform:  true
   deseasonalise:  false
   scale_target:   true
+  cyclical_month_features: true
   add_lag_target: false
   lag_steps:      []
 
@@ -51,7 +52,7 @@ preprocessing:
 # ---------------------------------------------------------------------------
 features:
   use_landuse:   false
-  quality_vars:  []
+  quality_vars:  ['data_quality']
   env_vars:      []
   climate_vars:  []
   epidemic_vars: []

@@ -38,10 +38,10 @@ These are per-admin-1 spatial averages (zonal statistics) of the environmental f
 #| label: tbl-zonal-stats
 #| tbl-cap: "Latest monthly zonal statistics by SEA admin-1 region (raw, pre-correction)."
 
-if not stats_path.exists():
+regions = stats.get("regions", {})
+if not stats_path.exists() or not regions:
     print("⚠️  No zonal statistics found — run site/scripts/fetch_zonal_stats.py first.")
 else:
-    regions = stats.get("regions", {})
     rows = []
     for region, vals in regions.items():
         row = {"Region": region, "Country": vals.get("country", "")}
@@ -65,11 +65,11 @@ so the raw observation is shifted downward before model inference.
 #| label: tbl-deltas
 #| tbl-cap: "Per-variable climate deltas (AR6 SSP2-4.5 projection minus 2011–2018 baseline) applied this month."
 
-if not deltas_path.exists():
+current_month = target_month[-2:] if len(target_month) >= 2 else "01"
+month_deltas = deltas.get(current_month, deltas.get("annual_mean", {}))
+if not deltas_path.exists() or not month_deltas:
     print("⚠️  No climate delta file found — run site/scripts/apply_climate_delta.py first.")
 else:
-    current_month = target_month[-2:] if len(target_month) >= 2 else "01"
-    month_deltas = deltas.get(current_month, deltas.get("annual_mean", {}))
     delta_df = pd.DataFrame([
         {"Feature": feat, "Delta (subtract from obs)": round(val, 4)}
         for feat, val in month_deltas.items()

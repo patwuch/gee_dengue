@@ -39,26 +39,30 @@ import plotly.graph_objects as go
 
 gwl_path = pathlib.Path("../climate-projection-module/data/processed/TSV/GWL_NetCDF/gwl_all_sliced.tsv")
 
+gwl_monthly = pd.DataFrame()
 if not gwl_path.exists():
     print("⚠️  GWL TSV not found — run climate-projection-module pipeline first.")
 else:
     gwl = pd.read_csv(gwl_path, sep="\t", parse_dates=["time"])
-    gwl_monthly = gwl.groupby(["gwl", gwl["time"].dt.to_period("M")]).mean(numeric_only=True).reset_index()
-    gwl_monthly["time"] = gwl_monthly["time"].astype(str)
+    if gwl.empty:
+        print("⚠️  GWL TSV is empty — no data to plot.")
+    else:
+        gwl_monthly = gwl.groupby(["gwl", gwl["time"].dt.to_period("M")]).mean(numeric_only=True).reset_index()
+        gwl_monthly["time"] = gwl_monthly["time"].astype(str)
 
-    fig = go.Figure()
-    for gwl_val in sorted(gwl_monthly["gwl"].unique()):
-        subset = gwl_monthly[gwl_monthly["gwl"] == gwl_val]
-        fig.add_trace(go.Scatter(
-            x=subset["time"], y=subset["temp_avg"],
-            mode="lines", name=f"GWL {gwl_val}°C",
-        ))
-    fig.update_layout(
-        title="Mean Temperature by Global Warming Level — SEA",
-        xaxis_title="Month", yaxis_title="Temperature (°C)",
-        legend_title="GWL Scenario", height=400,
-    )
-    fig.show()
+        fig = go.Figure()
+        for gwl_val in sorted(gwl_monthly["gwl"].unique()):
+            subset = gwl_monthly[gwl_monthly["gwl"] == gwl_val]
+            fig.add_trace(go.Scatter(
+                x=subset["time"], y=subset["temp_avg"],
+                mode="lines", name=f"GWL {gwl_val}°C",
+            ))
+        fig.update_layout(
+            title="Mean Temperature by Global Warming Level — SEA",
+            xaxis_title="Month", yaxis_title="Temperature (°C)",
+            legend_title="GWL Scenario", height=400,
+        )
+        fig.show()
 ```
 
 ### GWL Precipitation Projections (SEA Domain)
@@ -68,8 +72,8 @@ else:
 #| label: fig-gwl-precip
 #| fig-cap: "Mean precipitation trajectories across Global Warming Levels for the SEA region."
 
-if not gwl_path.exists():
-    print("⚠️  GWL TSV not found — run climate-projection-module pipeline first.")
+if not gwl_path.exists() or gwl_monthly.empty:
+    print("⚠️  GWL TSV not found or empty — run climate-projection-module pipeline first.")
 else:
     fig = go.Figure()
     for gwl_val in sorted(gwl_monthly["gwl"].unique()):
@@ -114,7 +118,9 @@ else:
             continue
         for feat, val in feat_dict.items():
             rows.append({"Month": month, "Feature": feat, "Delta": round(val, 4)})
-    if rows:
+    if not rows:
+        print("⚠️  climate_deltas.json has no per-month data — run site/scripts/apply_climate_delta.py first.")
+    else:
         df_deltas = pd.DataFrame(rows).pivot(index="Month", columns="Feature", values="Delta")
         df_deltas.style.format(precision=4).background_gradient(cmap="RdBu_r", axis=None)
 ```
@@ -131,7 +137,10 @@ if not cmip6_path.exists():
     print("⚠️  CMIP6 ensemble spread TSV not found — run climate-projection-module/scripts/compute_cmip6_spread.py first.")
 else:
     df = pd.read_csv(cmip6_path, sep="\t")
-    print(df.head())
+    if df.empty:
+        print("⚠️  CMIP6 ensemble spread TSV is empty.")
+    else:
+        print(df.head())
 ```
 
 ---
@@ -161,19 +170,22 @@ if not tccip_path.exists():
     print("⚠️  TCCIP temperature TSV not found — run climate-projection-module/scripts/extract_tccip.py first.")
 else:
     df = pd.read_csv(tccip_path, sep="\t", parse_dates=["year"])
-    fig = go.Figure()
-    for scenario in df["scenario"].unique():
-        subset = df[df["scenario"] == scenario]
-        fig.add_trace(go.Scatter(
-            x=subset["year"], y=subset["temp_mean"],
-            mode="lines", name=scenario,
-        ))
-    fig.update_layout(
-        title="TCCIP Mean Temperature Projections — Taiwan",
-        xaxis_title="Year", yaxis_title="Temperature (°C)",
-        legend_title="Scenario", height=400,
-    )
-    fig.show()
+    if df.empty or "scenario" not in df.columns:
+        print("⚠️  TCCIP temperature TSV is empty or missing expected columns.")
+    else:
+        fig = go.Figure()
+        for scenario in df["scenario"].unique():
+            subset = df[df["scenario"] == scenario]
+            fig.add_trace(go.Scatter(
+                x=subset["year"], y=subset["temp_mean"],
+                mode="lines", name=scenario,
+            ))
+        fig.update_layout(
+            title="TCCIP Mean Temperature Projections — Taiwan",
+            xaxis_title="Year", yaxis_title="Temperature (°C)",
+            legend_title="Scenario", height=400,
+        )
+        fig.show()
 ```
 
 ### TCCIP Precipitation Projections (Taiwan)
@@ -188,7 +200,10 @@ if not tccip_precip_path.exists():
     print("⚠️  TCCIP precipitation TSV not found — run climate-projection-module/scripts/extract_tccip.py first.")
 else:
     df = pd.read_csv(tccip_precip_path, sep="\t")
-    print(df.head())
+    if df.empty:
+        print("⚠️  TCCIP precipitation TSV is empty.")
+    else:
+        print(df.head())
 ```
 
 ### Dengue Suitability Index — Taiwan Future Projections

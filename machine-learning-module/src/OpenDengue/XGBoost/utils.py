@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yaml
+from sklearn.preprocessing import StandardScaler
 
 
 # ---------------------------------------------------------------------------
@@ -56,6 +57,17 @@ def _admin_col(cfg: dict) -> str:
     return cfg.get("admin_column") or cfg.get("data", {}).get("admin_column", "admin")
 
 
+def _region_col(cfg: dict) -> str:
+    """Column the {region} wildcard filters on (e.g. country for multi-country scope).
+
+    Falls back to unit_column when no explicit region_column is configured, matching
+    the single-level scope used by earlier (single-country) experiments.
+    """
+    return (cfg.get("region_column")
+            or cfg.get("data", {}).get("region_column")
+            or _unit_col(cfg))
+
+
 def _target_col(cfg: dict) -> str:
     return cfg.get("target_column") or cfg.get("target", {}).get("column", "IR")
 
@@ -86,6 +98,10 @@ def _experiment_name(cfg: dict) -> str:
             or cfg.get("experiment", {}).get("name", "opendengue"))
 
 
+def _split_cfg(cfg: dict) -> dict:
+    return cfg.get("split") or cfg.get("data", {}).get("split", {})
+
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -97,8 +113,15 @@ def _find_project_root(start: Path, marker: str = ".git") -> Path:
     return start.resolve()
 
 
+def _find_module_root(start: Path, marker: str = "Snakefile") -> Path:
+    for parent in start.resolve().parents:
+        if (parent / marker).exists():
+            return parent
+    return start.resolve()
+
+
 def resolve_paths(cfg: dict) -> dict[str, Path]:
-    root    = _find_project_root(Path(__file__))
+    root    = _find_module_root(Path(__file__))
     reports = root / "reports"
     defaults = {
         "project_root":  root,
@@ -106,6 +129,7 @@ def resolve_paths(cfg: dict) -> dict[str, Path]:
         "models_dir":    root / "models",
         "figures_dir":   reports / "figures",
         "tables_dir":    reports / "tables",
+        "results_dir":   root / "results" / "XGBoost",
     }
     overrides = cfg.get("paths", {})
     return {k: Path(overrides.get(k, v)) for k, v in defaults.items()}
@@ -120,6 +144,10 @@ def load_data(cfg: dict, run_cfg: dict | None = None) -> pd.DataFrame:
     data_path = _data_path(cfg, run_cfg)
     if not data_path:
         raise ValueError("data path not set in config (data.path or data_path)")
+
+    data_path = Path(data_path)
+    if not data_path.is_absolute() and not data_path.exists():
+        data_path = _find_project_root(Path(__file__)) / data_path
 
     df = pd.read_csv(data_path)
 
@@ -200,16 +228,16 @@ def split_train_test(
     region: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     time_col   = _time_col(cfg)
-    unit_col   = _unit_col(cfg)
+    region_col = _region_col(cfg)
     target_col = _target_col(cfg)
 
     if region is not None:
-        df = df[df[unit_col] == region].copy()
+        df = df[df[region_col] == region].copy()
 
     df = df.dropna(subset=variable_columns + [target_col])
     df = df.sort_values(time_col).reset_index(drop=True)
 
-    test_months  = cfg.get("split", {}).get("test_months", 12)
+    test_months  = _split_cfg(cfg).get("test_months", 12)
     unique_dates = sorted(df[time_col].unique())
     cutoff       = unique_dates[-test_months] if len(unique_dates) > test_months else unique_dates[0]
 
@@ -219,6 +247,73 @@ def split_train_test(
 # ---------------------------------------------------------------------------
 # Sample weights
 # ---------------------------------------------------------------------------
+
+def fit_target_preprocessing(df_train: pd.DataFrame, cfg: dict) -> dict:
+    """Fit log/deseasonalise/scale transforms for a regression target on train data only."""
+    prep       = cfg.get("preprocessing", {})
+    target_col = _target_col(cfg)
+    time_col   = _time_col(cfg)
+
+    artifacts = {
+        "log_transform": bool(prep.get("log_transform", False)),
+        "deseasonalise": bool(prep.get("deseasonalise", False)),
+        "scale_target":  bool(prep.get("scale_target", False)),
+    }
+
+    y = df_train[target_col].astype(float)
+    if artifacts["log_transform"]:
+        y = np.log1p(y)
+
+    if artifacts["deseasonalise"]:
+        months = pd.to_datetime(df_train[time_col]).dt.month
+        artifacts["seasonal_means"] = y.groupby(months).mean().to_dict()
+        artifacts["seasonal_mean_fallback"] = float(y.mean())
+        y = y - months.map(artifacts["seasonal_means"]).fillna(artifacts["seasonal_mean_fallback"])
+
+    if artifacts["scale_target"]:
+        scaler = StandardScaler()
+        scaler.fit(y.values.reshape(-1, 1))
+        artifacts["scaler"] = scaler
+
+    return artifacts
+
+
+def apply_target_preprocessing(df: pd.DataFrame, cfg: dict, artifacts: dict) -> pd.DataFrame:
+    """Transform the target column of `df` using previously fitted artifacts."""
+    df = df.copy()
+    target_col = _target_col(cfg)
+    time_col   = _time_col(cfg)
+
+    y = df[target_col].astype(float)
+    if artifacts["log_transform"]:
+        y = np.log1p(y)
+
+    if artifacts["deseasonalise"]:
+        months = pd.to_datetime(df[time_col]).dt.month
+        y = y - months.map(artifacts["seasonal_means"]).fillna(artifacts["seasonal_mean_fallback"])
+
+    if artifacts["scale_target"]:
+        y = pd.Series(artifacts["scaler"].transform(y.values.reshape(-1, 1)).ravel(), index=y.index)
+
+    df[target_col] = y
+    return df
+
+
+def invert_target(y: np.ndarray, months: pd.Series, artifacts: dict) -> np.ndarray:
+    """Invert a prediction/target array back to the raw target scale."""
+    y = np.asarray(y, dtype=float)
+
+    if artifacts["scale_target"]:
+        y = artifacts["scaler"].inverse_transform(y.reshape(-1, 1)).ravel()
+
+    if artifacts["deseasonalise"]:
+        y = y + months.map(artifacts["seasonal_means"]).fillna(artifacts["seasonal_mean_fallback"]).values
+
+    if artifacts["log_transform"]:
+        y = np.expm1(y)
+
+    return y
+
 
 def calculate_sample_weights(y: np.ndarray) -> np.ndarray:
     unique_classes, counts = np.unique(y, return_counts=True)
