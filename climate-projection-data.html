@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -74,14 +77,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8e9a7d8a46fa568a1240ac9bc3a0c793.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-e3ae79077a5fa9755a37aa3a705c32a5.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-8e9a7d8a46fa568a1240ac9bc3a0c793.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-c31c705935906e54bdd193600b3122ba.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-761e2db56e4933a99215ab662aeff883.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-c31c705935906e54bdd193600b3122ba.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -419,7 +422,7 @@ Figure&nbsp;1
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-gwl-precip-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output cell-output-stdout">
-<pre><code>⚠️  GWL TSV not found — run climate-projection-module pipeline first.</code></pre>
+<pre><code>⚠️  GWL TSV not found or empty — run climate-projection-module pipeline first.</code></pre>
 </div>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-gwl-precip-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -654,16 +657,16 @@ Figure&nbsp;7
     }
     function toggleCodeHandler(show) {
       return function(e) {
-        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
-        for (let i=0; i<detailsSrc.length; i++) {
-          const details = detailsSrc[i].parentElement;
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
           if (show) {
             details.open = true;
           } else {
             details.removeAttribute("open");
           }
         }
-        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
         const fromCls = show ? "hidden" : "unhidden";
         const toCls = show ? "unhidden" : "hidden";
         for (let i=0; i<cellCodeDivs.length; i++) {
@@ -1054,186 +1057,201 @@ Figure&nbsp;7
 <span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>gwl_path <span class="op">=</span> pathlib.Path(<span class="st">"../climate-projection-module/data/processed/TSV/GWL_NetCDF/gwl_all_sliced.tsv"</span>)</span>
 <span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> gwl_path.exists():</span>
-<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  GWL TSV not found — run climate-projection-module pipeline first."</span>)</span>
-<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>    gwl <span class="op">=</span> pd.read_csv(gwl_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>, parse_dates<span class="op">=</span>[<span class="st">"time"</span>])</span>
-<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>    gwl_monthly <span class="op">=</span> gwl.groupby([<span class="st">"gwl"</span>, gwl[<span class="st">"time"</span>].dt.to_period(<span class="st">"M"</span>)]).mean(numeric_only<span class="op">=</span><span class="va">True</span>).reset_index()</span>
-<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>    gwl_monthly[<span class="st">"time"</span>] <span class="op">=</span> gwl_monthly[<span class="st">"time"</span>].astype(<span class="bu">str</span>)</span>
-<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
-<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> gwl_val <span class="kw">in</span> <span class="bu">sorted</span>(gwl_monthly[<span class="st">"gwl"</span>].unique()):</span>
-<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>        subset <span class="op">=</span> gwl_monthly[gwl_monthly[<span class="st">"gwl"</span>] <span class="op">==</span> gwl_val]</span>
-<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>        fig.add_trace(go.Scatter(</span>
-<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>            x<span class="op">=</span>subset[<span class="st">"time"</span>], y<span class="op">=</span>subset[<span class="st">"temp_avg"</span>],</span>
-<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>            mode<span class="op">=</span><span class="st">"lines"</span>, name<span class="op">=</span><span class="ss">f"GWL </span><span class="sc">{</span>gwl_val<span class="sc">}</span><span class="ss">°C"</span>,</span>
-<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>        ))</span>
-<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(</span>
-<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Mean Temperature by Global Warming Level — SEA"</span>,</span>
-<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>        xaxis_title<span class="op">=</span><span class="st">"Month"</span>, yaxis_title<span class="op">=</span><span class="st">"Temperature (°C)"</span>,</span>
-<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>        legend_title<span class="op">=</span><span class="st">"GWL Scenario"</span>, height<span class="op">=</span><span class="dv">400</span>,</span>
-<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>    fig.show()</span>
-<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a><span class="fu">### GWL Precipitation Projections (SEA Domain)</span></span>
-<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-gwl-precip</span></span>
-<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Mean precipitation trajectories across Global Warming Levels for the SEA region."</span></span>
-<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> gwl_path.exists():</span>
-<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  GWL TSV not found — run climate-projection-module pipeline first."</span>)</span>
-<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
-<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> gwl_val <span class="kw">in</span> <span class="bu">sorted</span>(gwl_monthly[<span class="st">"gwl"</span>].unique()):</span>
-<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a>        subset <span class="op">=</span> gwl_monthly[gwl_monthly[<span class="st">"gwl"</span>] <span class="op">==</span> gwl_val]</span>
-<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="st">"precip_avg"</span> <span class="kw">in</span> subset.columns:</span>
-<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>            fig.add_trace(go.Scatter(</span>
-<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>subset[<span class="st">"time"</span>], y<span class="op">=</span>subset[<span class="st">"precip_avg"</span>],</span>
-<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"lines"</span>, name<span class="op">=</span><span class="ss">f"GWL </span><span class="sc">{</span>gwl_val<span class="sc">}</span><span class="ss">°C"</span>,</span>
-<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>            ))</span>
-<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> fig.data:</span>
-<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a>        fig.update_layout(</span>
-<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a>            title<span class="op">=</span><span class="st">"Mean Precipitation by Global Warming Level — SEA"</span>,</span>
-<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a>            xaxis_title<span class="op">=</span><span class="st">"Month"</span>, yaxis_title<span class="op">=</span><span class="st">"Precipitation (mm)"</span>,</span>
-<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a>            legend_title<span class="op">=</span><span class="st">"GWL Scenario"</span>, height<span class="op">=</span><span class="dv">400</span>,</span>
-<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>        fig.show()</span>
-<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  Precipitation column not found in GWL TSV — check gwl_all_sliced.tsv column names."</span>)</span>
-<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a><span class="fu">### CMIP6 SSP2-4.5 Bias Correction Baseline</span></span>
-<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a>The bias correction applied to operational inference computes the difference between the CMIP6 SSP2-4.5</span>
-<span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a>projected climatology for the current calendar month and the 2011–2018 ERA5-Land training climatology.</span>
-<span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a>This delta is subtracted from current observations before they are passed to the STGNN.</span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>gwl_monthly <span class="op">=</span> pd.DataFrame()</span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> gwl_path.exists():</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  GWL TSV not found — run climate-projection-module pipeline first."</span>)</span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>    gwl <span class="op">=</span> pd.read_csv(gwl_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>, parse_dates<span class="op">=</span>[<span class="st">"time"</span>])</span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> gwl.empty:</span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  GWL TSV is empty — no data to plot."</span>)</span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>        gwl_monthly <span class="op">=</span> gwl.groupby([<span class="st">"gwl"</span>, gwl[<span class="st">"time"</span>].dt.to_period(<span class="st">"M"</span>)]).mean(numeric_only<span class="op">=</span><span class="va">True</span>).reset_index()</span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>        gwl_monthly[<span class="st">"time"</span>] <span class="op">=</span> gwl_monthly[<span class="st">"time"</span>].astype(<span class="bu">str</span>)</span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>        fig <span class="op">=</span> go.Figure()</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> gwl_val <span class="kw">in</span> <span class="bu">sorted</span>(gwl_monthly[<span class="st">"gwl"</span>].unique()):</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>            subset <span class="op">=</span> gwl_monthly[gwl_monthly[<span class="st">"gwl"</span>] <span class="op">==</span> gwl_val]</span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>            fig.add_trace(go.Scatter(</span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>subset[<span class="st">"time"</span>], y<span class="op">=</span>subset[<span class="st">"temp_avg"</span>],</span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"lines"</span>, name<span class="op">=</span><span class="ss">f"GWL </span><span class="sc">{</span>gwl_val<span class="sc">}</span><span class="ss">°C"</span>,</span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>            ))</span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a>        fig.update_layout(</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>            title<span class="op">=</span><span class="st">"Mean Temperature by Global Warming Level — SEA"</span>,</span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>            xaxis_title<span class="op">=</span><span class="st">"Month"</span>, yaxis_title<span class="op">=</span><span class="st">"Temperature (°C)"</span>,</span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>            legend_title<span class="op">=</span><span class="st">"GWL Scenario"</span>, height<span class="op">=</span><span class="dv">400</span>,</span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a>        fig.show()</span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a><span class="fu">### GWL Precipitation Projections (SEA Domain)</span></span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-gwl-precip</span></span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Mean precipitation trajectories across Global Warming Levels for the SEA region."</span></span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> gwl_path.exists() <span class="kw">or</span> gwl_monthly.empty:</span>
+<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  GWL TSV not found or empty — run climate-projection-module pipeline first."</span>)</span>
+<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
+<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> gwl_val <span class="kw">in</span> <span class="bu">sorted</span>(gwl_monthly[<span class="st">"gwl"</span>].unique()):</span>
+<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>        subset <span class="op">=</span> gwl_monthly[gwl_monthly[<span class="st">"gwl"</span>] <span class="op">==</span> gwl_val]</span>
+<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="st">"precip_avg"</span> <span class="kw">in</span> subset.columns:</span>
+<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a>            fig.add_trace(go.Scatter(</span>
+<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>subset[<span class="st">"time"</span>], y<span class="op">=</span>subset[<span class="st">"precip_avg"</span>],</span>
+<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"lines"</span>, name<span class="op">=</span><span class="ss">f"GWL </span><span class="sc">{</span>gwl_val<span class="sc">}</span><span class="ss">°C"</span>,</span>
+<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a>            ))</span>
+<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> fig.data:</span>
+<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>        fig.update_layout(</span>
+<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>            title<span class="op">=</span><span class="st">"Mean Precipitation by Global Warming Level — SEA"</span>,</span>
+<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>            xaxis_title<span class="op">=</span><span class="st">"Month"</span>, yaxis_title<span class="op">=</span><span class="st">"Precipitation (mm)"</span>,</span>
+<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a>            legend_title<span class="op">=</span><span class="st">"GWL Scenario"</span>, height<span class="op">=</span><span class="dv">400</span>,</span>
+<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a>        fig.show()</span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  Precipitation column not found in GWL TSV — check gwl_all_sliced.tsv column names."</span>)</span>
+<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a><span class="fu">### CMIP6 SSP2-4.5 Bias Correction Baseline</span></span>
 <span id="cb9-104"><a href="#cb9-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-107"><a href="#cb9-107" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-108"><a href="#cb9-108" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-109"><a href="#cb9-109" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-bias-correction</span></span>
-<span id="cb9-110"><a href="#cb9-110" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Monthly bias correction deltas (CMIP6 SSP2-4.5 minus 2011–2018 ERA5 baseline) across all calendar months."</span></span>
-<span id="cb9-111"><a href="#cb9-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-112"><a href="#cb9-112" aria-hidden="true" tabindex="-1"></a>deltas_path <span class="op">=</span> pathlib.Path(<span class="st">"data/climate_deltas.json"</span>)</span>
-<span id="cb9-113"><a href="#cb9-113" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
-<span id="cb9-114"><a href="#cb9-114" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-115"><a href="#cb9-115" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> deltas_path.exists():</span>
-<span id="cb9-116"><a href="#cb9-116" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  climate_deltas.json not found — run site/scripts/apply_climate_delta.py first."</span>)</span>
-<span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a>    deltas <span class="op">=</span> json.loads(deltas_path.read_text())</span>
-<span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> []</span>
-<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> month, feat_dict <span class="kw">in</span> deltas.items():</span>
-<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> month <span class="op">==</span> <span class="st">"annual_mean"</span>:</span>
-<span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
-<span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> feat, val <span class="kw">in</span> feat_dict.items():</span>
-<span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a>            rows.append({<span class="st">"Month"</span>: month, <span class="st">"Feature"</span>: feat, <span class="st">"Delta"</span>: <span class="bu">round</span>(val, <span class="dv">4</span>)})</span>
-<span id="cb9-125"><a href="#cb9-125" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> rows:</span>
-<span id="cb9-126"><a href="#cb9-126" aria-hidden="true" tabindex="-1"></a>        df_deltas <span class="op">=</span> pd.DataFrame(rows).pivot(index<span class="op">=</span><span class="st">"Month"</span>, columns<span class="op">=</span><span class="st">"Feature"</span>, values<span class="op">=</span><span class="st">"Delta"</span>)</span>
-<span id="cb9-127"><a href="#cb9-127" aria-hidden="true" tabindex="-1"></a>        df_deltas.style.<span class="bu">format</span>(precision<span class="op">=</span><span class="dv">4</span>).background_gradient(cmap<span class="op">=</span><span class="st">"RdBu_r"</span>, axis<span class="op">=</span><span class="va">None</span>)</span>
-<span id="cb9-128"><a href="#cb9-128" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a><span class="fu">### CMIP6 Multi-Model Spread (SEA)</span></span>
-<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-134"><a href="#cb9-134" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-135"><a href="#cb9-135" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-136"><a href="#cb9-136" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-cmip6-spread</span></span>
-<span id="cb9-137"><a href="#cb9-137" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Inter-model spread across CMIP6 ensemble members for SEA temperature and precipitation under SSP2-4.5."</span></span>
-<span id="cb9-138"><a href="#cb9-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-139"><a href="#cb9-139" aria-hidden="true" tabindex="-1"></a>cmip6_path <span class="op">=</span> climate_dir <span class="op">/</span> <span class="st">"TSV/CMIP6/cmip6_ensemble_spread.tsv"</span></span>
-<span id="cb9-140"><a href="#cb9-140" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> cmip6_path.exists():</span>
-<span id="cb9-141"><a href="#cb9-141" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  CMIP6 ensemble spread TSV not found — run climate-projection-module/scripts/compute_cmip6_spread.py first."</span>)</span>
-<span id="cb9-142"><a href="#cb9-142" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb9-143"><a href="#cb9-143" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.read_csv(cmip6_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>)</span>
-<span id="cb9-144"><a href="#cb9-144" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df.head())</span>
-<span id="cb9-145"><a href="#cb9-145" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-146"><a href="#cb9-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-147"><a href="#cb9-147" aria-hidden="true" tabindex="-1"></a>---</span>
-<span id="cb9-148"><a href="#cb9-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-149"><a href="#cb9-149" aria-hidden="true" tabindex="-1"></a><span class="fu">## Arm 2 — Taiwan Basic Statistics Area (TCCIP)</span></span>
-<span id="cb9-150"><a href="#cb9-150" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-151"><a href="#cb9-151" aria-hidden="true" tabindex="-1"></a>TCCIP provides high-resolution statistically and dynamically downscaled climate projections specifically</span>
-<span id="cb9-152"><a href="#cb9-152" aria-hidden="true" tabindex="-1"></a>covering Taiwan. The projections are used to characterise future dengue suitability at BSA level under</span>
-<span id="cb9-153"><a href="#cb9-153" aria-hidden="true" tabindex="-1"></a>different warming scenarios.</span>
-<span id="cb9-154"><a href="#cb9-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-155"><a href="#cb9-155" aria-hidden="true" tabindex="-1"></a><span class="fu">### TCCIP Temperature Projections (Taiwan)</span></span>
-<span id="cb9-156"><a href="#cb9-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-157"><a href="#cb9-157" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
-<span id="cb9-158"><a href="#cb9-158" aria-hidden="true" tabindex="-1"></a>**Placeholder** — TCCIP temperature projections for Taiwan are not yet integrated into the site pipeline.</span>
-<span id="cb9-159"><a href="#cb9-159" aria-hidden="true" tabindex="-1"></a>This section will display county- and BSA-level temperature trajectories under RCP4.5 and RCP8.5 (TCCIP</span>
-<span id="cb9-160"><a href="#cb9-160" aria-hidden="true" tabindex="-1"></a>uses RCP rather than SSP nomenclature for its downscaled products) once the</span>
-<span id="cb9-161"><a href="#cb9-161" aria-hidden="true" tabindex="-1"></a>climate-projection-module/scripts/extract_tccip.py pipeline is operational.</span>
-<span id="cb9-162"><a href="#cb9-162" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb9-105"><a href="#cb9-105" aria-hidden="true" tabindex="-1"></a>The bias correction applied to operational inference computes the difference between the CMIP6 SSP2-4.5</span>
+<span id="cb9-106"><a href="#cb9-106" aria-hidden="true" tabindex="-1"></a>projected climatology for the current calendar month and the 2011–2018 ERA5-Land training climatology.</span>
+<span id="cb9-107"><a href="#cb9-107" aria-hidden="true" tabindex="-1"></a>This delta is subtracted from current observations before they are passed to the STGNN.</span>
+<span id="cb9-108"><a href="#cb9-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-111"><a href="#cb9-111" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-112"><a href="#cb9-112" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-113"><a href="#cb9-113" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-bias-correction</span></span>
+<span id="cb9-114"><a href="#cb9-114" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Monthly bias correction deltas (CMIP6 SSP2-4.5 minus 2011–2018 ERA5 baseline) across all calendar months."</span></span>
+<span id="cb9-115"><a href="#cb9-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-116"><a href="#cb9-116" aria-hidden="true" tabindex="-1"></a>deltas_path <span class="op">=</span> pathlib.Path(<span class="st">"data/climate_deltas.json"</span>)</span>
+<span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> deltas_path.exists():</span>
+<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  climate_deltas.json not found — run site/scripts/apply_climate_delta.py first."</span>)</span>
+<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a>    deltas <span class="op">=</span> json.loads(deltas_path.read_text())</span>
+<span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> []</span>
+<span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> month, feat_dict <span class="kw">in</span> deltas.items():</span>
+<span id="cb9-125"><a href="#cb9-125" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> month <span class="op">==</span> <span class="st">"annual_mean"</span>:</span>
+<span id="cb9-126"><a href="#cb9-126" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb9-127"><a href="#cb9-127" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> feat, val <span class="kw">in</span> feat_dict.items():</span>
+<span id="cb9-128"><a href="#cb9-128" aria-hidden="true" tabindex="-1"></a>            rows.append({<span class="st">"Month"</span>: month, <span class="st">"Feature"</span>: feat, <span class="st">"Delta"</span>: <span class="bu">round</span>(val, <span class="dv">4</span>)})</span>
+<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> rows:</span>
+<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  climate_deltas.json has no per-month data — run site/scripts/apply_climate_delta.py first."</span>)</span>
+<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-132"><a href="#cb9-132" aria-hidden="true" tabindex="-1"></a>        df_deltas <span class="op">=</span> pd.DataFrame(rows).pivot(index<span class="op">=</span><span class="st">"Month"</span>, columns<span class="op">=</span><span class="st">"Feature"</span>, values<span class="op">=</span><span class="st">"Delta"</span>)</span>
+<span id="cb9-133"><a href="#cb9-133" aria-hidden="true" tabindex="-1"></a>        df_deltas.style.<span class="bu">format</span>(precision<span class="op">=</span><span class="dv">4</span>).background_gradient(cmap<span class="op">=</span><span class="st">"RdBu_r"</span>, axis<span class="op">=</span><span class="va">None</span>)</span>
+<span id="cb9-134"><a href="#cb9-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-135"><a href="#cb9-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-136"><a href="#cb9-136" aria-hidden="true" tabindex="-1"></a><span class="fu">### CMIP6 Multi-Model Spread (SEA)</span></span>
+<span id="cb9-137"><a href="#cb9-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-140"><a href="#cb9-140" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-141"><a href="#cb9-141" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-142"><a href="#cb9-142" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-cmip6-spread</span></span>
+<span id="cb9-143"><a href="#cb9-143" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Inter-model spread across CMIP6 ensemble members for SEA temperature and precipitation under SSP2-4.5."</span></span>
+<span id="cb9-144"><a href="#cb9-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-145"><a href="#cb9-145" aria-hidden="true" tabindex="-1"></a>cmip6_path <span class="op">=</span> climate_dir <span class="op">/</span> <span class="st">"TSV/CMIP6/cmip6_ensemble_spread.tsv"</span></span>
+<span id="cb9-146"><a href="#cb9-146" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> cmip6_path.exists():</span>
+<span id="cb9-147"><a href="#cb9-147" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  CMIP6 ensemble spread TSV not found — run climate-projection-module/scripts/compute_cmip6_spread.py first."</span>)</span>
+<span id="cb9-148"><a href="#cb9-148" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-149"><a href="#cb9-149" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.read_csv(cmip6_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>)</span>
+<span id="cb9-150"><a href="#cb9-150" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> df.empty:</span>
+<span id="cb9-151"><a href="#cb9-151" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  CMIP6 ensemble spread TSV is empty."</span>)</span>
+<span id="cb9-152"><a href="#cb9-152" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-153"><a href="#cb9-153" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(df.head())</span>
+<span id="cb9-154"><a href="#cb9-154" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-155"><a href="#cb9-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-156"><a href="#cb9-156" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb9-157"><a href="#cb9-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-158"><a href="#cb9-158" aria-hidden="true" tabindex="-1"></a><span class="fu">## Arm 2 — Taiwan Basic Statistics Area (TCCIP)</span></span>
+<span id="cb9-159"><a href="#cb9-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-160"><a href="#cb9-160" aria-hidden="true" tabindex="-1"></a>TCCIP provides high-resolution statistically and dynamically downscaled climate projections specifically</span>
+<span id="cb9-161"><a href="#cb9-161" aria-hidden="true" tabindex="-1"></a>covering Taiwan. The projections are used to characterise future dengue suitability at BSA level under</span>
+<span id="cb9-162"><a href="#cb9-162" aria-hidden="true" tabindex="-1"></a>different warming scenarios.</span>
 <span id="cb9-163"><a href="#cb9-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-166"><a href="#cb9-166" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-167"><a href="#cb9-167" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-168"><a href="#cb9-168" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tccip-temp</span></span>
-<span id="cb9-169"><a href="#cb9-169" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: TCCIP mean temperature projections for Taiwan counties under RCP4.5 and RCP8.5, 2020–2099."</span></span>
-<span id="cb9-170"><a href="#cb9-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-171"><a href="#cb9-171" aria-hidden="true" tabindex="-1"></a>tccip_path <span class="op">=</span> climate_dir <span class="op">/</span> <span class="st">"TSV/TCCIP/tccip_county_temperature.tsv"</span></span>
-<span id="cb9-172"><a href="#cb9-172" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> tccip_path.exists():</span>
-<span id="cb9-173"><a href="#cb9-173" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  TCCIP temperature TSV not found — run climate-projection-module/scripts/extract_tccip.py first."</span>)</span>
-<span id="cb9-174"><a href="#cb9-174" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb9-175"><a href="#cb9-175" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.read_csv(tccip_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>, parse_dates<span class="op">=</span>[<span class="st">"year"</span>])</span>
-<span id="cb9-176"><a href="#cb9-176" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
-<span id="cb9-177"><a href="#cb9-177" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> scenario <span class="kw">in</span> df[<span class="st">"scenario"</span>].unique():</span>
-<span id="cb9-178"><a href="#cb9-178" aria-hidden="true" tabindex="-1"></a>        subset <span class="op">=</span> df[df[<span class="st">"scenario"</span>] <span class="op">==</span> scenario]</span>
-<span id="cb9-179"><a href="#cb9-179" aria-hidden="true" tabindex="-1"></a>        fig.add_trace(go.Scatter(</span>
-<span id="cb9-180"><a href="#cb9-180" aria-hidden="true" tabindex="-1"></a>            x<span class="op">=</span>subset[<span class="st">"year"</span>], y<span class="op">=</span>subset[<span class="st">"temp_mean"</span>],</span>
-<span id="cb9-181"><a href="#cb9-181" aria-hidden="true" tabindex="-1"></a>            mode<span class="op">=</span><span class="st">"lines"</span>, name<span class="op">=</span>scenario,</span>
-<span id="cb9-182"><a href="#cb9-182" aria-hidden="true" tabindex="-1"></a>        ))</span>
-<span id="cb9-183"><a href="#cb9-183" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(</span>
-<span id="cb9-184"><a href="#cb9-184" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"TCCIP Mean Temperature Projections — Taiwan"</span>,</span>
-<span id="cb9-185"><a href="#cb9-185" aria-hidden="true" tabindex="-1"></a>        xaxis_title<span class="op">=</span><span class="st">"Year"</span>, yaxis_title<span class="op">=</span><span class="st">"Temperature (°C)"</span>,</span>
-<span id="cb9-186"><a href="#cb9-186" aria-hidden="true" tabindex="-1"></a>        legend_title<span class="op">=</span><span class="st">"Scenario"</span>, height<span class="op">=</span><span class="dv">400</span>,</span>
-<span id="cb9-187"><a href="#cb9-187" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb9-188"><a href="#cb9-188" aria-hidden="true" tabindex="-1"></a>    fig.show()</span>
-<span id="cb9-189"><a href="#cb9-189" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-190"><a href="#cb9-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-191"><a href="#cb9-191" aria-hidden="true" tabindex="-1"></a><span class="fu">### TCCIP Precipitation Projections (Taiwan)</span></span>
-<span id="cb9-192"><a href="#cb9-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-195"><a href="#cb9-195" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-196"><a href="#cb9-196" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-197"><a href="#cb9-197" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tccip-precip</span></span>
-<span id="cb9-198"><a href="#cb9-198" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: TCCIP mean precipitation projections for Taiwan under RCP4.5 and RCP8.5."</span></span>
-<span id="cb9-199"><a href="#cb9-199" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-200"><a href="#cb9-200" aria-hidden="true" tabindex="-1"></a>tccip_precip_path <span class="op">=</span> climate_dir <span class="op">/</span> <span class="st">"TSV/TCCIP/tccip_county_precipitation.tsv"</span></span>
-<span id="cb9-201"><a href="#cb9-201" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> tccip_precip_path.exists():</span>
-<span id="cb9-202"><a href="#cb9-202" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  TCCIP precipitation TSV not found — run climate-projection-module/scripts/extract_tccip.py first."</span>)</span>
-<span id="cb9-203"><a href="#cb9-203" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
-<span id="cb9-204"><a href="#cb9-204" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.read_csv(tccip_precip_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>)</span>
-<span id="cb9-205"><a href="#cb9-205" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(df.head())</span>
-<span id="cb9-206"><a href="#cb9-206" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb9-207"><a href="#cb9-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-208"><a href="#cb9-208" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dengue Suitability Index — Taiwan Future Projections</span></span>
-<span id="cb9-209"><a href="#cb9-209" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-210"><a href="#cb9-210" aria-hidden="true" tabindex="-1"></a>The climate suitability index for *Aedes aegypti* and *Aedes albopictus* transmission is computed from</span>
-<span id="cb9-211"><a href="#cb9-211" aria-hidden="true" tabindex="-1"></a>TCCIP temperature and precipitation projections using the Mordecai et al. thermal performance curve framework.</span>
-<span id="cb9-212"><a href="#cb9-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-215"><a href="#cb9-215" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-216"><a href="#cb9-216" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-217"><a href="#cb9-217" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tccip-suitability</span></span>
-<span id="cb9-218"><a href="#cb9-218" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Projected dengue vector suitability index for Taiwan BSAs under RCP4.5 and RCP8.5."</span></span>
-<span id="cb9-219"><a href="#cb9-219" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-220"><a href="#cb9-220" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"⚠️  TCCIP suitability index not yet computed — implement climate-projection-module/scripts/compute_suitability_taiwan.py first."</span>)</span>
+<span id="cb9-164"><a href="#cb9-164" aria-hidden="true" tabindex="-1"></a><span class="fu">### TCCIP Temperature Projections (Taiwan)</span></span>
+<span id="cb9-165"><a href="#cb9-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-166"><a href="#cb9-166" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning}</span>
+<span id="cb9-167"><a href="#cb9-167" aria-hidden="true" tabindex="-1"></a>**Placeholder** — TCCIP temperature projections for Taiwan are not yet integrated into the site pipeline.</span>
+<span id="cb9-168"><a href="#cb9-168" aria-hidden="true" tabindex="-1"></a>This section will display county- and BSA-level temperature trajectories under RCP4.5 and RCP8.5 (TCCIP</span>
+<span id="cb9-169"><a href="#cb9-169" aria-hidden="true" tabindex="-1"></a>uses RCP rather than SSP nomenclature for its downscaled products) once the</span>
+<span id="cb9-170"><a href="#cb9-170" aria-hidden="true" tabindex="-1"></a>climate-projection-module/scripts/extract_tccip.py pipeline is operational.</span>
+<span id="cb9-171"><a href="#cb9-171" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb9-172"><a href="#cb9-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-175"><a href="#cb9-175" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-176"><a href="#cb9-176" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-177"><a href="#cb9-177" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tccip-temp</span></span>
+<span id="cb9-178"><a href="#cb9-178" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: TCCIP mean temperature projections for Taiwan counties under RCP4.5 and RCP8.5, 2020–2099."</span></span>
+<span id="cb9-179"><a href="#cb9-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-180"><a href="#cb9-180" aria-hidden="true" tabindex="-1"></a>tccip_path <span class="op">=</span> climate_dir <span class="op">/</span> <span class="st">"TSV/TCCIP/tccip_county_temperature.tsv"</span></span>
+<span id="cb9-181"><a href="#cb9-181" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> tccip_path.exists():</span>
+<span id="cb9-182"><a href="#cb9-182" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  TCCIP temperature TSV not found — run climate-projection-module/scripts/extract_tccip.py first."</span>)</span>
+<span id="cb9-183"><a href="#cb9-183" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-184"><a href="#cb9-184" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.read_csv(tccip_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>, parse_dates<span class="op">=</span>[<span class="st">"year"</span>])</span>
+<span id="cb9-185"><a href="#cb9-185" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> df.empty <span class="kw">or</span> <span class="st">"scenario"</span> <span class="kw">not</span> <span class="kw">in</span> df.columns:</span>
+<span id="cb9-186"><a href="#cb9-186" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  TCCIP temperature TSV is empty or missing expected columns."</span>)</span>
+<span id="cb9-187"><a href="#cb9-187" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-188"><a href="#cb9-188" aria-hidden="true" tabindex="-1"></a>        fig <span class="op">=</span> go.Figure()</span>
+<span id="cb9-189"><a href="#cb9-189" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> scenario <span class="kw">in</span> df[<span class="st">"scenario"</span>].unique():</span>
+<span id="cb9-190"><a href="#cb9-190" aria-hidden="true" tabindex="-1"></a>            subset <span class="op">=</span> df[df[<span class="st">"scenario"</span>] <span class="op">==</span> scenario]</span>
+<span id="cb9-191"><a href="#cb9-191" aria-hidden="true" tabindex="-1"></a>            fig.add_trace(go.Scatter(</span>
+<span id="cb9-192"><a href="#cb9-192" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>subset[<span class="st">"year"</span>], y<span class="op">=</span>subset[<span class="st">"temp_mean"</span>],</span>
+<span id="cb9-193"><a href="#cb9-193" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"lines"</span>, name<span class="op">=</span>scenario,</span>
+<span id="cb9-194"><a href="#cb9-194" aria-hidden="true" tabindex="-1"></a>            ))</span>
+<span id="cb9-195"><a href="#cb9-195" aria-hidden="true" tabindex="-1"></a>        fig.update_layout(</span>
+<span id="cb9-196"><a href="#cb9-196" aria-hidden="true" tabindex="-1"></a>            title<span class="op">=</span><span class="st">"TCCIP Mean Temperature Projections — Taiwan"</span>,</span>
+<span id="cb9-197"><a href="#cb9-197" aria-hidden="true" tabindex="-1"></a>            xaxis_title<span class="op">=</span><span class="st">"Year"</span>, yaxis_title<span class="op">=</span><span class="st">"Temperature (°C)"</span>,</span>
+<span id="cb9-198"><a href="#cb9-198" aria-hidden="true" tabindex="-1"></a>            legend_title<span class="op">=</span><span class="st">"Scenario"</span>, height<span class="op">=</span><span class="dv">400</span>,</span>
+<span id="cb9-199"><a href="#cb9-199" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb9-200"><a href="#cb9-200" aria-hidden="true" tabindex="-1"></a>        fig.show()</span>
+<span id="cb9-201"><a href="#cb9-201" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-202"><a href="#cb9-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-203"><a href="#cb9-203" aria-hidden="true" tabindex="-1"></a><span class="fu">### TCCIP Precipitation Projections (Taiwan)</span></span>
+<span id="cb9-204"><a href="#cb9-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-207"><a href="#cb9-207" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-208"><a href="#cb9-208" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-209"><a href="#cb9-209" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tccip-precip</span></span>
+<span id="cb9-210"><a href="#cb9-210" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: TCCIP mean precipitation projections for Taiwan under RCP4.5 and RCP8.5."</span></span>
+<span id="cb9-211"><a href="#cb9-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-212"><a href="#cb9-212" aria-hidden="true" tabindex="-1"></a>tccip_precip_path <span class="op">=</span> climate_dir <span class="op">/</span> <span class="st">"TSV/TCCIP/tccip_county_precipitation.tsv"</span></span>
+<span id="cb9-213"><a href="#cb9-213" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="kw">not</span> tccip_precip_path.exists():</span>
+<span id="cb9-214"><a href="#cb9-214" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"⚠️  TCCIP precipitation TSV not found — run climate-projection-module/scripts/extract_tccip.py first."</span>)</span>
+<span id="cb9-215"><a href="#cb9-215" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb9-216"><a href="#cb9-216" aria-hidden="true" tabindex="-1"></a>    df <span class="op">=</span> pd.read_csv(tccip_precip_path, sep<span class="op">=</span><span class="st">"</span><span class="ch">\t</span><span class="st">"</span>)</span>
+<span id="cb9-217"><a href="#cb9-217" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> df.empty:</span>
+<span id="cb9-218"><a href="#cb9-218" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"⚠️  TCCIP precipitation TSV is empty."</span>)</span>
+<span id="cb9-219"><a href="#cb9-219" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-220"><a href="#cb9-220" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(df.head())</span>
 <span id="cb9-221"><a href="#cb9-221" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb9-222"><a href="#cb9-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-223"><a href="#cb9-223" aria-hidden="true" tabindex="-1"></a><span class="fu">### Comparison: SEA vs Taiwan Climate Trajectories</span></span>
+<span id="cb9-223"><a href="#cb9-223" aria-hidden="true" tabindex="-1"></a><span class="fu">### Dengue Suitability Index — Taiwan Future Projections</span></span>
 <span id="cb9-224"><a href="#cb9-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-227"><a href="#cb9-227" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb9-228"><a href="#cb9-228" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb9-229"><a href="#cb9-229" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-comparison</span></span>
-<span id="cb9-230"><a href="#cb9-230" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Side-by-side temperature anomaly trajectories for SEA (CMIP6 SSP2-4.5) and Taiwan (TCCIP RCP4.5), relative to 2011–2018 baseline."</span></span>
-<span id="cb9-231"><a href="#cb9-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-232"><a href="#cb9-232" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"⚠️  Comparison figure not yet available — requires both CMIP6 and TCCIP pipelines to be complete."</span>)</span>
-<span id="cb9-233"><a href="#cb9-233" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-225"><a href="#cb9-225" aria-hidden="true" tabindex="-1"></a>The climate suitability index for *Aedes aegypti* and *Aedes albopictus* transmission is computed from</span>
+<span id="cb9-226"><a href="#cb9-226" aria-hidden="true" tabindex="-1"></a>TCCIP temperature and precipitation projections using the Mordecai et al. thermal performance curve framework.</span>
+<span id="cb9-227"><a href="#cb9-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-230"><a href="#cb9-230" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-231"><a href="#cb9-231" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-232"><a href="#cb9-232" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tccip-suitability</span></span>
+<span id="cb9-233"><a href="#cb9-233" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Projected dengue vector suitability index for Taiwan BSAs under RCP4.5 and RCP8.5."</span></span>
 <span id="cb9-234"><a href="#cb9-234" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-235"><a href="#cb9-235" aria-hidden="true" tabindex="-1"></a>---</span>
-<span id="cb9-236"><a href="#cb9-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-237"><a href="#cb9-237" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **Note on scenario alignment:** The SEA Provinces model uses CMIP6 SSP2-4.5 for its operational bias</span></span>
-<span id="cb9-238"><a href="#cb9-238" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; correction. The Taiwan BSA model uses TCCIP RCP4.5 as the primary scenario, which is approximately</span></span>
-<span id="cb9-239"><a href="#cb9-239" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; equivalent in radiative forcing. SSP5-8.5 / RCP8.5 projections are included for sensitivity analysis only.</span></span>
+<span id="cb9-235"><a href="#cb9-235" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"⚠️  TCCIP suitability index not yet computed — implement climate-projection-module/scripts/compute_suitability_taiwan.py first."</span>)</span>
+<span id="cb9-236"><a href="#cb9-236" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-237"><a href="#cb9-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-238"><a href="#cb9-238" aria-hidden="true" tabindex="-1"></a><span class="fu">### Comparison: SEA vs Taiwan Climate Trajectories</span></span>
+<span id="cb9-239"><a href="#cb9-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-242"><a href="#cb9-242" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb9-243"><a href="#cb9-243" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb9-244"><a href="#cb9-244" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-comparison</span></span>
+<span id="cb9-245"><a href="#cb9-245" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Placeholder: Side-by-side temperature anomaly trajectories for SEA (CMIP6 SSP2-4.5) and Taiwan (TCCIP RCP4.5), relative to 2011–2018 baseline."</span></span>
+<span id="cb9-246"><a href="#cb9-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-247"><a href="#cb9-247" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"⚠️  Comparison figure not yet available — requires both CMIP6 and TCCIP pipelines to be complete."</span>)</span>
+<span id="cb9-248"><a href="#cb9-248" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb9-249"><a href="#cb9-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-250"><a href="#cb9-250" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb9-251"><a href="#cb9-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-252"><a href="#cb9-252" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **Note on scenario alignment:** The SEA Provinces model uses CMIP6 SSP2-4.5 for its operational bias</span></span>
+<span id="cb9-253"><a href="#cb9-253" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; correction. The Taiwan BSA model uses TCCIP RCP4.5 as the primary scenario, which is approximately</span></span>
+<span id="cb9-254"><a href="#cb9-254" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; equivalent in radiative forcing. SSP5-8.5 / RCP8.5 projections are included for sensitivity analysis only.</span></span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
